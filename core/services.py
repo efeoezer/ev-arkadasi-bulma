@@ -1,0 +1,52 @@
+import math
+from .models import Profile, UserLifestyle, Match
+
+def calculate_cosine_similarity(vec1, vec2):
+    """İki vektör (liste) arasındaki kosinüs benzerliğini hesaplar."""
+    # İç çarpım (Dot product)
+    dot_product = sum(a * b for a, b in zip(vec1, vec2))
+    
+    # Öklid normları (Euclidean norms)
+    norm_a = math.sqrt(sum(a * a for a in vec1))
+    norm_b = math.sqrt(sum(b * b for b in vec2))
+    
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+        
+    return dot_product / (norm_a * norm_b)
+
+def generate_match_score(user1_profile, user2_profile):
+    """İki kullanıcının yaşam tarzı ağırlıklarını vektör uzayına çekip skoru hesaplar."""
+    
+    # İki kullanıcının da oyladığı ortak etiketleri (tag) buluyoruz
+    tags_user1 = {ul.tag.id: ul.weight for ul in UserLifestyle.objects.filter(profile=user1_profile)}
+    tags_user2 = {ul.tag.id: ul.weight for ul in UserLifestyle.objects.filter(profile=user2_profile)}
+    
+    # Ortak bir vektör uzayı yaratmak için tüm benzersiz etiket ID'lerini birleştiriyoruz
+    all_tag_ids = set(tags_user1.keys()).union(set(tags_user2.keys()))
+    
+    if not all_tag_ids:
+        return 0.0 # Hiçbir ortak veri yoksa uyum 0'dır
+        
+    vector_a = []
+    vector_b = []
+    
+    # Boyutları eşitleyip, eksik verilere nötr değer (3) atayarak vektörleri dolduruyoruz
+    for tag_id in all_tag_ids:
+        vector_a.append(tags_user1.get(tag_id, 3))
+        vector_b.append(tags_user2.get(tag_id, 3))
+        
+    # Matematiksel benzerliği hesapla (Sonuç 0 ile 1 arasında döner)
+    similarity = calculate_cosine_similarity(vector_a, vector_b)
+    
+    # Yüzdelik skora çevir (%0 - %100)
+    final_score = round(similarity * 100, 2)
+    
+    # Hesaplanan bu sonucu veritabanına yeni bir eşleşme (Match) objesi olarak kaydet
+    Match.objects.create(
+        user_1=user1_profile.user,
+        user_2=user2_profile.user,
+        algorithm_score=final_score
+    )
+    
+    return final_score
