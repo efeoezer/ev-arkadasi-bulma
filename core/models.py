@@ -195,6 +195,5 @@ class Review(models.Model):
 
 # 19. sabıka kaydı sorgulama.
 class CriminalRecord(models.Model):
-    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
-    criminalrecord = models.OneToOneField(Profile, on_delete=models.CASCADE)
-    
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='main_criminal_profile')
+    criminalrecord = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='detailed_criminal_record')
