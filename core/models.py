@@ -184,4 +184,15 @@ class Review(models.Model):
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+# Konum
+class Location(models.Model):
+    city = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
 
+    def __str__(self):
+        return f"{self.city}, {self.country}"
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # ... diğer alanlar ...
+    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
