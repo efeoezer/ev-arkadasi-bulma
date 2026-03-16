@@ -105,3 +105,83 @@ class CompatibilityScore(models.Model):
 
     def __str__(self):
         return f"{self.user1.username} & {self.user2.username} -> {self.total_score}"
+
+# 11. Extrovert ya da introvert olup olmadığını ölçer
+class PersonalityEorI(models.Model):
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    introvert_level = models.IntegerField()   # 1-5
+    social_level = models.IntegerField()      # 1-5
+    conflict_style = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"{self.profile.user.username} PersonalityEorI"
+
+#12. Ev kuralları uyumluluğu ölçer.
+class HouseRules(models.Model):
+
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    guest_frequency = models.IntegerField()  # haftada kaç kez
+    party_tolerance = models.IntegerField()  # 1-5
+    quiet_hours_start = models.TimeField()
+    quiet_hours_end = models.TimeField()
+
+#13. Temizlik alışkanlığı uyumluluğu.
+class CleaningHabit(models.Model):
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    cleanliness_level = models.IntegerField() # 1-5
+    dishes_immediately = models.BooleanField()
+    cleaning_frequency = models.IntegerField() # haftada kaç kez
+
+#14. Evcil hayvan uyumlulığu:
+class PetPreference(models.Model):
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    likes_dogs = models.BooleanField()
+    likes_cats = models.BooleanField()
+    allergic_to_pets = models.BooleanField()
+
+#15. Mutfak kullanımı - uyumluluğu:
+class KitchenHabit(models.Model):
+
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    cooks_often = models.BooleanField()
+    shares_food = models.BooleanField()
+    vegetarian = models.BooleanField()
+    vegan = models.BooleanField()
+    pescatarian = models.BooleanField()
+    omnivor = models.BooleanField()
+
+#16. Eğitim/Meslek saatlerinin uyumluluğu
+class Occupation(models.Model):
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    occupation = models.CharField(max_length=100)
+    university = models.CharField(max_length=100)
+    working_hours = models.CharField(max_length=100)
+
+#17 Finansal / Bütçe uyumluluğu
+class FinancialHabit(models.Model):
+
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    pays_bills_on_time = models.BooleanField()
+    budget_flexibility = models.IntegerField()  # 1-5
+
+# 18. Gürültü tolerans seviyesi
+class NoisePreference(models.Model):
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    music_volume = models.IntegerField()  # 1-5
+    tolerance_to_noise = models.IntegerField()  # 1-5
+
+#GÜVENLİK DOĞRULAMA SİSTEMİ!
+class Verification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    student_verified = models.BooleanField(default=False)
+    id_verified = models.BooleanField(default=False)
+
+#KULLANICI DEĞERLENDİRME SİSTEMİ
+class Review(models.Model):
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="given_reviews")
+    reviewed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_reviews")
+    rating = models.IntegerField()
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
