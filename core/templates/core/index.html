@@ -18,6 +18,7 @@
             <div class="form-group" style="margin-top: 20px;">
             <h3>Giriş Yap / Kayıt Ol</h3>
             <input type="text" id="username" placeholder="Kullanıcı Adı" style="width: 100%; padding: 10px; margin-bottom: 10px;">
+            <input type="email" id="email" placeholder="E-posta Adresi" style="width: 100%; padding: 10px; margin-bottom: 10px;">
             <input type="password" id="password" placeholder="Şifre" style="width: 100%; padding: 10px; margin-bottom: 10px;">
             <button onclick="handleAuth('login')" style="width: 48%; padding: 10px; background: #3498db; color: white; border: none; cursor: pointer;">Giriş</button>
             <button onclick="handleAuth('register')" style="width: 48%; padding: 10px; background: #2ecc71; color: white; border: none; cursor: pointer;">Kayıt Ol</button>
@@ -32,6 +33,7 @@
         async function handleAuth(type) {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
+            const emailAddr = document.getElementById('email').value;
             const msg = document.getElementById('response-message');
             
             const endpoint = type === 'login' ? '/api/login/' : '/api/register/';
@@ -40,7 +42,7 @@
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass })
+                    body: JSON.stringify({ username: user, password: pass, email: emailAddr })
                 });
                 const data = await response.json();
                 msg.innerText = data.message;
