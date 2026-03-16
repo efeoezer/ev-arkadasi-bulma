@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from .models import Profile
 from .services import calculate_match_score
+from django.shortcuts import render
 
 def calculate_match_api(request, user1_id, user2_id):
     """İki kullanıcının eşleşme skorunu hesaplayıp JSON olarak döndüren API uç noktası."""
@@ -76,3 +77,6 @@ def logout_api(request):
     # Mevcut oturumu sunucu tarafından sonlandır
     logout(request)
     return JsonResponse({'status': 'success', 'message': 'Başarıyla çıkış yapıldı.'})
+def index_view(request):
+    """Ana sayfa arayüzünü yükler."""
+    return render(request, 'core/index.html')
