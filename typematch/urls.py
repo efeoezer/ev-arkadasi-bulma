@@ -4,7 +4,7 @@ from core import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/match/<int:user1_id>/<int:user2_id>/', views.calculate_match_api),
+    path('api/match/<int:user1_id>/<int:user2_id>/', views.calculate_match_api, name='api_match'),
     
     # Kimlik Doğrulama Uç Noktaları
     path('api/register/', views.register_api),
