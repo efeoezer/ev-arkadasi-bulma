@@ -10,4 +10,5 @@ urlpatterns = [
     path('api/register/', views.register_api),
     path('api/login/', views.login_api),
     path('api/logout/', views.logout_api),
+    path('', views.index_view, name='index'),
 ]
