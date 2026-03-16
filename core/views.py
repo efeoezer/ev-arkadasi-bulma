@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from .models import Profile
-from .services import calculate_match_score
+from .services import generate_match_score
 from django.shortcuts import render
 
 def calculate_match_api(request, user1_id, user2_id):
