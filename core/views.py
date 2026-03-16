@@ -81,3 +81,18 @@ def logout_api(request):
 def index_view(request):
     """Ana sayfa arayüzünü yükler."""
     return render(request, 'core/index.html')
+
+from django.urls import path
+from .views import *
+
+urlpatterns = [
+
+    path('', index_view),
+
+    path('api/register/', register_api),
+    path('api/login/', login_api),
+    path('api/logout/', logout_api),
+
+    path('api/match/<int:user1_id>/<int:user2_id>/', calculate_match_api),
+
+]
