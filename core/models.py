@@ -1,6 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+# Konum
+class Location(models.Model):
+    city = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.city}, {self.country}"
+
+
 # 1. REFERANS TABLOSU: MBTI Tipleri
 class MBTIType(models.Model):
     type_code = models.CharField(max_length=4, unique=True)
@@ -15,7 +24,7 @@ class Profile(models.Model):
     bio = models.TextField(blank=True, null=True)
     mbti_type = models.ForeignKey(MBTIType, on_delete=models.SET_NULL, null=True)
     budget_limit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
+    location = models.ForeignKey('Location', on_delete=models.SET_NULL, null=True)
     
     def __str__(self):
         return self.user.username
@@ -183,16 +192,3 @@ class Review(models.Model):
     rating = models.IntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
-# Konum
-class Location(models.Model):
-    city = models.CharField(max_length=100)
-    country = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.city}, {self.country}"
-
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    # ... diğer alanlar ...
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
