@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Profile
 from .services import generate_match_score
 from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 def calculate_match_api(request, user1_id, user2_id):
     """İki kullanıcının eşleşme skorunu hesaplayıp JSON olarak döndüren API uç noktası."""
