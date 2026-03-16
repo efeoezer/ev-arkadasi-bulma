@@ -192,3 +192,9 @@ class Review(models.Model):
     rating = models.IntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+# 19. sabıka kaydı sorgulama.
+class CriminalRecord(models.Model):
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    criminalrecord = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    
