@@ -1,14 +1,8 @@
 from django.contrib import admin
-from django.urls import path
-from core import views
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/match/<int:user1_id>/<int:user2_id>/', views.calculate_match_api, name='api_match'),
-    
-    # Kimlik Doğrulama Uç Noktaları
-    path('api/register/', views.register_api),
-    path('api/login/', views.login_api),
-    path('api/logout/', views.logout_api),
-    path('', views.index_view, name='index'),
+    # Gelen tüm istekleri doğrudan core uygulamasının urls.py dosyasına yönlendirir
+    path('', include('core.urls')), 
 ]
