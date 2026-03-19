@@ -81,4 +81,5 @@ def logout_api(request):
 def index_view(request):
     """Ana sayfa arayüzünü yükler."""
     return render(request, 'core/index.html')
-
+def dashboard(request):
+    return render(request, 'core/dashboard.html')
