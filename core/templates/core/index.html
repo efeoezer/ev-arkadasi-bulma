@@ -36,6 +36,15 @@
             const emailAddr = document.getElementById('email').value;
             const msg = document.getElementById('response-message');
             
+            if (type === 'register') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(emailAddr)) {
+                    msg.innerText = "Lütfen geçerli bir e-posta adresi girin! (Örn: isim@mail.com)";
+                    msg.style.color = '#e74c3c';
+                    return; // Hatalıysa işlemi durdur, sunucuya gönderme
+                }
+            }
+            
             const endpoint = type === 'login' ? '/api/login/' : '/api/register/';
             
             try {
