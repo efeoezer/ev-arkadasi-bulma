@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TypeMatch | Kontrol Paneli{% endblock %}</title>
+    <style>
+        /* Sitenin Genel ve Modern Teması */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; }
+        
+        /* Üst Menü (Navbar) */
+        .navbar { background-color: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .navbar .logo { font-size: 1.5em; font-weight: bold; letter-spacing: 1px; color: #3498db; text-decoration: none; }
+        .navbar .nav-links a { color: white; text-decoration: none; margin-left: 20px; font-size: 0.95em; transition: color 0.3s; }
+        .navbar .nav-links a:hover { color: #3498db; }
+        
+        /* Ana İçerik Konteyneri */
+        .main-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="logo">TypeMatch</a>
+        <div class="nav-links">
+            <a href="#">Keşfet</a>
+            <a href="#">Mesajlar</a>
+            <a href="#">Profilim</a>
+            <a href="#">Çıkış Yap</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</body>
+</html>
