@@ -35,6 +35,10 @@
             const pass = document.getElementById('password').value;
             const emailAddr = document.getElementById('email').value;
             const msg = document.getElementById('response-message');
+
+            // Her tıklamada eski mesajı temizle ve rengi sıfırla
+            msg.innerText = "";
+            msg.style.color = '#e74c3c';
             
             if (type === 'register') {
                 // 1. Kullanıcı Adı Standardı
@@ -72,7 +76,10 @@
                 });
                 const data = await response.json();
                 msg.innerText = data.message;
-                if(data.status === 'success') msg.style.color = '#27ae60';
+                
+                if(data.status === 'success') { 
+                    msg.style.color = '#27ae60';
+                    
                 // Eğer kullanıcı giriş yapıyorsa 1 saniye sonra panele yönlendir
                     if (type === 'login') {
                         setTimeout(() => {
