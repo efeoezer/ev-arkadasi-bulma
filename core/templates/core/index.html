@@ -37,6 +37,23 @@
             const msg = document.getElementById('response-message');
             
             if (type === 'register') {
+                // 1. Kullanıcı Adı Standardı
+                const userRegex = /^[a-zA-Z0-9_]{3,20}$/;
+                if (!userRegex.test(user)) {
+                    msg.innerText = "Kullanıcı adı 3-20 karakter olmalı; boşluk veya özel karakter içermemelidir.";
+                    msg.style.color = '#e74c3c';
+                    return; 
+                }
+                
+                // 2. Şifre Standardı (En az 8 karakter, 1 harf, 1 rakam)
+                const passRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+                if (!passRegex.test(pass)) {
+                    msg.innerText = "Şifre en az 8 karakter olmalı, en az bir harf ve bir rakam içermelidir.";
+                    msg.style.color = '#e74c3c';
+                    return; 
+                }
+                
+                // 3. E-posta Standardı
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(emailAddr)) {
                     msg.innerText = "Lütfen geçerli bir e-posta adresi girin! (Örn: isim@mail.com)";
