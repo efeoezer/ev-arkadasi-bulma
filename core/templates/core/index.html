@@ -73,6 +73,13 @@
                 const data = await response.json();
                 msg.innerText = data.message;
                 if(data.status === 'success') msg.style.color = '#27ae60';
+                // Eğer kullanıcı giriş yapıyorsa 1 saniye sonra panele yönlendir
+                    if (type === 'login') {
+                        setTimeout(() => {
+                            window.location.href = '/dashboard/';
+                        }, 1000); 
+                    }
+                }
             } catch (error) {
                 msg.innerText = "Sunucu bağlantı hatası!";
             }
