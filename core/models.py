@@ -55,6 +55,11 @@ class Match(models.Model):
 
     def __str__(self):
         return f"{self.user_1.username} & {self.user_2.username} - Skor: {self.algorithm_score}"
+    
+    class Meta:
+        unique_together = ('user_1', 'user_2')
+
+
 
 #6. Ev tercihleri
 class HousingPreference(models.Model):
