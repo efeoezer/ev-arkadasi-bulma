@@ -17,4 +17,7 @@ urlpatterns = [
     path('api/logout/', views.logout_api, name='api_logout'),
 
     path('api/save_mbti/', views.save_mbti_api, name='api_save_mbti'),
+    
+    # MBTI Test Sayfası
+    path('test/mbti/', views.mbti_test_view, name='mbti_test'),
 ]
