@@ -83,6 +83,7 @@ def index_view(request):
     return render(request, 'core/index.html')
 def dashboard(request):
     return render(request, 'core/dashboard.html')
+    
 @login_required 
 def save_mbti_api(request):
     if request.method == 'POST':
@@ -102,3 +103,6 @@ def save_mbti_api(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
             
     return JsonResponse({'status': 'error', 'message': 'Geçersiz metod.'}, status=405)
+def mbti_test_view(request):
+    # Kullanıcı testi çözmek istediğinde bu sayfayı göstereceğiz
+    return render(request, 'core/mbti_test.html')
