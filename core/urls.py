@@ -15,4 +15,6 @@ urlpatterns = [
     path('api/register/', views.register_api, name='api_register'),
     path('api/login/', views.login_api, name='api_login'),
     path('api/logout/', views.logout_api, name='api_logout'),
+
+    path('api/save_mbti/', views.save_mbti_api, name='api_save_mbti'),
 ]
