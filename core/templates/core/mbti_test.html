@@ -4,36 +4,52 @@
 
 {% block content %}
 <style>
-    /* Modern Kart ve Arka Plan */
+    /* Genel Kart Tasarımı */
     .test-wrapper { min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .glass-card { background: rgba(255, 255, 255, 0.95); max-width: 600px; width: 100%; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; position: relative; overflow: hidden; }
+    .glass-card { background: rgba(255, 255, 255, 0.98); max-width: 700px; width: 100%; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; }
     
     /* İlerleme Çubuğu */
-    .progress-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+    .progress-container { display: flex; align-items: center; margin-bottom: 40px; }
     .progress-bar { flex-grow: 1; background-color: #f1f2f6; border-radius: 10px; height: 8px; margin-right: 15px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #3498db, #2ecc71); width: 0%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-    .progress-text { font-size: 0.85em; color: #7f8c8d; font-weight: bold; white-space: nowrap; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #3498db, #2ecc71); width: 0%; transition: width 0.4s ease; }
+    .progress-text { font-size: 0.9em; color: #7f8c8d; font-weight: bold; }
 
-    /* Soru Alanı ve Butonlar */
-    .question-box { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
+    /* Soru Alanı */
+    .question-box { display: none; opacity: 0; transition: opacity 0.4s ease; }
     .question-box.active { display: block; opacity: 1; }
-    .question-text { color: #2c3e50; font-size: 1.3em; margin-bottom: 30px; font-weight: 600; line-height: 1.4; }
+    .question-text { color: #2c3e50; font-size: 1.4em; margin-bottom: 40px; font-weight: 600; line-height: 1.5; }
     
-    .btn-option { display: block; width: 100%; padding: 18px 20px; margin: 12px 0; border: 2px solid #ecf0f1; border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; font-size: 1.05em; color: #34495e; text-align: left; position: relative; overflow: hidden; }
-    .btn-option:hover { border-color: #3498db; background: #f8fbff; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(52, 152, 219, 0.1); }
+    /* Spektrum (Katılıyorum / Katılmıyorum) Arayüzü */
+    .spectrum-container { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
+    .spectrum-label { font-size: 1em; font-weight: bold; width: 25%; }
+    .spectrum-label.disagree { color: #e74c3c; text-align: right; }
+    .spectrum-label.agree { color: #2ecc71; text-align: left; }
     
-    /* Tıklanma Efekti Sınıfı */
-    .btn-option.selected { border-color: #2ecc71; background: #eafaf1; color: #27ae60; transform: scale(0.98); }
+    .spectrum-circles { display: flex; justify-content: center; align-items: center; gap: 20px; flex-grow: 1; }
+    .circle-btn { border-radius: 50%; border: 3px solid; cursor: pointer; background: transparent; transition: all 0.2s; outline: none; }
+    .circle-btn:hover { transform: scale(1.1); }
+    
+    /* Çember Boyutları ve Renkleri */
+    .circle-btn.big { width: 55px; height: 55px; }
+    .circle-btn.med { width: 40px; height: 40px; }
+    .circle-btn.small { width: 30px; height: 30px; border-width: 2px; }
+    
+    .circle-btn.disagree-color { border-color: #e74c3c; }
+    .circle-btn.disagree-color.selected { background: #e74c3c; box-shadow: 0 0 15px rgba(231, 76, 60, 0.4); }
+    
+    .circle-btn.neutral-color { border-color: #95a5a6; }
+    .circle-btn.neutral-color.selected { background: #95a5a6; }
+    
+    .circle-btn.agree-color { border-color: #2ecc71; }
+    .circle-btn.agree-color.selected { background: #2ecc71; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); }
 
-    /* Yükleme Ekranı (Spinner) */
+    /* Yükleme ve Sonuç Ekranı */
     .loader-box { display: none; padding: 40px 0; }
     .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* Sonuç Ekranı */
-    #result-box { display: none; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    .mbti-badge { display: inline-block; font-size: 2.5em; font-weight: 800; color: white; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); padding: 15px 30px; border-radius: 15px; margin: 20px 0; letter-spacing: 2px; box-shadow: 0 10px 20px rgba(37, 117, 252, 0.3); }
-    @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+    
+    #result-box { display: none; }
+    .mbti-badge { display: inline-block; font-size: 3em; font-weight: 800; color: white; background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); padding: 15px 40px; border-radius: 20px; margin: 20px 0; box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3); }
 </style>
 
 <div class="test-wrapper">
@@ -42,7 +58,7 @@
         <div id="quiz-header">
             <div class="progress-container">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-                <div class="progress-text" id="progress-text">1 / 4</div>
+                <div class="progress-text" id="progress-text">1 / 12</div>
             </div>
         </div>
 
@@ -51,29 +67,48 @@
 
         <div id="loading-area" class="loader-box">
             <div class="spinner"></div>
-            <h3 style="color: #2c3e50;">Kişilik Profilin Analiz Ediliyor...</h3>
-            <p style="color: #7f8c8d; font-size: 0.9em; margin-top: 10px;">Algoritmalarımız cevaplarını eşleştiriyor</p>
+            <h3 style="color: #2c3e50;">Algoritma Hesaplanıyor...</h3>
+            <p style="color: #7f8c8d; font-size: 0.9em; margin-top: 10px;">Cevapların spektrum üzerinden analiz ediliyor</p>
         </div>
 
         <div id="result-box">
-            <h2 style="color: #2c3e50;">Senin Tipin</h2>
+            <h2 style="color: #2c3e50;">Kişilik Tipin</h2>
             <div class="mbti-badge" id="mbti-result"></div>
-            <p id="save-status" style="margin-top: 10px; font-weight: 500;"></p>
-            <button onclick="window.location.href='/dashboard/'" style="margin-top: 25px; width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: bold; transition: background 0.3s;">Eşleşmeleri Gör</button>
+            <p id="save-status" style="margin-top: 10px; font-weight: 500; font-size: 1.1em;"></p>
+            <button onclick="window.location.href='/dashboard/'" style="margin-top: 25px; width: 100%; padding: 15px; background: #2ecc71; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Tamamla ve Panele Dön</button>
         </div>
 
     </div>
 </div>
 
 <script>
+    // Puanlama Motoru
     const scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
     let currentQuestionIndex = 0;
 
+    // 12 Soruluk Spektrum Havuzu
+    // "plus": Katılıyorum denirse artacak olan özellik
+    // "minus": Katılmıyorum denirse artacak olan özellik
     const questions = [
-        { q: "Yeni bir ortama girdiğinizde genellikle hangisini yaparsınız?", a1: { text: "👋 İnsanlarla tanışmaya ve sohbet etmeye hevesliyimdir.", type: "E" }, a2: { text: "👁️ Kenarda durup önce ortamı gözlemlemeyi tercih ederim.", type: "I" } },
-        { q: "Önemli bir karar verirken daha çok neye güvenirsiniz?", a1: { text: "📊 Somut gerçeklere, verilere ve geçmiş tecrübelere.", type: "S" }, a2: { text: "✨ İçgüdülerime, hayal gücüme ve gelecekteki olasılıklara.", type: "N" } },
-        { q: "Bir tartışma esnasında sizin için hangisi daha kritik bir öneme sahiptir?", a1: { text: "⚖️ Ne pahasına olursa olsun gerçeğin ve mantığın kazanması.", type: "T" }, a2: { text: "🤝 Karşımdaki insanların duygularının incinmemesi ve uyum.", type: "F" } },
-        { q: "Günlük yaşamınızı ve sorumluluklarınızı nasıl organize edersiniz?", a1: { text: "📅 Planlı, programlı ve listelere sadık kalarak.", type: "J" }, a2: { text: "🌊 Esnek, spontane ve o anki duruma göre akışına bırakarak.", type: "P" } }
+        // E / I Ekseni
+        { text: "Kalabalık sosyal ortamlarda bulunmak ve yeni insanlarla tanışmak bana enerji verir.", plus: "E", minus: "I" },
+        { text: "Boş zamanlarımı dışarıda kalabalık etkinliklerde geçirmektense, evde sakin geçirmeyi tercih ederim.", plus: "I", minus: "E" },
+        { text: "Düşüncelerimi kendi içimde tartmak yerine, sesli bir şekilde tartışarak ve anlatarak geliştiririm.", plus: "E", minus: "I" },
+        
+        // S / N Ekseni
+        { text: "Karar verirken içgüdülerimden ziyade somut gerçeklere, verilere ve geçmiş tecrübelere güvenirim.", plus: "S", minus: "N" },
+        { text: "Felsefi tartışmalar, teoriler ve henüz gerçekleşmemiş gelecek senaryoları üzerine düşünmekten keyif alırım.", plus: "N", minus: "S" },
+        { text: "Detaylara takılmaktansa her zaman 'büyük resmi' görmeye ve işin arkasındaki anlama odaklanırım.", plus: "N", minus: "S" },
+        
+        // T / F Ekseni
+        { text: "Mantığın ve objektif doğruların, insanların duygularından ve hassasiyetlerinden daha önemli olduğuna inanırım.", plus: "T", minus: "F" },
+        { text: "Bir arkadaşım sorun yaşadığında, ona çözüm önermekten çok duygusal destek vermeyi ve onu dinlemeyi tercih ederim.", plus: "F", minus: "T" },
+        { text: "Kararlarımın, çevremdeki insanların uyumunu ve huzurunu bozmamasına büyük özen gösteririm.", plus: "F", minus: "T" },
+        
+        // J / P Ekseni
+        { text: "Günlük hayatımı, yapacaklarımı ve tatillerimi önceden detaylıca organize etmeyi severim.", plus: "J", minus: "P" },
+        { text: "Programlara katı bir şekilde bağlı kalmaktansa, esnek olmayı ve olayları o anki akışına bırakmayı tercih ederim.", plus: "P", minus: "J" },
+        { text: "İşlerimi veya sorumluluklarımı genellikle son teslim tarihinden çok önce bitirip rahatlarım.", plus: "J", minus: "P" }
     ];
 
     function loadQuestion() {
@@ -84,60 +119,80 @@
 
         const qData = questions[currentQuestionIndex];
         
-        // Progress Bar
+        // İlerleme Çubuğu Hesaplaması
         const progressPercentage = (currentQuestionIndex / questions.length) * 100;
         document.getElementById('progress-fill').style.width = progressPercentage + '%';
         document.getElementById('progress-text').innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
         
+        // Spektrum Arayüzünü Çizdirme
         const html = `
             <div class="question-box active" id="q-box">
-                <div class="question-text">${qData.q}</div>
-                <button class="btn-option" onclick="handleAnswer(this, '${qData.a1.type}')">${qData.a1.text}</button>
-                <button class="btn-option" onclick="handleAnswer(this, '${qData.a2.type}')">${qData.a2.text}</button>
+                <div class="question-text">${qData.text}</div>
+                <div class="spectrum-container">
+                    <div class="spectrum-label disagree">Katılmıyorum</div>
+                    <div class="spectrum-circles">
+                        <button class="circle-btn big disagree-color" onclick="handleAnswer(this, -2)"></button>
+                        <button class="circle-btn med disagree-color" onclick="handleAnswer(this, -1)"></button>
+                        <button class="circle-btn small neutral-color" onclick="handleAnswer(this, 0)"></button>
+                        <button class="circle-btn med agree-color" onclick="handleAnswer(this, 1)"></button>
+                        <button class="circle-btn big agree-color" onclick="handleAnswer(this, 2)"></button>
+                    </div>
+                    <div class="spectrum-label agree">Katılıyorum</div>
+                </div>
             </div>
         `;
         document.getElementById('quiz-area').innerHTML = html;
     }
 
-    // Seçim yapıldığında çalışan yeni, şık animasyon fonksiyonu
-    function handleAnswer(buttonElement, type) {
-        // Çift tıklamayı önlemek için butonları pasif yap
-        const allButtons = document.querySelectorAll('.btn-option');
+    // Seçim Yapıldığında Puanı Hesaplayan Matematiksel Algoritma
+    function handleAnswer(buttonElement, point) {
+        // Tıklamaları geçici olarak kilitle (hızlı çift tıklamayı önler)
+        const allButtons = document.querySelectorAll('.circle-btn');
         allButtons.forEach(btn => btn.style.pointerEvents = 'none');
 
-        // Tıklanan butonu yeşil yap
+        // Tıklanan butonu renklendir
         buttonElement.classList.add('selected');
-        scores[type]++;
+
+        const qData = questions[currentQuestionIndex];
+        
+        // Seçim Katılıyorum (Sağ taraf) ise
+        if (point > 0) {
+            scores[qData.plus] += point;
+        } 
+        // Seçim Katılmıyorum (Sol taraf) ise
+        else if (point < 0) {
+            scores[qData.minus] += Math.abs(point);
+        }
+        // Sıfır ise nötrdür, puan eklenmez.
+
         currentQuestionIndex++;
 
-        // 400 milisaniye bekle (gerçekçilik efekti), sonra yeni soruyu yükle
+        // Yumuşak geçiş efekti
         setTimeout(() => {
             const qBox = document.getElementById('q-box');
-            qBox.style.opacity = '0'; // Eski soruyu yavaşça sil
+            qBox.style.opacity = '0'; 
             
             setTimeout(() => {
                 loadQuestion();
-            }, 300); // 300ms sonra yenisini getir
+            }, 300); 
         }, 400);
     }
 
-    // Test bitince devreye giren analiz simülasyonu
     function startAnalysis() {
         document.getElementById('quiz-header').style.display = 'none';
         document.getElementById('quiz-area').style.display = 'none';
         
-        // Yükleme ekranını göster
         const loader = document.getElementById('loading-area');
         loader.style.display = 'block';
 
-        // 1.5 Saniye sonra sonucu göster ve veritabanına kaydet
         setTimeout(() => {
             loader.style.display = 'none';
             finishTest();
-        }, 1500);
+        }, 2000); // 2 saniyelik gerçekçi analiz hissi
     }
 
     async function finishTest() {
+        // Hangi puan daha yüksekse o harfi seç (Eşitlikte varsayılan harf atanır)
         const finalMBTI = 
             (scores.E >= scores.I ? "E" : "I") + 
             (scores.S >= scores.N ? "S" : "N") + 
@@ -149,6 +204,8 @@
 
         const csrfToken = getCookie('csrftoken'); 
         const statusMsg = document.getElementById('save-status');
+        
+        statusMsg.innerText = "Veritabanına işleniyor...";
 
         try {
             const response = await fetch('/api/save_mbti/', {
@@ -158,7 +215,7 @@
             });
             const data = await response.json();
             if(data.status === 'success') {
-                statusMsg.innerText = "Kişilik profilin başarıyla algoritmalara eklendi!";
+                statusMsg.innerText = "🎉 Profilin tamamen güncellendi!";
                 statusMsg.style.color = "#27ae60";
             }
         } catch (error) {
@@ -182,6 +239,7 @@
         return cookieValue;
     }
 
+    // Sistemi Başlat
     loadQuestion();
 </script>
 {% endblock %}
