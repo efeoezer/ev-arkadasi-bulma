@@ -1,12 +1,12 @@
 import json
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from .models import Profile
 from .services import generate_match_score
-from django.shortcuts import render
-from django.shortcuts import render, get_object_or_404
 
 def calculate_match_api(request, user1_id, user2_id):
     """İki kullanıcının eşleşme skorunu hesaplayıp JSON olarak döndüren API uç noktası."""
@@ -83,3 +83,22 @@ def index_view(request):
     return render(request, 'core/index.html')
 def dashboard(request):
     return render(request, 'core/dashboard.html')
+@login_required 
+def save_mbti_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            final_mbti = data.get('mbti')
+            
+            if not final_mbti:
+                return JsonResponse({'status': 'error', 'message': 'Veri eksik!'}, status=400)
+
+            profile, created = Profile.objects.get_or_create(user=request.user)
+            profile.mbti_type = final_mbti
+            profile.save()
+
+            return JsonResponse({'status': 'success', 'message': f'Kişilik tipin {final_mbti} olarak kaydedildi!'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            
+    return JsonResponse({'status': 'error', 'message': 'Geçersiz metod.'}, status=405)
