@@ -1,89 +1,143 @@
 {% extends 'core/base.html' %}
 
-{% block title %}TypeMatch | Kişilik Testi{% endblock %}
+{% block title %}TypeMatch | Kişilik Analizi{% endblock %}
 
 {% block content %}
 <style>
-    .test-container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
-    .question-box { display: none; animation: fadeIn 0.5s; }
-    .question-box.active { display: block; }
-    .btn-option { display: block; width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #ecf0f1; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; font-size: 1.05em; color: #2c3e50; }
-    .btn-option:hover { border-color: #3498db; background: #f0f8ff; transform: translateY(-2px); }
-    #result-box { display: none; margin-top: 20px; animation: fadeIn 0.8s; }
-    .progress-bar { width: 100%; background-color: #ecf0f1; border-radius: 5px; margin-bottom: 25px; overflow: hidden; height: 10px; }
-    .progress-fill { height: 100%; background-color: #3498db; width: 0%; transition: width 0.4s ease; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    /* Modern Kart ve Arka Plan */
+    .test-wrapper { min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); max-width: 600px; width: 100%; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; position: relative; overflow: hidden; }
+    
+    /* İlerleme Çubuğu */
+    .progress-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+    .progress-bar { flex-grow: 1; background-color: #f1f2f6; border-radius: 10px; height: 8px; margin-right: 15px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #3498db, #2ecc71); width: 0%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    .progress-text { font-size: 0.85em; color: #7f8c8d; font-weight: bold; white-space: nowrap; }
+
+    /* Soru Alanı ve Butonlar */
+    .question-box { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
+    .question-box.active { display: block; opacity: 1; }
+    .question-text { color: #2c3e50; font-size: 1.3em; margin-bottom: 30px; font-weight: 600; line-height: 1.4; }
+    
+    .btn-option { display: block; width: 100%; padding: 18px 20px; margin: 12px 0; border: 2px solid #ecf0f1; border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; font-size: 1.05em; color: #34495e; text-align: left; position: relative; overflow: hidden; }
+    .btn-option:hover { border-color: #3498db; background: #f8fbff; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(52, 152, 219, 0.1); }
+    
+    /* Tıklanma Efekti Sınıfı */
+    .btn-option.selected { border-color: #2ecc71; background: #eafaf1; color: #27ae60; transform: scale(0.98); }
+
+    /* Yükleme Ekranı (Spinner) */
+    .loader-box { display: none; padding: 40px 0; }
+    .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Sonuç Ekranı */
+    #result-box { display: none; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .mbti-badge { display: inline-block; font-size: 2.5em; font-weight: 800; color: white; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); padding: 15px 30px; border-radius: 15px; margin: 20px 0; letter-spacing: 2px; box-shadow: 0 10px 20px rgba(37, 117, 252, 0.3); }
+    @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
 </style>
 
-<div class="test-container">
-    <h2 style="color: #2c3e50; margin-bottom: 10px;">MBTI Kişilik Testi</h2>
-    
-    <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill"></div>
-    </div>
-    <div id="progress-text" style="color: #7f8c8d; margin-bottom: 20px; font-size: 0.9em;">Soru 1 / 4</div>
-
-    <div id="quiz-area">
+<div class="test-wrapper">
+    <div class="glass-card">
+        
+        <div id="quiz-header">
+            <div class="progress-container">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                <div class="progress-text" id="progress-text">1 / 4</div>
+            </div>
         </div>
 
-    <div id="result-box">
-        <h3 style="color: #2c3e50;">Kişilik Tipin: <span id="mbti-result" style="color: #3498db; font-size: 1.5em; display: block; margin-top: 10px;"></span></h3>
-        <p id="save-status" style="margin-top: 15px; font-weight: bold;"></p>
-        <button onclick="window.location.href='/dashboard/'" style="margin-top: 20px; padding: 12px 25px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; transition: background 0.3s;">Kontrol Paneline Dön</button>
+        <div id="quiz-area">
+            </div>
+
+        <div id="loading-area" class="loader-box">
+            <div class="spinner"></div>
+            <h3 style="color: #2c3e50;">Kişilik Profilin Analiz Ediliyor...</h3>
+            <p style="color: #7f8c8d; font-size: 0.9em; margin-top: 10px;">Algoritmalarımız cevaplarını eşleştiriyor</p>
+        </div>
+
+        <div id="result-box">
+            <h2 style="color: #2c3e50;">Senin Tipin</h2>
+            <div class="mbti-badge" id="mbti-result"></div>
+            <p id="save-status" style="margin-top: 10px; font-weight: 500;"></p>
+            <button onclick="window.location.href='/dashboard/'" style="margin-top: 25px; width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: bold; transition: background 0.3s;">Eşleşmeleri Gör</button>
+        </div>
+
     </div>
 </div>
 
 <script>
-    // 1. Puan Tablosu
     const scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
     let currentQuestionIndex = 0;
 
-    // 2. Soru Havuzu (İleride buraya daha fazla soru eklenebilir)
     const questions = [
-        { q: "Yeni bir ortama girdiğinizde genellikle:", a1: { text: "İnsanlarla tanışmaya ve sohbet etmeye hevesliyimdir.", type: "E" }, a2: { text: "Daha çok kenarda durup ortamı gözlemlemeyi tercih ederim.", type: "I" } },
-        { q: "Karar verirken daha çok neye güvenirsiniz?", a1: { text: "Somut gerçeklere, verilere ve geçmiş tecrübelere.", type: "S" }, a2: { text: "İçgüdülerime, hayal gücüme ve gelecekteki olasılıklara.", type: "N" } },
-        { q: "Bir tartışmada hangisi daha önemlidir?", a1: { text: "Ne pahasına olursa olsun gerçeğin ve mantığın ortaya çıkması.", type: "T" }, a2: { text: "Karşımdaki insanların duygularının incinmemesi ve uyum.", type: "F" } },
-        { q: "Günlük yaşamınızı nasıl organize edersiniz?", a1: { text: "Planlı, programlı ve listeler yaparak.", type: "J" }, a2: { text: "Esnek, spontane ve akışına bırakarak.", type: "P" } }
+        { q: "Yeni bir ortama girdiğinizde genellikle hangisini yaparsınız?", a1: { text: "👋 İnsanlarla tanışmaya ve sohbet etmeye hevesliyimdir.", type: "E" }, a2: { text: "👁️ Kenarda durup önce ortamı gözlemlemeyi tercih ederim.", type: "I" } },
+        { q: "Önemli bir karar verirken daha çok neye güvenirsiniz?", a1: { text: "📊 Somut gerçeklere, verilere ve geçmiş tecrübelere.", type: "S" }, a2: { text: "✨ İçgüdülerime, hayal gücüme ve gelecekteki olasılıklara.", type: "N" } },
+        { q: "Bir tartışma esnasında sizin için hangisi daha kritik bir öneme sahiptir?", a1: { text: "⚖️ Ne pahasına olursa olsun gerçeğin ve mantığın kazanması.", type: "T" }, a2: { text: "🤝 Karşımdaki insanların duygularının incinmemesi ve uyum.", type: "F" } },
+        { q: "Günlük yaşamınızı ve sorumluluklarınızı nasıl organize edersiniz?", a1: { text: "📅 Planlı, programlı ve listelere sadık kalarak.", type: "J" }, a2: { text: "🌊 Esnek, spontane ve o anki duruma göre akışına bırakarak.", type: "P" } }
     ];
 
-    // 3. Soruyu Ekrana Basan Fonksiyon
     function loadQuestion() {
         if (currentQuestionIndex >= questions.length) {
-            finishTest();
+            startAnalysis();
             return;
         }
 
         const qData = questions[currentQuestionIndex];
         
-        // İlerleme Çubuğunu Güncelle
+        // Progress Bar
         const progressPercentage = (currentQuestionIndex / questions.length) * 100;
         document.getElementById('progress-fill').style.width = progressPercentage + '%';
-        document.getElementById('progress-text').innerText = `Soru ${currentQuestionIndex + 1} / ${questions.length}`;
+        document.getElementById('progress-text').innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
         
         const html = `
-            <div class="question-box active">
-                <h3 style="margin-bottom: 25px; color: #34495e; font-size: 1.2em; line-height: 1.4;">${qData.q}</h3>
-                <button class="btn-option" onclick="answer('${qData.a1.type}')">${qData.a1.text}</button>
-                <button class="btn-option" onclick="answer('${qData.a2.type}')">${qData.a2.text}</button>
+            <div class="question-box active" id="q-box">
+                <div class="question-text">${qData.q}</div>
+                <button class="btn-option" onclick="handleAnswer(this, '${qData.a1.type}')">${qData.a1.text}</button>
+                <button class="btn-option" onclick="handleAnswer(this, '${qData.a2.type}')">${qData.a2.text}</button>
             </div>
         `;
         document.getElementById('quiz-area').innerHTML = html;
     }
 
-    // 4. Cevap Tıklandığında Puanı Artıran Fonksiyon
-    function answer(type) {
+    // Seçim yapıldığında çalışan yeni, şık animasyon fonksiyonu
+    function handleAnswer(buttonElement, type) {
+        // Çift tıklamayı önlemek için butonları pasif yap
+        const allButtons = document.querySelectorAll('.btn-option');
+        allButtons.forEach(btn => btn.style.pointerEvents = 'none');
+
+        // Tıklanan butonu yeşil yap
+        buttonElement.classList.add('selected');
         scores[type]++;
         currentQuestionIndex++;
-        loadQuestion();
+
+        // 400 milisaniye bekle (gerçekçilik efekti), sonra yeni soruyu yükle
+        setTimeout(() => {
+            const qBox = document.getElementById('q-box');
+            qBox.style.opacity = '0'; // Eski soruyu yavaşça sil
+            
+            setTimeout(() => {
+                loadQuestion();
+            }, 300); // 300ms sonra yenisini getir
+        }, 400);
     }
 
-    // 5. Testi Bitiren ve Django'ya Veri Gönderen Fonksiyon
-    async function finishTest() {
+    // Test bitince devreye giren analiz simülasyonu
+    function startAnalysis() {
+        document.getElementById('quiz-header').style.display = 'none';
         document.getElementById('quiz-area').style.display = 'none';
-        document.getElementById('progress-text').style.display = 'none';
-        document.getElementById('progress-fill').style.width = '100%';
         
-        // Kim kazandı? (Beraberlikte ilk harfi varsayılan atar)
+        // Yükleme ekranını göster
+        const loader = document.getElementById('loading-area');
+        loader.style.display = 'block';
+
+        // 1.5 Saniye sonra sonucu göster ve veritabanına kaydet
+        setTimeout(() => {
+            loader.style.display = 'none';
+            finishTest();
+        }, 1500);
+    }
+
+    async function finishTest() {
         const finalMBTI = 
             (scores.E >= scores.I ? "E" : "I") + 
             (scores.S >= scores.N ? "S" : "N") + 
@@ -93,38 +147,26 @@
         document.getElementById('result-box').style.display = 'block';
         document.getElementById('mbti-result').innerText = finalMBTI;
 
-        // Django'ya (Backend) Kayıt İşlemi
         const csrfToken = getCookie('csrftoken'); 
         const statusMsg = document.getElementById('save-status');
-        
-        statusMsg.innerText = "Sonuç kaydediliyor...";
-        statusMsg.style.color = "#f39c12";
 
         try {
             const response = await fetch('/api/save_mbti/', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken // Django güvenliği için şart
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
                 body: JSON.stringify({ mbti: finalMBTI })
             });
             const data = await response.json();
-            
             if(data.status === 'success') {
-                statusMsg.innerText = "🎉 " + data.message;
+                statusMsg.innerText = "Kişilik profilin başarıyla algoritmalara eklendi!";
                 statusMsg.style.color = "#27ae60";
-            } else {
-                statusMsg.innerText = "Hata: " + data.message;
-                statusMsg.style.color = "#e74c3c";
             }
         } catch (error) {
-            statusMsg.innerText = "Sunucuya bağlanılamadı!";
+            statusMsg.innerText = "Kayıt sırasında bir bağlantı sorunu oluştu.";
             statusMsg.style.color = "#e74c3c";
         }
     }
 
-    // Güvenlik (CSRF Token) Okuyucu
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -140,7 +182,6 @@
         return cookieValue;
     }
 
-    // Sistemi Başlat
     loadQuestion();
 </script>
 {% endblock %}
