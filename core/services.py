@@ -15,6 +15,24 @@ def calculate_cosine_similarity(vec1, vec2):
         
     return dot_product / (norm_a * norm_b)
 
+def mbti_to_vector(mbti_str):
+    """
+    Kategorik MBTI verisini 4 boyutlu sürekli bir vektöre kodlar.
+    Ağırlıklar, nötr durumu temsil eden 0 değeri etrafında +1 ve -1 olarak dağıtılmıştır.
+    """
+    if not mbti_str or len(mbti_str) != 4:
+        return [0, 0, 0, 0]
+        
+    mbti_str = mbti_str.upper()
+    vector = []
+    
+    vector.append(1 if mbti_str[0] == 'E' else -1 if mbti_str[0] == 'I' else 0)
+    vector.append(1 if mbti_str[1] == 'S' else -1 if mbti_str[1] == 'N' else 0)
+    vector.append(1 if mbti_str[2] == 'T' else -1 if mbti_str[2] == 'F' else 0)
+    vector.append(1 if mbti_str[3] == 'J' else -1 if mbti_str[3] == 'P' else 0)
+    
+    return vector
+
 def generate_match_score(user1_profile, user2_profile):
     """İki kullanıcının yaşam tarzı ağırlıklarını vektör uzayına çekip skoru hesaplar."""
     
