@@ -9,25 +9,17 @@ class Location(models.Model):
     def __str__(self):
         return f"{self.city}, {self.country}"
 
-
-# 1. REFERANS TABLOSU: MBTI Tipleri
-class MBTIType(models.Model):
-    type_code = models.CharField(max_length=4, unique=True)
-    description = models.TextField()
-
-    def __str__(self):
-        return self.type_code
-
 # 2. PROFİL TABLOSU: Kullanıcıların detaylı verileri
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(blank=True, null=True)
-    mbti_type = models.ForeignKey(MBTIType, on_delete=models.SET_NULL, null=True)
+    mbti_type = models.CharField(max_length=4, blank=True, null=True)
     budget_limit = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     location = models.ForeignKey('Location', on_delete=models.SET_NULL, null=True)
     
     def __str__(self):
-        return self.user.username
+        # Eğer kullanıcının MBTI'ı varsa onu, yoksa 'Belirsiz' yazdır
+        return f"{self.user.username} - {self.mbti_type if self.mbti_type else 'Belirsiz'}"
 
 # 3. YAŞAM TARZI ETİKETLERİ: Temizlik, sigara, evcil hayvan vb.
 class LifestyleTag(models.Model):
