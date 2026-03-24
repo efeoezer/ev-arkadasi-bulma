@@ -20,4 +20,7 @@ urlpatterns = [
     
     # MBTI Test Sayfası
     path('test/mbti/', views.mbti_test_view, name='mbti_test'),
+
+    # Eşleşme Skoru Test API'si
+    path('api/match/<int:user1_id>/<int:user2_id>/', views.calculate_match_api, name='api_match'),
 ]
