@@ -1,5 +1,5 @@
 import json
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
@@ -139,3 +139,7 @@ def profile_view(request):
         'chart_data': chart_data
     }
     return render(request, 'core/profile.html', context)
+def logout_view(request):
+    """Kullanıcının oturumunu sonlandırır ve giriş/ana sayfaya yönlendirir."""
+    logout(request)
+    return redirect('/') # Çıkış yapınca ana dizine yönlendir
