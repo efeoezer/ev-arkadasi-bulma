@@ -23,4 +23,7 @@ urlpatterns = [
 
     # Eşleşme Skoru Test API'si
     path('api/match/<int:user1_id>/<int:user2_id>/', views.calculate_match_api, name='api_match'),
+
+    # Profil Sayfası (Chart.js Grafiği İçerir)
+    path('profile/', views.profile_view, name='profile'),
 ]
