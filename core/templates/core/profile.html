@@ -1,0 +1,114 @@
+{% extends 'core/base.html' %}
+
+{% block title %}TypeMatch | Profil Analizi{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .profile-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 30px;
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+    .profile-card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        text-align: center;
+    }
+    .chart-container {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .mbti-badge {
+        display: inline-block;
+        background: #2c3e50;
+        color: white;
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-top: 15px;
+    }
+</style>
+
+<div class="profile-container">
+    <div class="profile-card">
+        <div style="width: 150px; height: 150px; border-radius: 50%; background: #bdc3c7; margin: 0 auto 20px auto;"></div>
+        <h2 style="color: #2c3e50; margin-bottom: 5px;">{{ profile.user.username }}</h2>
+        <p style="color: #7f8c8d;">Sistem Kayıtlı Profil</p>
+        
+        <div class="mbti-badge">
+            {{ profile.mbti_type|default:"Test Çözülmedi" }}
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="mbtiRadarChart" width="400" height="400"></canvas>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('mbtiRadarChart').getContext('2d');
+        
+        // Django Backend'den gelen statik verinin JSON formatında JavaScript'e aktarılması
+        const rawData = {{ chart_data|safe }};
+        
+        const data = {
+            labels: [
+                'Dışadönüklük (E)',
+                'Duyusallık (S)',
+                'Mantıksallık (T)',
+                'Planlılık (J)'
+            ],
+            datasets: [{
+                label: 'Bilişsel Fonksiyon Spektrumu',
+                data: rawData,
+                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
+            }]
+        };
+
+        const config = {
+            type: 'radar',
+            data: data,
+            options: {
+                elements: {
+                    line: { borderWidth: 3 }
+                },
+                scales: {
+                    r: {
+                        angleLines: { display: true },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        };
+
+        // Grafiği oluştur
+        new Chart(ctx, config);
+    });
+</script>
+{% endblock %}
