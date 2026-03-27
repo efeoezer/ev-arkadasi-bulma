@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import Profile
+from .models import Profile, Like
 from .services import generate_match_score
 from .forms import UserUpdateForm, ProfileUpdateForm
 
@@ -172,7 +172,7 @@ def dashboard_view(request):
     # 2. Son Aktiviteleri Çekme
     # Son 3 eşleşme veya beğeni (Like) bilgisini alıyoruz
     recent_activities = []
-    likes = Like.objects.filter(to_user=request.user).order_ some('-created_at')[:3]
+    likes = Like.objects.filter(to_user=request.user).order_by('-created_at')[:3]
     for like in likes:
         recent_activities.append(f"👀 {like.from_user.username} profilini beğendi!")
     
