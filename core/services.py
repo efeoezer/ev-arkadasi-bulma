@@ -1,5 +1,5 @@
 import math
-from .models import Profile, UserLifestyle, Match
+from .models import Profile, Match
 
 def calculate_cosine_similarity(vec1, vec2):
     """İki vektör (liste) arasındaki kosinüs benzerliğini hesaplar."""
