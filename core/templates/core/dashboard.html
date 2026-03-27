@@ -58,22 +58,24 @@
 
     <div class="side-panel">
         <div class="info-card">
-            <h3>Profil Durumu</h3>
-            <p style="font-size: 0.9em; color: #666;">Algoritmanın senin için en iyi ev arkadaşını bulabilmesi için profilini tamamla.</p>
-            <div style="background: #ecf0f1; border-radius: 5px; height: 10px; margin-top: 15px; overflow: hidden;">
-                <div style="background: #2ecc71; width: 30%; height: 100%;"></div>
-            </div>
-            <p style="text-align: right; font-size: 0.8em; margin-top: 5px; color: #2ecc71; font-weight: bold;">%30 Tamamlandı</p>
-        </div>
+    <h3>Profil Durumu</h3>
+    <p style="font-size: 0.9em; color: #666;">Algoritmanın senin için en iyi ev arkadaşını bulabilmesi için profilini tamamla.</p>
+    <div style="background: #ecf0f1; border-radius: 5px; height: 10px; margin-top: 15px; overflow: hidden;">
+        <div style="background: #2ecc71; width: {{ completion_percentage }}%; height: 100%; transition: width 0.5s;"></div>
+    </div>
+    <p style="text-align: right; font-size: 0.8em; margin-top: 5px; color: #2ecc71; font-weight: bold;">%{{ completion_percentage }} Tamamlandı</p>
+</div>
 
-        <div class="info-card">
-            <h3>Son Aktiviteler</h3>
-            <ul style="list-style: none; font-size: 0.9em; color: #666; line-height: 1.8;">
-                <li>🔔 Yeni bir eşleşmen var!</li>
-                <li>👀 3 kişi profilini inceledi.</li>
-                <li>⚙️ MBTI testini çözmedin.</li>
-            </ul>
-        </div>
+<div class="info-card">
+    <h3>Son Aktiviteler</h3>
+    <ul style="list-style: none; font-size: 0.9em; color: #666; line-height: 1.8; padding: 0;">
+        {% for activity in recent_activities %}
+            <li>{{ activity }}</li>
+        {% empty %}
+            <li>Henüz yeni bir aktivite yok.</li>
+        {% endfor %}
+    </ul>
+</div>
     </div>
 
 </div>
