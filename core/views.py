@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from .models import Profile
 from .services import generate_match_score
+from .forms import UserUpdateForm, ProfileUpdateForm
 
 def calculate_match_api(request, user1_id, user2_id):
     """İki kullanıcının eşleşme skorunu hesaplayıp JSON olarak döndüren API uç noktası."""
@@ -116,27 +117,40 @@ def mbti_test_view(request):
     # Kullanıcı testi çözmek istediğinde bu sayfayı göstereceğiz
     return render(request, 'core/mbti_test.html')
 def profile_view(request):
-    """Kullanıcının profil verilerini ve Chart.js için gerekli MBTI dağılımını döndürür."""
+    """Kullanıcının profil verilerini, güncelleme formunu ve MBTI grafiğini döndürür."""
     profile = get_object_or_404(Profile, user=request.user)
     
-    # Mevcut veritabanında MBTI spektrum yüzdeleri tutulmadığı için, 
-    # görselleştirme kütüphanesinin (Chart.js) çalışabilmesi adına 
-    # kategorik veriden (örn: 'INTJ') sayısal bir simülasyon dizisi oluşturulur.
+    # Form Gönderildiyse (POST işlemi) verileri kaydet
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, instance=profile)
+        
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            return redirect('profile') # Başarıyla güncellenince sayfayı yenile
+    else:
+        # Form henüz gönderilmediyse mevcut verilerle dolu olarak getir
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=profile)
+
+    # --- Grafik (Chart.js) Veri Algoritması ---
     mbti_type = profile.mbti_type if profile.mbti_type else "Bilinmiyor"
     
-    # E/I, S/N, T/F, J/P eksenleri için standartlaştırılmış veri seti (0-100 ölçeği)
     chart_data = []
     if len(mbti_type) == 4:
-        chart_data.append(85 if mbti_type[0] == 'E' else 15) # E/I Ekseni
-        chart_data.append(85 if mbti_type[1] == 'S' else 15) # S/N Ekseni
-        chart_data.append(85 if mbti_type[2] == 'T' else 15) # T/F Ekseni
-        chart_data.append(85 if mbti_type[3] == 'J' else 15) # J/P Ekseni
+        chart_data.append(85 if mbti_type[0] == 'E' else 15)
+        chart_data.append(85 if mbti_type[1] == 'S' else 15)
+        chart_data.append(85 if mbti_type[2] == 'T' else 15)
+        chart_data.append(85 if mbti_type[3] == 'J' else 15)
     else:
         chart_data = [0, 0, 0, 0]
 
     context = {
         'profile': profile,
-        'chart_data': chart_data
+        'chart_data': chart_data,
+        'u_form': u_form,   # Formu HTML'e gönderiyoruz
+        'p_form': p_form    # Formu HTML'e gönderiyoruz
     }
     return render(request, 'core/profile.html', context)
 def logout_view(request):
