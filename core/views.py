@@ -157,3 +157,31 @@ def logout_view(request):
     """Kullanıcının oturumunu sonlandırır ve giriş/ana sayfaya yönlendirir."""
     logout(request)
     return redirect('/') # Çıkış yapınca ana dizine yönlendir
+def dashboard_view(request):
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    
+    # 1. Profil Tamamlama Yüzdesi Hesaplama (Algoritma)
+    # Hangi alanlar doluysa puan ekliyoruz
+    score = 0
+    if profile.bio: score += 25
+    if profile.city: score += 25
+    if profile.mbti_type: score += 25
+    # Bir de fotoğrafı varsa (UserPhoto tablosuna bakıyoruz)
+    if profile.userphoto_set.exists(): score += 25
+    
+    # 2. Son Aktiviteleri Çekme
+    # Son 3 eşleşme veya beğeni (Like) bilgisini alıyoruz
+    recent_activities = []
+    likes = Like.objects.filter(to_user=request.user).order_ some('-created_at')[:3]
+    for like in likes:
+        recent_activities.append(f"👀 {like.from_user.username} profilini beğendi!")
+    
+    if not profile.mbti_type:
+        recent_activities.append("⚙️ MBTI testini henüz çözmedin.")
+    
+    context = {
+        'profile': profile,
+        'completion_percentage': score,
+        'recent_activities': recent_activities,
+    }
+    return render(request, 'core/dashboard.html', context)
