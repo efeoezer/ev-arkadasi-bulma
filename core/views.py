@@ -115,3 +115,27 @@ def save_mbti_api(request):
 def mbti_test_view(request):
     # Kullanıcı testi çözmek istediğinde bu sayfayı göstereceğiz
     return render(request, 'core/mbti_test.html')
+def profile_view(request):
+    """Kullanıcının profil verilerini ve Chart.js için gerekli MBTI dağılımını döndürür."""
+    profile = get_object_or_404(Profile, user=request.user)
+    
+    # Mevcut veritabanında MBTI spektrum yüzdeleri tutulmadığı için, 
+    # görselleştirme kütüphanesinin (Chart.js) çalışabilmesi adına 
+    # kategorik veriden (örn: 'INTJ') sayısal bir simülasyon dizisi oluşturulur.
+    mbti_type = profile.mbti_type if profile.mbti_type else "Bilinmiyor"
+    
+    # E/I, S/N, T/F, J/P eksenleri için standartlaştırılmış veri seti (0-100 ölçeği)
+    chart_data = []
+    if len(mbti_type) == 4:
+        chart_data.append(85 if mbti_type[0] == 'E' else 15) # E/I Ekseni
+        chart_data.append(85 if mbti_type[1] == 'S' else 15) # S/N Ekseni
+        chart_data.append(85 if mbti_type[2] == 'T' else 15) # T/F Ekseni
+        chart_data.append(85 if mbti_type[3] == 'J' else 15) # J/P Ekseni
+    else:
+        chart_data = [0, 0, 0, 0]
+
+    context = {
+        'profile': profile,
+        'chart_data': chart_data
+    }
+    return render(request, 'core/profile.html', context)
