@@ -118,7 +118,7 @@ def mbti_test_view(request):
     return render(request, 'core/mbti_test.html')
 def profile_view(request):
     """Kullanıcının profil verilerini, güncelleme formunu ve MBTI grafiğini döndürür."""
-    profile = get_object_or_404(Profile, user=request.user)
+    profile, created = Profile.objects.get_or_create(user=request.user)
     
     # Form Gönderildiyse (POST işlemi) verileri kaydet
     if request.method == 'POST':
