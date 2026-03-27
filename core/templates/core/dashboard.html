@@ -3,32 +3,60 @@
 {% block title %}TypeMatch | Keşfet{% endblock %}
 
 {% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+
 <style>
     /* Ana Ekranın Grid (Izgara) Yapısı */
     .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
     
-    /* İleride Tinder mantığı kaydırmanın geleceği yer */
-    .swipe-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; min-height: 500px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    /* Kaydırma Alanı Dış Çerçevesi */
+    .swipe-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; min-height: 500px; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
     
     /* Yan taraftaki profesyonel paneller */
     .side-panel { display: flex; flex-direction: column; gap: 20px; }
     .info-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     .info-card h3 { color: #2c3e50; margin-bottom: 15px; font-size: 1.1em; border-bottom: 2px solid #f4f7f6; padding-bottom: 5px; }
+
+    /* Yeni: Dinamik Kart Yığını Stilleri */
+    .card-stack { width: 300px; height: 400px; position: relative; margin-top: 20px; }
+    
+    .swipe-card { position: absolute; width: 100%; height: 100%; background-color: #ffffff; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; user-select: none; will-change: transform; transition: transform 0.3s ease-out; border: 1px solid #ecf0f1; }
+    
+    .swipe-card.dragging { transition: none; }
+    
+    .profile-img { width: 120px; height: 120px; border-radius: 50%; background-color: #ecf0f1; margin-bottom: 20px; border: 3px solid #3498db; }
+    
+    .match-score { font-size: 2.2em; font-weight: bold; color: #2ecc71; margin-top: 10px; }
 </style>
 
 <div class="dashboard-grid">
     
     <div class="swipe-section">
         <h2 style="color: #bdc3c7; margin-bottom: 10px;">Günün Adayları</h2>
-        <p style="color: #7f8c8d; font-size: 0.9em;">(Sağa/Sola kaydırma mekanizması buraya inşa edilecek)</p>
         
-        <div style="width: 300px; height: 350px; background: #ecf0f1; border-radius: 10px; margin-top: 20px; border: 2px dashed #bdc3c7;">
-            <div style="padding-top: 150px; color: #95a5a6;">Aday Kartı</div>
+        <div class="card-stack" id="card-stack">
+            <div class="swipe-card">
+                <div class="profile-img"></div>
+                <h2>Örnek Profil 1</h2>
+                <p>INTJ - İstanbul</p>
+                <div class="match-score">%85</div>
+            </div>
+            <div class="swipe-card">
+                <div class="profile-img"></div>
+                <h2>Örnek Profil 2</h2>
+                <p>ENFP - Ankara</p>
+                <div class="match-score">%72</div>
+            </div>
+            <div class="swipe-card">
+                <div class="profile-img"></div>
+                <h2>Örnek Profil 3</h2>
+                <p>ISTP - İzmir</p>
+                <div class="match-score">%40</div>
+            </div>
         </div>
     </div>
 
     <div class="side-panel">
-        
         <div class="info-card">
             <h3>Profil Durumu</h3>
             <p style="font-size: 0.9em; color: #666;">Algoritmanın senin için en iyi ev arkadaşını bulabilmesi için profilini tamamla.</p>
@@ -46,7 +74,63 @@
                 <li>⚙️ MBTI testini çözmedin.</li>
             </ul>
         </div>
-
     </div>
+
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stack = document.getElementById('card-stack');
+        let cards = Array.from(stack.querySelectorAll('.swipe-card')).reverse();
+
+        function initCards() {
+            cards.forEach((card, index) => {
+                // Derinlik algoritması: Her arka kart Z ekseninde küçülür ve aşağı kayar
+                card.style.zIndex = cards.length - index;
+                card.style.transform = `scale(${(20 - index) / 20}) translateY(-${50 * index}px)`;
+                card.style.opacity = (10 - index) / 10;
+            });
+            
+            if (cards.length > 0) {
+                initHammer(cards[0]);
+            }
+        }
+
+        function initHammer(card) {
+            const hammer = new Hammer(card);
+            hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+
+            hammer.on('pan', function(event) {
+                card.classList.add('dragging');
+                const rotate = event.deltaX * 0.05;
+                card.style.transform = `translate(${event.deltaX}px, ${event.deltaY}px) rotate(${rotate}deg)`;
+            });
+
+            hammer.on('panend', function(event) {
+                card.classList.remove('dragging');
+                
+                // Red/Kabul eşik değeri (Genişliğin %25'i)
+                const threshold = window.innerWidth * 0.25; 
+                const isSwipedRight = event.deltaX > threshold;
+                const isSwipedLeft = event.deltaX < -threshold;
+
+                if (isSwipedRight || isSwipedLeft) {
+                    const direction = isSwipedRight ? 1 : -1;
+                    card.style.transform = `translate(${direction * window.innerWidth}px, ${event.deltaY}px) rotate(${direction * 30}deg)`;
+                    
+                    setTimeout(() => {
+                        card.remove();
+                        cards.shift(); 
+                        initCards(); 
+                        console.log(isSwipedRight ? 'Right Swipe (Positive)' : 'Left Swipe (Negative)');
+                    }, 300); 
+                } else {
+                    card.style.transform = ''; 
+                }
+            });
+        }
+
+        initCards();
+    });
+</script>
 {% endblock %}
