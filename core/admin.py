@@ -1,8 +1,12 @@
 from django.contrib import admin
-from .models import Profile, LifestyleTag, UserLifestyle, Match
+from .models import Location, Profile, RoommatePreference, Verification, Match, Like, Message, Review, UserPhoto
 
-# Veritabanı tablolarının arayüze entegre edilmesi
+admin.site.register(Location)
 admin.site.register(Profile)
-admin.site.register(LifestyleTag)
-admin.site.register(UserLifestyle)
+admin.site.register(RoommatePreference)
+admin.site.register(Verification)
 admin.site.register(Match)
+admin.site.register(Like)
+admin.site.register(Message)
+admin.site.register(Review)
+admin.site.register(UserPhoto)
