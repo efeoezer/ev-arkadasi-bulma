@@ -24,9 +24,10 @@
     <a href="{% url 'dashboard' %}" style="text-decoration: none; color: #2c3e50; font-weight: bold; font-size: 1em;">Keşfet</a>
     <a href="{% url 'profile' %}" style="text-decoration: none; color: #2c3e50; font-weight: bold; font-size: 1em;">Profilim</a>
     
-    <form action="{% url 'logout' %}" method="post" style="margin: 0; padding: 0; display: flex; align-items: center;">
+    <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" style="text-decoration: none; color: #e74c3c; font-weight: bold; font-size: 1em;">Çıkış Yap</a>
+    
+    <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
         {% csrf_token %}
-        <button type="submit" style="background: none; border: none; color: #e74c3c; font-weight: bold; cursor: pointer; font-size: 1em; padding: 0; margin: 0; font-family: inherit;">Çıkış Yap</button>
     </form>
 </nav>
     <div class="main-container">
