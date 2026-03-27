@@ -51,6 +51,35 @@
         <div class="mbti-badge">
             {{ profile.mbti_type|default:"Test Çözülmedi" }}
         </div>
+        <div style="margin-top: 30px; text-align: left; background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #eee;">
+            <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 15px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px;">Bilgileri Güncelle</h3>
+            
+            <form method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+                {% csrf_token %}
+                
+                <div>
+                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Kullanıcı Adı</label>
+                    <input type="text" name="username" value="{{ u_form.username.value|default:'' }}" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;">
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">E-Posta</label>
+                    <input type="email" name="email" value="{{ u_form.email.value|default:'' }}" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;">
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Şehir / Konum</label>
+                    <input type="text" name="city" value="{{ p_form.city.value|default:'' }}" placeholder="Örn: İstanbul" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;">
+                </div>
+
+                <div>
+                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Biyografi</label>
+                    <textarea name="bio" rows="3" placeholder="Kendinden biraz bahset..." style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em; resize: none;">{{ p_form.bio.value|default:'' }}</textarea>
+                </div>
+
+                <button type="submit" style="background: #3498db; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px;">Kaydet ve Güncelle</button>
+            </form>
+        </div>
     </div>
 
     <div class="chart-container">
