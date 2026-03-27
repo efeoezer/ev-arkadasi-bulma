@@ -26,4 +26,7 @@ urlpatterns = [
 
     # Profil Sayfası (Chart.js Grafiği İçerir)
     path('profile/', views.profile_view, name='profile'),
+
+    # Çıkış Yapma Rotası
+    path('logout/', views.logout_view, name='logout'),
 ]
