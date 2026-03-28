@@ -116,3 +116,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# --- MEDYA DOSYALARI AYARLARI (Kullanıcı Yüklemeleri) ---
+# Yüklenen dosyaların diskte tutulacağı klasör
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Bu dosyalara tarayıcıdan erişmek için kullanılacak URL öneki
+MEDIA_URL = '/media/'
