@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Profile
+from .models import Profile, UserPhoto
 
 # 1. Kullanıcı (User) tablosundaki temel bilgileri güncellemek için
 class UserUpdateForm(forms.ModelForm):
@@ -13,3 +13,11 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['bio', 'city'] # Kullanıcının kendisini tanıtacağı alanlar
+
+class PhotoUpdateForm(forms.ModelForm):
+    class Meta:
+        model = UserPhoto
+        fields = ['image'] # Sadece resim alanını gösteriyoruz
+        labels = {
+            'image': 'Profil Fotoğrafı Seç'
+        }
