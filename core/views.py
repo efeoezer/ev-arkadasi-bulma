@@ -5,9 +5,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import Profile, Like
+from .models import Profile, Like, UserPhoto
 from .services import generate_match_score
-from .forms import UserUpdateForm, ProfileUpdateForm
+from .forms import UserUpdateForm, ProfileUpdateForm, PhotoUpdateForm
 
 def calculate_match_api(request, user1_id, user2_id):
     """İki kullanıcının eşleşme skorunu hesaplayıp JSON olarak döndüren API uç noktası."""
@@ -120,19 +120,30 @@ def profile_view(request):
     """Kullanıcının profil verilerini, güncelleme formunu ve MBTI grafiğini döndürür."""
     profile, created = Profile.objects.get_or_create(user=request.user)
     
+    # Kullanıcının mevcut fotoğrafını çek (Varsa)
+    current_photo = profile.userphoto_set.first()
+    
     # Form Gönderildiyse (POST işlemi) verileri kaydet
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, instance=profile)
+        ph_form = PhotoUpdateForm(request.POST, request.FILES, instance=current_photo)
         
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
-            return redirect('profile') # Başarıyla güncellenince sayfayı yenile
+
+            if request.FILES.get('image'):
+                new_photo = ph_form.save(commit=False)
+                new_photo.profile = profile
+                new_photo.save()
+                
+            return redirect('profile')
     else:
         # Form henüz gönderilmediyse mevcut verilerle dolu olarak getir
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=profile)
+        ph_form = PhotoUpdateForm(instance=current_photo)
 
     # --- Grafik (Chart.js) Veri Algoritması ---
     mbti_type = profile.mbti_type if profile.mbti_type else "Bilinmiyor"
@@ -148,9 +159,11 @@ def profile_view(request):
 
     context = {
         'profile': profile,
+        'current_photo': current_photo,
         'chart_data': chart_data,
-        'u_form': u_form,   # Formu HTML'e gönderiyoruz
-        'p_form': p_form    # Formu HTML'e gönderiyoruz
+        'u_form': u_form,
+        'p_form': p_form,
+        'ph_form': ph_form
     }
     return render(request, 'core/profile.html', context)
 def logout_view(request):
