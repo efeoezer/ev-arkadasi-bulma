@@ -44,7 +44,13 @@
 
 <div class="profile-container">
     <div class="profile-card">
-        <div style="width: 150px; height: 150px; border-radius: 50%; background: #bdc3c7; margin: 0 auto 20px auto;"></div>
+        <div style="width: 150px; height: 150px; border-radius: 50%; background: #bdc3c7; margin: 0 auto 20px auto; overflow: hidden; border: 3px solid #eee;">
+                {% if current_photo %}
+                    <img src="{{ current_photo.image.url }}" alt="Profil Fotoğrafı" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <div style="padding-top: 60px; color: white; font-weight: bold;">Foto Yok</div>
+                {% endif %}
+            </div>
         <h2 style="color: #2c3e50; margin-bottom: 5px;">{{ profile.user.username }}</h2>
         <p style="color: #7f8c8d;">Sistem Kayıtlı Profil</p>
         
@@ -62,8 +68,16 @@
         <div style="margin-top: 30px; text-align: left; background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #eee;">
             <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 15px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px;">Bilgileri Güncelle</h3>
             
-            <form method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+            <form method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
                 {% csrf_token %}
+
+                <div style="background: white; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 5px;">Profil Fotoğrafı Değiştir</label>
+                    {{ ph_form.image }}
+                    {% if ph_form.image.errors %}
+                        <p style="color: #e74c3c; font-size: 0.8em; margin-top: 5px;">{{ ph_form.image.errors.0 }}</p>
+                    {% endif %}
+                </div>
                 
                 <div>
                     <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Kullanıcı Adı</label>
