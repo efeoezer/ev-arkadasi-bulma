@@ -1,16 +1,26 @@
-# TypeMatch: Algoritmik Psikometrik Eşleşme Motoru
+# TypeMatch: MBTI Tabanlı Akıllı Ev Arkadaşı Eşleşme Platformu
 
-Bu proje, MAT132 - Bilgisayar Programlama 2 dersi kapsamında geliştirilmiş, veri odaklı bir karar destek ve eşleşme platformudur. Geleneksel eşleşme sistemlerinin aksine TypeMatch, kullanıcıların yaşam tarzı tercihlerini matematiksel vektörler olarak modeller ve **Kosinüs Benzerliği (Cosine Similarity)** algoritması kullanarak en yüksek yönsel uyuma sahip ev arkadaşlarını bulur.
+TypeMatch, kullanıcıların psikolojik profillerini (MBTI) analiz ederek, ev ortamında en yüksek uyumu yakalayabilecekleri ev arkadaşlarını matematiksel bir algoritma ile bulan yeni nesil bir eşleşme platformudur.
 
-## Mimari ve Teknolojik Altyapı
-Proje, sıkı bağlı (tightly coupled) mimariler yerine **Django MVT (Model-View-Template)** mimarisi kullanılarak geliştirilmiştir. Backend ve veri katmanı tamamen izole çalışır ve dış dünyaya RESTful standartlarında JSON formatında yanıt üretir.
+##  Projenin Amacı
+Sıradan ilan sitelerinin aksine TypeMatch, "Kim nerede yaşıyor?" sorusundan ziyade **"Kim kiminle uyumlu yaşayabilir?"** sorusuna odaklanır. Kullanıcıların yaşam tarzları, enerji yönleri, bilgi işleme ve karar verme mekanizmaları analiz edilerek, potansiyel çatışmalar daha ev arkadaşlığı başlamadan önlenir.
 
-- **Backend Framework:** Python / Django
-- **Algoritma Motoru:** Lineer Cebir Tabanlı Kosinüs Benzerliği (Cosine Similarity)
-- **Veritabanı:** SQLite / PostgreSQL (3NF Normalizasyon standartlarında, ORM tabanlı)
-- **Veri Yapıları:** Set Teorisi ve Çok Boyutlu Vektör Uzayları
+##  Temel Özellikler (V1.0)
+- **MBTI Kişilik Analizi:** Sisteme entegre 12 soruluk test ile kullanıcıların psikolojik profillerinin çıkarılması.
+- **Dinamik Veri Görselleştirme:** Chart.js kullanılarak 4 eksenli (E/I, S/N, T/F, J/P) Radar Grafiği ile kişisel analizin sunulması.
+- **Akıllı Eşleşme Algoritması:** Adaylar arası "Kosinüs Benzerliği" ve yüzde tabanlı eşleşme motoru.
+- **Swipe Arayüzü:** Hammer.js ile desteklenen, mobil uyumlu ve sezgisel "Kaydırma" mekanizması.
+- **Otomatik Aday Havuzu:** RandomUser API kullanılarak tek tıkla sisteme gerçekçi bot/aday ekleme sistemi.
+- **Güvenli Kimlik Doğrulama:** Django Authentication tabanlı oturum yönetimi ve parçalı veritabanı mimarisi (User & Profile ayrımı).
 
-## Kurulum ve Çalıştırma (Mac / Linux Ortamı)
+## Kullanılan Teknolojiler
+- **Backend:** Python 3.14, Django 6.0.3
+- **Frontend:** HTML5, CSS3 (CSS Grid/Flexbox), JavaScript
+- **Kütüphaneler:** Chart.js (Grafikler), Hammer.js (Swipe efektleri)
+- **Veritabanı:** SQLite (Geliştirme Ortamı)
+- **Dış Servisler:** RandomUser API (Aday Üretimi)
+
+## Kurulum ve Çalıştırma
 
 Projeyi kendi bilgisayarınızda izole bir ortamda çalıştırmak için aşağıdaki adımları sırasıyla terminalinizde uygulayın:
 
@@ -33,12 +43,17 @@ venv\Scripts\activate
 ```
 **3. Gerekli Kütüphaneleri Yükleyin:**
 ```bash
-pip install django
+pip install -r requirements.txt
 ```
 **4. Veritabanı Tablolarını İnşa Edin (Migration):**
 ```bash
 python manage.py makemigrations
 python manage.py migrate
+```
+**5. Yönetici (Superuser) Hesabı Oluşturun:
+(Bot üretme butonunu görebilmek için gereklidir)**
+```bash
+python manage.py createsuperuser
 ```
 **5. Yerel Geliştirme Sunucusunu Başlatın:**
 ```bash
