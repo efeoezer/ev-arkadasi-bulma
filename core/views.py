@@ -9,7 +9,7 @@ from .models import Profile, Like, UserPhoto
 from .services import generate_match_score, generate_bot_users
 from .forms import UserUpdateForm, ProfileUpdateForm, PhotoUpdateForm
 
-# 16 MBTI Tipinin Standart Açıklamaları (Tarafsız ve Nesnel)
+# 16 MBTI Tipinin Standart Açıklamaları
 MBTI_DESCRIPTIONS = {
     'INTJ': 'Stratejik ve analitik düşünürler. Her şey için mantıksal bir planları ve sistemleri vardır.',
     'INTP': 'Yenilikçi mucitler, bilginin ve teorilerin ardındaki temel mantığı ararlar.',
@@ -227,7 +227,7 @@ def dashboard_view(request):
         'candidates': candidates
     }
     return render(request, 'core/dashboard.html', context)
-    def generate_bots_view(request):
+def generate_bots_view(request):
     if request.user.is_superuser:
-        generate_bot_users(10)
+        generate_bot_users(10) 
     return redirect('dashboard')
