@@ -33,4 +33,6 @@ urlpatterns = [
     path('generate-bots/', views.generate_bots_view, name='generate_bots'),
 
     path('profile/delete-photo/', views.delete_photo_view, name='delete_photo'),
+
+    path('profile/delete-account/', views.delete_account_view, name='delete_account'),
 ]
