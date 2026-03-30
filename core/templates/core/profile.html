@@ -96,6 +96,14 @@
                     {% if ph_form.image.errors %}
                         <p style="color: #e74c3c; font-size: 0.8em; margin-top: 5px;">{{ ph_form.image.errors.0 }}</p>
                     {% endif %}
+
+                    {% if current_photo %}
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #eee;">
+                        <a href="{% url 'delete_photo' %}" style="color: #e74c3c; font-size: 0.85em; text-decoration: none; font-weight: bold; display: inline-block;">
+                            🗑️ Mevcut Fotoğrafı Kaldır
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
                 
                 <div>
