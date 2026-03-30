@@ -30,32 +30,42 @@
 </style>
 
 <div class="dashboard-grid">
-    
     <div class="swipe-section">
+        {% if request.user.is_superuser %}
+        <div style="margin-bottom: 20px; background: #fff3e0; padding: 15px; border-radius: 8px; border: 1px dashed #e67e22; width: 100%; max-width: 350px;">
+            <h4 style="color: #d35400; margin-bottom: 10px;">🛠️ Admin Kontrol Paneli</h4>
+            <a href="{% url 'generate_bots' %}" style="background: #e67e22; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block;">
+                🤖 10 Yeni Aday Üret (API)
+            </a>
+            <p style="font-size: 0.8em; color: #d35400; margin-top: 5px;">Tıkladıktan sonra resimler inene kadar birkaç saniye bekleyin.</p>
+        </div>
+        {% endif %}
+
         <h2 style="color: #bdc3c7; margin-bottom: 10px;">Günün Adayları</h2>
         
         <div class="card-stack" id="card-stack">
+            {% for candidate in candidates %}
             <div class="swipe-card">
-                <div class="profile-img"></div>
-                <h2>Örnek Profil 1</h2>
-                <p>INTJ - İstanbul</p>
-                <div class="match-score">%85</div>
+                <div class="profile-img" style="overflow: hidden;">
+                    {% if candidate.userphoto_set.first %}
+                        <img src="{{ candidate.userphoto_set.first.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #ecf0f1; color: #95a5a6; font-size: 0.8em;">Foto Yok</div>
+                    {% endif %}
+                </div>
+                <h2 style="margin-bottom: 5px;">{{ candidate.user.first_name }}</h2>
+                <p style="color: #7f8c8d; margin-top: 0;">{{ candidate.mbti_type|default:"Bilinmiyor" }} - {{ candidate.city|default:"Konum Yok" }}</p>
+                
+                <div class="match-score">?</div>
             </div>
-            <div class="swipe-card">
-                <div class="profile-img"></div>
-                <h2>Örnek Profil 2</h2>
-                <p>ENFP - Ankara</p>
-                <div class="match-score">%72</div>
+            {% empty %}
+            <div style="text-align: center; color: #7f8c8d; padding: 20px; font-weight: bold;">
+                Şu an eşleşebileceğin aday kalmadı. <br>
+                Admin panelinden yeni adaylar üretebilirsin.
             </div>
-            <div class="swipe-card">
-                <div class="profile-img"></div>
-                <h2>Örnek Profil 3</h2>
-                <p>ISTP - İzmir</p>
-                <div class="match-score">%40</div>
-            </div>
+            {% endfor %}
         </div>
     </div>
-
     <div class="side-panel">
         <div class="info-card">
     <h3>Profil Durumu</h3>
