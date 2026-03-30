@@ -1,0 +1,20 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 50px auto; padding: 30px; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
+    <h2 style="color: #e74c3c;">⚠️ Hesabını Silmek Üzeresin</h2>
+    <p style="color: #7f8c8d; line-height: 1.6;">
+        Bu işlem geri alınamaz. Profilin, fotoğrafların ve tüm eşleşmelerin sistemden kalıcı olarak silinecektir.
+    </p>
+    
+    <form method="POST" style="margin-top: 25px;">
+        {% csrf_token %}
+        <button type="submit" style="background: #e74c3c; color: white; padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
+            Evet, Hesabımı Kalıcı Olarak Sil
+        </button>
+        <a href="{% url 'profile' %}" style="display: block; margin-top: 15px; color: #3498db; text-decoration: none; font-size: 0.9em;">
+            Vazgeç, Profile Dön
+        </a>
+    </form>
+</div>
+{% endblock %}
