@@ -31,4 +31,6 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
 
     path('generate-bots/', views.generate_bots_view, name='generate_bots'),
+
+    path('profile/delete-photo/', views.delete_photo_view, name='delete_photo'),
 ]
