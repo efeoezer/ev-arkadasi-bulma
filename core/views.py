@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from .models import Profile, Like, UserPhoto
-from .services import generate_match_score
+from .services import generate_match_score, generate_bot_users
 from .forms import UserUpdateForm, ProfileUpdateForm, PhotoUpdateForm
 
 # 16 MBTI Tipinin Standart Açıklamaları (Tarafsız ve Nesnel)
@@ -224,3 +224,7 @@ def dashboard_view(request):
         'recent_activities': recent_activities,
     }
     return render(request, 'core/dashboard.html', context)
+    def generate_bots_view(request):
+    if request.user.is_superuser:
+        generate_bot_users(10)
+    return redirect('dashboard')
