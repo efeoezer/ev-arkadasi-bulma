@@ -219,6 +219,9 @@ def dashboard(request):
         
     candidates = Profile.objects.exclude(user=request.user).order_by('-id')[:6]
 
+    for candidate in candidates:
+        candidate.match_score = generate_match_score(profile, candidate)
+
     # --- RÖNTGEN KODLARI BAŞLANGIÇ ---
     print("=== SİSTEM RÖNTGENİ ===")
     print(f"1. Veritabanındaki Toplam Kullanıcı (User): {User.objects.count()}")
