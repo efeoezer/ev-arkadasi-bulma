@@ -228,6 +228,17 @@ def dashboard_view(request):
     }
     return render(request, 'core/dashboard.html', context)
 def generate_bots_view(request):
+    print("--- 1. BOT ÜRETME BUTONUNA BASILDI ---")
+    
     if request.user.is_superuser:
-        generate_bot_users(10) 
+        print("--- 2. KULLANICI ADMİN. FONKSİYON BAŞLIYOR ---")
+        try:
+            # Hızlı test için şimdilik 10 yerine 3 kişi üretelim
+            generate_bot_users(3) 
+            print("--- 3. İŞLEM BAŞARIYLA TAMAMLANDI! ---")
+        except Exception as e:
+            print(f"--- KRİTİK HATA: {e} ---")
+    else:
+        print("--- HATA: Kullanıcı yetkili değil (Superuser değil) ---")
+        
     return redirect('dashboard')
