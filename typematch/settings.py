@@ -123,3 +123,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Bu dosyalara tarayıcıdan erişmek için kullanılacak URL öneki
 MEDIA_URL = '/media/'
+
+# Geliştirme aşamasında e-postaları terminale yazdırır
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
