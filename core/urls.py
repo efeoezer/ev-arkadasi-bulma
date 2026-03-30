@@ -29,4 +29,6 @@ urlpatterns = [
 
     # Çıkış Yapma Rotası
     path('logout/', views.logout_view, name='logout'),
+
+    path('generate-bots/', views.generate_bots_view, name='generate_bots'),
 ]
