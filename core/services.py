@@ -81,7 +81,7 @@ MBTI_TYPES = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP',
 def generate_bot_users(count=10):
     # RandomUser API'sinden 'count' kadar kişi çekiyoruz
     url = f"https://randomuser.me/api/?results={count}"
-    response = requests.get(url)
+    response = requests.get(url, verify=False)
     data = response.json()
     
     for item in data['results']:
@@ -119,7 +119,7 @@ def generate_bot_users(count=10):
         Verification.objects.get_or_create(user=user)
         
         # 4. Profil Fotoğrafını İnternetten İndir ve Kaydet
-        img_response = requests.get(picture_url)
+        img_response = requests.get(picture_url, verify=False)
         if img_response.status_code == 200:
             photo = UserPhoto(profile=profile)
             # Django'nun ContentFile özelliği ile görseli diske yazıyoruz
