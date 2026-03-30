@@ -56,7 +56,7 @@
                 <h2 style="margin-bottom: 5px;">{{ candidate.user.first_name }}</h2>
                 <p style="color: #7f8c8d; margin-top: 0;">{{ candidate.mbti_type|default:"Bilinmiyor" }} - {{ candidate.city|default:"Konum Yok" }}</p>
                 
-                <div class="match-score">?</div>
+                <div class="match-score">%{{ candidate.match_score }}</div>
             </div>
             {% empty %}
             <div style="text-align: center; color: #7f8c8d; padding: 20px; font-weight: bold;">
