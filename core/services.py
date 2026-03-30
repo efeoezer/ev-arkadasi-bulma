@@ -79,10 +79,11 @@ MBTI_TYPES = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP',
               'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP']
 
 def generate_bot_users(count=10):
-    # RandomUser API'sinden 'count' kadar kişi çekiyoruz
+    print(f"RandomUser API'sine bağlanılıyor... İstenen kişi sayısı: {count}")
     url = f"https://randomuser.me/api/?results={count}"
     response = requests.get(url, verify=False)
     data = response.json()
+    print("API'den veri başarıyla çekildi. Veritabanına yazılıyor...")
     
     for item in data['results']:
         first_name = item['name']['first']
