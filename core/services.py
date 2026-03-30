@@ -1,5 +1,10 @@
+import requests
+import random
 import math
-from .models import Profile, Match
+import random
+from django.core.files.base import ContentFile
+from django.contrib.auth.models import User
+from .models import Profile, Match, RoommatePreference, Verification, UserPhoto
 
 def calculate_cosine_similarity(vec1, vec2):
     """İki vektör (liste) arasındaki kosinüs benzerliğini hesaplar."""
@@ -68,3 +73,56 @@ def generate_match_score(user1_profile, user2_profile):
     )
     
     return final_score
+    
+# MBTI Havuzumuz
+MBTI_TYPES = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 
+              'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP']
+
+def generate_bot_users(count=10):
+    # RandomUser API'sinden 'count' kadar kişi çekiyoruz
+    url = f"https://randomuser.me/api/?results={count}"
+    response = requests.get(url)
+    data = response.json()
+    
+    for item in data['results']:
+        first_name = item['name']['first']
+        last_name = item['name']['last']
+        username = item['login']['username']
+        email = item['email']
+        city = item['location']['city']
+        picture_url = item['picture']['large']
+        
+        # Kullanıcı adı zaten varsa çakışmayı önlemek için sonuna rakam ekle
+        if User.objects.filter(username=username).exists():
+            username = f"{username}{random.randint(100, 999)}"
+            
+        # 1. Ana Kullanıcıyı (User) Yarat
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password="BotPassword123!", # Botların standart şifresi
+            first_name=first_name,
+            last_name=last_name
+        )
+        
+        # 2. Profili Yarat (Rastgele MBTI ile)
+        mbti = random.choice(MBTI_TYPES)
+        bio = f"Selam! Ben {first_name}. {city} şehrinde yaşıyorum. Düzenli ve uyumlu bir ev arkadaşı arıyorum. MBTI tipim {mbti}."
+        
+        profile, created = Profile.objects.get_or_create(
+            user=user,
+            defaults={'city': city, 'bio': bio, 'mbti_type': mbti}
+        )
+        
+        # 3. Alt Tabloları Yarat (Hata vermemesi için boş olarak)
+        RoommatePreference.objects.get_or_create(profile=profile)
+        Verification.objects.get_or_create(user=user)
+        
+        # 4. Profil Fotoğrafını İnternetten İndir ve Kaydet
+        img_response = requests.get(picture_url)
+        if img_response.status_code == 200:
+            photo = UserPhoto(profile=profile)
+            # Django'nun ContentFile özelliği ile görseli diske yazıyoruz
+            photo.image.save(f"{username}.jpg", ContentFile(img_response.content), save=True)
+            
+    return True
