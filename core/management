@@ -1,0 +1,43 @@
+import requests
+from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
+from your_app.models import UserProfile  # Senin profil modelin
+import random
+
+class Command(BaseCommand):
+    help = 'RandomUser API kullanarak bot kullanıcılar oluşturur'
+
+    def add_arguments(self, parser):
+        parser.add_argument('total', type=int, help='Kaç kullanıcı eklenecek?')
+
+    def handle(self, *args, **kwargs):
+        total = kwargs['total']
+        # 1. API'den Veri Çek
+        response = requests.get(f'https://randomuser.me/api/?results={total}')
+        data = response.json()['results']
+
+        for person in data:
+            # 2. Django User Oluştur
+            username = person['login']['username']
+            email = person['email']
+            
+            if not User.objects.filter(username=username).exists():
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password='password123',
+                    first_name=person['name']['first'],
+                    last_name=person['name']['last']
+                )
+
+                # 3. Profil ve Vektör Verilerini Oluştur
+                # Şehir ve Fotoğraf URL'sini kaydet
+                UserProfile.objects.create(
+                    user=user,
+                    city=person['location']['city'],
+                    profile_picture_url=person['picture']['large'],
+                    # Algoritman için rastgele vektör değerleri ata (0-1 arası)
+                    vector_data=[random.random() for _ in range(5)] 
+                )
+        
+        self.stdout.write(self.style.SUCCESS(f'{total} bot kullanıcı başarıyla eklendi!'))
