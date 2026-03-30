@@ -217,11 +217,14 @@ def dashboard_view(request):
     
     if not profile.mbti_type:
         recent_activities.append("⚙️ MBTI testini henüz çözmedin.")
-    
+        
+    candidates = Profile.objects.exclude(user=request.user).order_by('-id')[:6]
+
     context = {
         'profile': profile,
         'completion_percentage': score,
         'recent_activities': recent_activities,
+        'candidates': candidates
     }
     return render(request, 'core/dashboard.html', context)
     def generate_bots_view(request):
