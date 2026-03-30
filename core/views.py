@@ -111,9 +111,7 @@ def logout_api(request):
 def index_view(request):
     """Ana sayfa arayüzünü yükler."""
     return render(request, 'core/index.html')
-def dashboard(request):
-    return render(request, 'core/dashboard.html')
-    
+
 @login_required 
 def save_mbti_api(request):
     if request.method == 'POST':
@@ -196,7 +194,8 @@ def logout_view(request):
     """Kullanıcının oturumunu sonlandırır ve giriş/ana sayfaya yönlendirir."""
     logout(request)
     return redirect('/') # Çıkış yapınca ana dizine yönlendir
-def dashboard_view(request):
+@login_required
+def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     
     # 1. Profil Tamamlama Yüzdesi Hesaplama (Algoritma)
