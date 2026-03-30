@@ -221,7 +221,6 @@ def dashboard_view(request):
     candidates = Profile.objects.exclude(user=request.user).order_by('-id')[:6]
 
     # --- RÖNTGEN KODLARI BAŞLANGIÇ ---
-    from django.contrib.auth.models import User
     print("=== SİSTEM RÖNTGENİ ===")
     print(f"1. Veritabanındaki Toplam Kullanıcı (User): {User.objects.count()}")
     print(f"2. Veritabanındaki Toplam Profil (Profile): {Profile.objects.count()}")
