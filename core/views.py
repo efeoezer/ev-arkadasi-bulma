@@ -118,10 +118,7 @@ def profile_view(request):
         'mbti_description': mbti_description
     }
     return render(request, 'core/profile.html', context)
-def logout_view(request):
-    """Kullanıcının oturumunu sonlandırır ve giriş/ana sayfaya yönlendirir."""
-    logout(request)
-    return redirect('/') # Çıkış yapınca ana dizine yönlendir
+
 @login_required
 def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
