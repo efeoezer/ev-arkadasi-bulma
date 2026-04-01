@@ -15,6 +15,7 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('admin/', admin.site.register),
     path('', include('core.urls')),
+    path('', include('accounts.urls')),
 ]
 
 # Geliştirme modundaysak medya dosyalarını sunmaya izin ver
