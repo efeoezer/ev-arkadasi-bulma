@@ -122,23 +122,3 @@ def generate_bots_view(request):
         
     return redirect('dashboard')
     
-@login_required
-def delete_photo_view(request):
-    """Kullanıcının mevcut profil fotoğrafını veritabanından siler."""
-    profile = get_object_or_404(Profile, user=request.user)
-    
-    photo = profile.userphoto_set.first()
-    if photo:
-        photo.delete()
-        
-    return redirect('profile')
-
-@login_required
-def delete_account_view(request):
-    if request.method == 'POST':
-        user = request.user
-        logout(request)
-        user.delete()
-        return redirect('/')
-        
-    return render(request, 'core/delete_confirm.html')
