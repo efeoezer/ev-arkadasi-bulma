@@ -86,3 +86,60 @@ def logout_view(request):
     """Kullanıcının oturumunu sonlandırır ve giriş/ana sayfaya yönlendirir."""
     logout(request)
     return redirect('/') # Çıkış yapınca ana dizine yönlendir
+
+def profile_view(request):
+    """Kullanıcının profil verilerini, güncelleme formunu ve MBTI grafiğini döndürür."""
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    
+    # Kullanıcının mevcut fotoğrafını çek (Varsa)
+    current_photo = profile.userphoto_set.first()
+    
+    # Form Gönderildiyse (POST işlemi) verileri kaydet
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, instance=profile)
+        ph_form = PhotoUpdateForm(request.POST, request.FILES, instance=current_photo)
+        
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+
+            if request.FILES.get('image'):
+                new_photo = ph_form.save(commit=False)
+                new_photo.profile = profile
+                new_photo.save()
+                
+            return redirect('profile')
+    else:
+        # Form henüz gönderilmediyse mevcut verilerle dolu olarak getir
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=profile)
+        ph_form = PhotoUpdateForm(instance=current_photo)
+
+    # --- Grafik (Chart.js) Veri Algoritması ---
+    mbti_type = profile.mbti_type if profile.mbti_type else "Bilinmiyor"
+    
+    chart_data = []
+    if len(mbti_type) == 4:
+        chart_data.append(85 if mbti_type[0] == 'E' else 15)
+        chart_data.append(85 if mbti_type[1] == 'S' else 15)
+        chart_data.append(85 if mbti_type[2] == 'T' else 15)
+        chart_data.append(85 if mbti_type[3] == 'J' else 15)
+    else:
+        chart_data = [0, 0, 0, 0]
+
+    mbti_description = MBTI_DESCRIPTIONS.get(
+        profile.mbti_type, 
+        "Kişilik analizinizi görmek ve algoritmanın çalışmasını sağlamak için lütfen önce testi tamamlayın."
+    )
+
+    context = {
+        'profile': profile,
+        'current_photo': current_photo,
+        'chart_data': chart_data,
+        'u_form': u_form,
+        'p_form': p_form,
+        'ph_form': ph_form,
+        'mbti_description': mbti_description
+    }
+    return render(request, 'core/profile.html', context)
