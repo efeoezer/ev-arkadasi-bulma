@@ -15,3 +15,12 @@ class UserPhoto(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     image = models.ImageField(upload_to="profile_photos/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+class Verification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    student_verified = models.BooleanField(default=False)
+    id_verified = models.BooleanField(default=False)
+    has_criminal_record = models.BooleanField(default=False, help_text="Resmi sabıka kaydı beyanı")
+
+    def __str__(self):
+        return f"{self.user.username} Doğrulama Durumu"
