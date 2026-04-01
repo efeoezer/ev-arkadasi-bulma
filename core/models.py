@@ -89,8 +89,3 @@ class Review(models.Model):
     rating = models.IntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
-class UserPhoto(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="profile_photos/")
-    uploaded_at = models.DateTimeField(auto_now_add=True)
