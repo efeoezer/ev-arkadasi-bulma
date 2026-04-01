@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from accounts.models import Profile
 
 # 3. EV ARKADAŞI TERCİHLERİ (KONSOLİDE EDİLMİŞ TABLO)
 class RoommatePreference(models.Model):
