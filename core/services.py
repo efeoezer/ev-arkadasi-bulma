@@ -4,7 +4,8 @@ import urllib3
 import math
 from django.core.files.base import ContentFile
 from django.contrib.auth.models import User
-from .models import Profile, Match, RoommatePreference, Verification, UserPhoto
+from .models import Match, RoommatePreference
+from accounts.models import Profile, Verification, UserPhoto
 
 # Terminaldeki SSL uyarılarını gizleme
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
