@@ -27,3 +27,57 @@ MBTI_DESCRIPTIONS = {
     'ESTP': 'Zeki, enerjik ve eylem odaklı insanlar. Risk almayı severler ve pratik sonuçlara odaklanırlar.',
     'ESFP': 'Spontane, enerjik ve hevesli bireyler. Çevrelerindeki insanları neşelendirmeyi iyi bilirler.',
 }
+
+@csrf_exempt
+def register_api(request):
+    if request.method == 'POST':
+        try:
+            # Gelen JSON verisini Python sözlüğüne çevir
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+
+            # Kullanıcı adı çakışmasını kontrol et
+            if User.objects.filter(username=username).exists():
+                return JsonResponse({'status': 'error', 'message': 'Bu kullanıcı adı zaten sistemde kayıtlı.'}, status=400)
+
+            # Şifreyi hashleyerek veritabanına kaydet
+            user = User.objects.create_user(username=username, password=password)
+            
+            # İlişkisel veritabanı gereği boş bir Profile satırı yarat ve bağla
+            Profile.objects.create(user=user)
+
+            return JsonResponse({'status': 'success', 'message': 'Kullanıcı ve profil başarıyla oluşturuldu.'}, status=201)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Geçersiz metod. Sadece POST kabul edilir.'}, status=405)
+
+@csrf_exempt
+def login_api(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data.get('username')
+        password = data.get('password')
+
+        # Veritabanındaki hashlenmiş şifre ile girilen şifreyi kriptografik olarak karşılaştır
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            # Oturum (Session) başlat
+            login(request, user)
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Giriş başarılı.', 
+                'user_id': user.id,
+                'username': user.username
+            })
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Geçersiz kullanıcı adı veya şifre.'}, status=401)
+            
+    return JsonResponse({'status': 'error', 'message': 'Geçersiz metod. Sadece POST kabul edilir.'}, status=405)
+
+def logout_api(request):
+    # Mevcut oturumu sunucu tarafından sonlandır
+    logout(request)
+    return JsonResponse({'status': 'success', 'message': 'Başarıyla çıkış yapıldı.'})
