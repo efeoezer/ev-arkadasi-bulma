@@ -10,3 +10,8 @@ class Profile(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.mbti_type if self.mbti_type else 'Belirsiz'}"
+
+class UserPhoto(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="profile_photos/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
