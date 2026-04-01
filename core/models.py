@@ -48,16 +48,6 @@ class RoommatePreference(models.Model):
     def __str__(self):
         return f"{self.profile.user.username} Tercihleri"
 
-# 4. GÜVENLİK VE DOĞRULAMA (Sabıka kaydı buraya entegre edildi)
-class Verification(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    student_verified = models.BooleanField(default=False)
-    id_verified = models.BooleanField(default=False)
-    has_criminal_record = models.BooleanField(default=False, help_text="Resmi sabıka kaydı beyanı")
-
-    def __str__(self):
-        return f"{self.user.username} Doğrulama Durumu"
-
 # 5. EŞLEŞME MOTORU TABLOSU
 class Match(models.Model):
     user_1 = models.ForeignKey(User, related_name='matches_as_user1', on_delete=models.CASCADE)
