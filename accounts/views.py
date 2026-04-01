@@ -81,3 +81,8 @@ def logout_api(request):
     # Mevcut oturumu sunucu tarafından sonlandır
     logout(request)
     return JsonResponse({'status': 'success', 'message': 'Başarıyla çıkış yapıldı.'})
+
+def logout_view(request):
+    """Kullanıcının oturumunu sonlandırır ve giriş/ana sayfaya yönlendirir."""
+    logout(request)
+    return redirect('/') # Çıkış yapınca ana dizine yönlendir
