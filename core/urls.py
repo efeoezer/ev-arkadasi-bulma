@@ -10,11 +10,6 @@ urlpatterns = [
 
     # Kosinüs Benzerliği Algoritması
     path('api/match/<int:user1_id>/<int:user2_id>/', views.calculate_match_api, name='api_match'),
-    
-    # Kimlik Doğrulama (Auth) Uç Noktaları
-    path('api/register/', views.register_api, name='api_register'),
-    path('api/login/', views.login_api, name='api_login'),
-    path('api/logout/', views.logout_api, name='api_logout'),
 
     path('api/save_mbti/', views.save_mbti_api, name='api_save_mbti'),
     
@@ -24,15 +19,5 @@ urlpatterns = [
     # Eşleşme Skoru Test API'si
     path('api/match/<int:user1_id>/<int:user2_id>/', views.calculate_match_api, name='api_match'),
 
-    # Profil Sayfası (Chart.js Grafiği İçerir)
-    path('profile/', views.profile_view, name='profile'),
-
-    # Çıkış Yapma Rotası
-    path('logout/', views.logout_view, name='logout'),
-
     path('generate-bots/', views.generate_bots_view, name='generate_bots'),
-
-    path('profile/delete-photo/', views.delete_photo_view, name='delete_photo'),
-
-    path('profile/delete-account/', views.delete_account_view, name='delete_account'),
 ]
