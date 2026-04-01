@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from accounts.models import Profile
 from .services import generate_match_score, generate_bot_users
-from .forms import UserUpdateForm, ProfileUpdateForm, PhotoUpdateForm
 
 def calculate_match_api(request, user1_id, user2_id):
     """İki kullanıcının eşleşme skorunu hesaplayıp JSON olarak döndüren API uç noktası."""
