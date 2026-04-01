@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import Profile, Like, UserPhoto
+from accounts.models import Profile
 from .services import generate_match_score, generate_bot_users
 from .forms import UserUpdateForm, ProfileUpdateForm, PhotoUpdateForm
 
