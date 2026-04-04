@@ -29,6 +29,19 @@
     .match-score { font-size: 2.2em; font-weight: bold; color: #2ecc71; margin-top: 10px; }
 </style>
 
+<div id="match-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; animation: fadeIn 0.5s;">
+    <h1 style="font-family: 'Pacifico', cursive; font-size: 5em; color: #e74c3c; text-shadow: 0 0 20px rgba(231, 76, 60, 0.6); margin-bottom: 10px;">It's a Match!</h1>
+    <p style="font-size: 1.2em; margin-bottom: 30px;">Tebrikler! <strong id="match-name" style="color: #f1c40f;"></strong> ile karşılıklı eşleştin.</p>
+    <div style="display: flex; gap: 15px;">
+        <button onclick="document.getElementById('match-popup').style.display='none'" style="background: transparent; border: 2px solid white; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; font-size: 1em;">Kaydırmaya Devam Et</button>
+        <a href="{% url 'matches' %}" style="background: #e74c3c; border: none; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 1em;">Mesaj Gönder</a>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+</style>
+
 <div class="dashboard-grid">
     <div class="swipe-section">
         {% if request.user.is_superuser %}
