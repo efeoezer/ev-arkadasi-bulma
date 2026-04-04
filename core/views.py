@@ -171,3 +171,19 @@ def swipe_api(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Geçersiz metod.'}, status=405)
+
+@login_required
+def matches_view(request):
+    # Kullanıcının içinde bulunduğu tüm eşleşmeleri çek
+    # (user1 ben isem user2'yi, user2 ben isem user1'i almalıyım)
+    user_matches = Match.objects.filter(user1=request.user) | Match.objects.filter(user2=request.user)
+    
+    # Şablon için karşı tarafın profillerini hazırlayalım
+    matched_profiles = []
+    for match in user_matches:
+        if match.user1 == request.user:
+            matched_profiles.append(match.user2.profile)
+        else:
+            matched_profiles.append(match.user1.profile)
+            
+    return render(request, 'core/matches.html', {'matches': matched_profiles})
