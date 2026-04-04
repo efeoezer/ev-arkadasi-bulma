@@ -45,7 +45,7 @@
         
         <div class="card-stack" id="card-stack">
             {% for candidate in candidates %}
-            <div class="swipe-card">
+            <div class="swipe-card" data-id="{{ candidate.user.id }}">
                 <div class="profile-img" style="overflow: hidden;">
                     {% if candidate.userphoto_set.first %}
                         <img src="{{ candidate.userphoto_set.first.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
@@ -95,6 +95,27 @@
         const stack = document.getElementById('card-stack');
         let cards = Array.from(stack.querySelectorAll('.swipe-card')).reverse();
 
+        // 1. PYTHON'A VERİ GÖNDERECEK OLAN KÖPRÜ FONKSİYONUMUZ
+        function sendSwipeData(targetId, swipeDirection) {
+            fetch('/api/swipe/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'target_user_id': targetId,
+                    'action': swipeDirection
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Sunucudan Gelen Cevap:", data.message);
+            })
+            .catch(error => {
+                console.error("Bağlantı Hatası:", error);
+            });
+        }
+
         function initCards() {
             cards.forEach((card, index) => {
                 // Derinlik algoritması: Her arka kart Z ekseninde küçülür ve aşağı kayar
@@ -130,11 +151,18 @@
                     const direction = isSwipedRight ? 1 : -1;
                     card.style.transform = `translate(${direction * window.innerWidth}px, ${event.deltaY}px) rotate(${direction * 30}deg)`;
                     
+                    // 2. KARTIN YÖNÜNÜ VE KİM OLDUĞUNU (ID) YAKALA
+                    const targetId = card.getAttribute('data-id');
+                    const swipeAction = isSwipedRight ? 'right' : 'left';
+
                     setTimeout(() => {
                         card.remove();
                         cards.shift(); 
                         initCards(); 
-                        console.log(isSwipedRight ? 'Right Swipe (Positive)' : 'Left Swipe (Negative)');
+                        
+                        // 3. YAKALADIĞIN VERİYİ PYTHON'A FIRLAT
+                        sendSwipeData(targetId, swipeAction);
+                        
                     }, 300); 
                 } else {
                     card.style.transform = ''; 
