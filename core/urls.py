@@ -20,4 +20,6 @@ urlpatterns = [
     path('api/match/<int:user1_id>/<int:user2_id>/', views.calculate_match_api, name='api_match'),
 
     path('generate-bots/', views.generate_bots_view, name='generate_bots'),
+
+    path('api/swipe/', views.swipe_api, name='swipe_api'),
 ]
