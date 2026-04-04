@@ -68,16 +68,13 @@ def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     
     # 1. Profil Tamamlama Yüzdesi Hesaplama (Algoritma)
-    # Hangi alanlar doluysa puan ekliyoruz
     score = 0
     if profile.bio: score += 25
     if profile.city: score += 25
     if profile.mbti_type: score += 25
-    # Bir de fotoğrafı varsa (UserPhoto tablosuna bakıyoruz)
     if profile.userphoto_set.exists(): score += 25
     
     # 2. Son Aktiviteleri Çekme
-    # Son 3 eşleşme veya beğeni (Like) bilgisini alıyoruz
     recent_activities = []
     likes = Like.objects.filter(to_user=request.user).order_by('-created_at')[:3]
     for like in likes:
@@ -86,7 +83,13 @@ def dashboard(request):
     if not profile.mbti_type:
         recent_activities.append("⚙️ MBTI testini henüz çözmedin.")
         
-    candidates = Profile.objects.exclude(user=request.user).order_by('-id')[:6]
+    # --- YENİ EKLENEN KISIM: FİLTRELEME ---
+    # Daha önce sağa kaydırdığımız (beğendiğimiz) kişilerin ID'lerini bir liste yapıyoruz
+    swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
+
+    # Adayları çekerken: 1. Kendimizi çıkarıyoruz, 2. Daha önce beğendiklerimizi çıkarıyoruz
+    candidates = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids).order_by('-id')[:6]
+    # --------------------------------------
 
     for candidate in candidates:
         candidate.match_score = generate_match_score(profile, candidate)
@@ -106,6 +109,7 @@ def dashboard(request):
         'candidates': candidates
     }
     return render(request, 'core/dashboard.html', context)
+    
 def generate_bots_view(request):
     print("--- 1. BOT ÜRETME BUTONUNA BASILDI ---")
     
@@ -134,10 +138,31 @@ def swipe_api(request):
             target_user = User.objects.get(id=target_id)
 
             if action == 'right':
+                # 1. Benim beğenimi veritabanına kaydet
                 Like.objects.get_or_create(from_user=request.user, to_user=target_user)
+                
+                # --- YENİ EKLENEN KISIM: KARŞILIKLI EŞLEŞME KONTROLÜ ---
+                # Hedef kullanıcı da beni daha önce sağa kaydırmış mı diye bakıyoruz
+                is_mutual = Like.objects.filter(from_user=target_user, to_user=request.user).exists()
+
+                if is_mutual:
+                    # Karşılıklı beğeni var! Match tablosuna bir eşleşme kaydı açıyoruz
+                    Match.objects.get_or_create(user1=request.user, user2=target_user)
+                    
+                    # Frontend'e özel bir 'match' statüsü gönderiyoruz ki Pop-Up açılabilsin
+                    return JsonResponse({
+                        'status': 'match', 
+                        'message': 'Eşleşme sağlandı!', 
+                        'matched_name': target_user.first_name or target_user.username
+                    })
+                # --------------------------------------------------------
+
+                # Karşılıklı değilse standart başarı mesajı dön
                 return JsonResponse({'status': 'success', 'message': f'{target_user.username} beğenildi!'})
             
             elif action == 'left':
+                # İleride 'Pass' tablosu oluşturursak sola kaydırmaları oraya kaydedeceğiz.
+                # Şimdilik sadece frontend'e onay dönüyoruz.
                 return JsonResponse({'status': 'success', 'message': f'{target_user.username} pas geçildi.'})
 
         except User.DoesNotExist:
