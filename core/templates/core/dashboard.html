@@ -122,7 +122,13 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log("Sunucudan Gelen Cevap:", data.message);
+                // EĞER DURUM 'match' İSE POP-UP'I GÖSTER!
+                if (data.status === 'match') {
+                    document.getElementById('match-name').innerText = data.matched_name;
+                    document.getElementById('match-popup').style.display = 'flex';
+                } else {
+                    console.log("Sunucu:", data.message);
+                }
             })
             .catch(error => {
                 console.error("Bağlantı Hatası:", error);
