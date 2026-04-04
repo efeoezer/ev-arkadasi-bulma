@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from accounts.models import Profile
-from .models import Like
+from .models import Like, Match
 from .services import generate_match_score, generate_bot_users
 
 def calculate_match_api(request, user1_id, user2_id):
