@@ -176,14 +176,14 @@ def swipe_api(request):
 def matches_view(request):
     # Kullanıcının içinde bulunduğu tüm eşleşmeleri çek
     # (user1 ben isem user2'yi, user2 ben isem user1'i almalıyım)
-    user_matches = Match.objects.filter(user1=request.user) | Match.objects.filter(user2=request.user)
+    user_matches = Match.objects.filter(user_1=request.user) | Match.objects.filter(user_2=request.user)
     
     # Şablon için karşı tarafın profillerini hazırlayalım
     matched_profiles = []
     for match in user_matches:
-        if match.user1 == request.user:
-            matched_profiles.append(match.user2.profile)
+        if match.user_1 == request.user:
+            matched_profiles.append(match.user_2.profile)
         else:
-            matched_profiles.append(match.user1.profile)
+            matched_profiles.append(match.user_1.profile)
             
     return render(request, 'core/matches.html', {'matches': matched_profiles})
