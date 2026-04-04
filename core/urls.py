@@ -22,4 +22,6 @@ urlpatterns = [
     path('generate-bots/', views.generate_bots_view, name='generate_bots'),
 
     path('api/swipe/', views.swipe_api, name='swipe_api'),
+
+    path('matches/', views.matches_view, name='matches'),
 ]
