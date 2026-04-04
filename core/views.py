@@ -122,3 +122,27 @@ def generate_bots_view(request):
         
     return redirect('dashboard')
     
+@csrf_exempt
+@login_required
+def swipe_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            target_id = data.get('target_user_id')
+            action = data.get('action')
+
+            target_user = User.objects.get(id=target_id)
+
+            if action == 'right':
+                Like.objects.get_or_create(from_user=request.user, to_user=target_user)
+                return JsonResponse({'status': 'success', 'message': f'{target_user.username} beğenildi!'})
+            
+            elif action == 'left':
+                return JsonResponse({'status': 'success', 'message': f'{target_user.username} pas geçildi.'})
+
+        except User.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Kullanıcı bulunamadı.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Geçersiz metod.'}, status=405)
