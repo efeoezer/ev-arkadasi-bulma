@@ -187,3 +187,15 @@ def matches_view(request):
             matched_profiles.append(match.user_1.profile)
             
     return render(request, 'core/matches.html', {'matches': matched_profiles})
+
+@login_required
+def make_bots_like_me(request):
+    if not request.user.is_superuser:
+        return redirect('dashboard')
+    
+    # Veritabanındaki diğer kullanıcıları (botları) bul ve bana Like atsınlar
+    bots = User.objects.exclude(id=request.user.id).order_by('-id')[:5]
+    for bot in bots:
+        Like.objects.get_or_create(from_user=bot, to_user=request.user)
+        
+    return redirect('dashboard')
