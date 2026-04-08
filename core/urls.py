@@ -24,4 +24,6 @@ urlpatterns = [
     path('api/swipe/', views.swipe_api, name='swipe_api'),
 
     path('matches/', views.matches_view, name='matches'),
+
+    path('api/bots-like-me/', views.make_bots_like_me, name='make_bots_like_me'),
 ]
