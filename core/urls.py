@@ -27,3 +27,8 @@ urlpatterns = [
 
     path('api/bots-like-me/', views.make_bots_like_me, name='make_bots_like_me'),
 ]
+
+urlpatterns = [
+    # ... diğer adreslerin ...
+    path('chat/<int:receiver_id>/', views.chat_view, name='chat'),
+]
