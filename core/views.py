@@ -113,6 +113,19 @@ def dashboard(request):
     }
     return render(request, 'core/dashboard.html', context)
     
+    for item in match_results:
+        # Bu adaydan (candidate) bana gelen ve henüz okunmamış mesajları say
+        unread_count = Message.objects.filter(
+            sender=item['candidate'].user, 
+            receiver=request.user, 
+            is_read=False
+        ).count()
+        
+        # Sonucu listeye ekle
+        item['unread_count'] = unread_count
+        
+    return render(request, 'core/dashboard.html', {'matches': match_results})
+    
 def generate_bots_view(request):
     print("--- 1. BOT ÜRETME BUTONUNA BASILDI ---")
     
