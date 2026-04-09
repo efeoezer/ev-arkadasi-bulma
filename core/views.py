@@ -217,6 +217,12 @@ def make_bots_like_me(request):
     return redirect('dashboard')
 
 def chat_view(request, receiver_id):
+    receiver = get_object_or_404(User, id=receiver_id)
+    
+    # Karşı taraftan bana gelen tüm okunmamış mesajları "okundu" yap
+    Message.objects.filter(sender=receiver, receiver=request.user, is_read=False).update(is_read=True)
+    
+    # ... chat sayfasının geri kalan kodları ...
     receiver = User.objects.get(id=receiver_id)
     
     # 1. Mesajları Çek: Benim attıklarım veya bana gelenler
