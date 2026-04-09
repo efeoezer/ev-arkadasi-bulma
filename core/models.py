@@ -93,3 +93,7 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username}"
+
+class Message(models.Model):
+    # ... mevcut alanların (sender, receiver, content, sent_at) ...
+    is_read = models.BooleanField(default=False) # Yeni eklenen satır
