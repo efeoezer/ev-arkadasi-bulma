@@ -80,3 +80,16 @@ class Review(models.Model):
     rating = models.IntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+class Message(models.Model):
+    # Mesajı atan kişi
+    sender = models.ForeignKey(User, related_name="sent_messages", on_delete=models.CASCADE)
+    # Mesajı alan kişi
+    receiver = models.ForeignKey(User, related_name="received_messages", on_delete=models.CASCADE)
+    # Mesajın içeriği
+    content = models.TextField()
+    # Ne zaman atıldı? (Otomatik tarih atar)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.sender.username} -> {self.receiver.username}"
