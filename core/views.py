@@ -219,3 +219,35 @@ def chat_view(request, receiver_id):
         return redirect('chat', receiver_id=receiver_id)
 
     return render(request, 'core/chat.html', {'messages': messages, 'receiver': receiver})
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.models import User
+from .models import Message
+from django.db.models import Q
+
+def chat_view(request, receiver_id):
+    # 1. Mesajlaşacağımız kişiyi bul (Alıcı)
+    receiver = get_object_or_404(User, id=receiver_id)
+    
+    # 2. Eğer kullanıcı mesaj yazıp gönderdiyse (POST)
+    if request.method == "POST":
+        msg_content = request.POST.get('content')
+        if msg_content:
+            Message.objects.create(
+                sender=request.user, 
+                receiver=receiver, 
+                content=msg_content
+            )
+            return redirect('chat', receiver_id=receiver_id)
+
+    # 3. İki kişi arasındaki tüm eski mesajları getir
+    # (Benim attıklarım VEYA bana gelenler)
+    chat_messages = Message.objects.filter(
+        (Q(sender=request.user) & Q(receiver=receiver)) |
+        (Q(sender=receiver) & Q(receiver=request.user))
+    ).order_by('sent_at')
+
+    return render(request, 'core/chat.html', {
+        'messages': chat_messages,
+        'receiver': receiver
+    })
