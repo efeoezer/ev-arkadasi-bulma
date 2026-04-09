@@ -8,6 +8,9 @@ from django.contrib.auth.decorators import login_required
 from accounts.models import Profile
 from .models import Like, Match
 from .services import generate_match_score, generate_bot_users
+from django.shortcuts import render, redirect
+from .models import Message
+from django.contrib.auth.models import User
 
 def calculate_match_api(request, user1_id, user2_id):
     """İki kullanıcının eşleşme skorunu hesaplayıp JSON olarak döndüren API uç noktası."""
@@ -199,3 +202,20 @@ def make_bots_like_me(request):
         Like.objects.get_or_create(from_user=bot, to_user=request.user)
         
     return redirect('dashboard')
+
+def chat_view(request, receiver_id):
+    receiver = User.objects.get(id=receiver_id)
+    
+    # 1. Mesajları Çek: Benim attıklarım veya bana gelenler
+    messages = Message.objects.filter(
+        (models.Q(sender=request.user) & models.Q(receiver=receiver)) |
+        (models.Q(sender=receiver) & models.Q(receiver=request.user))
+    ).order_status('sent_at')
+
+    # 2. Mesaj Gönder: Eğer form doldurulup gönderildiyse
+    if request.method == 'POST':
+        msg_content = request.POST.get('message_text')
+        Message.objects.create(sender=request.user, receiver=receiver, content=msg_content)
+        return redirect('chat', receiver_id=receiver_id)
+
+    return render(request, 'core/chat.html', {'messages': messages, 'receiver': receiver})
