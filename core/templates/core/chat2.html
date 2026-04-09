@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>{{ receiver.username }} ile Sohbet</h3>
+    <hr>
+    
+    <div class="chat-window" style="height: 400px; border: 1px solid #ddd; padding: 20px; overflow-y: scroll; background: #f9f9f9;">
+        {% for msg in messages %}
+            <div class="mb-3 {% if msg.sender == request.user %}text-end{% endif %}">
+                <span class="p-2 rounded {% if msg.sender == request.user %}bg-primary text-white{% else %}bg-light border{% endif %}">
+                    {{ msg.content }}
+                </span>
+                <br><small class="text-muted" style="font-size: 0.7rem;">{{ msg.sent_at|date:"H:i" }}</small>
+            </div>
+        {% empty %}
+            <p class="text-center text-muted">Henüz mesaj yok. İlk mesajı sen at!</p>
+        {% endfor %}
+    </div>
+
+    <form method="POST" class="mt-3">
+        {% csrf_token %}
+        <div class="input-group">
+            <input type="text" name="content" class="form-control" placeholder="Mesajınızı yazın..." required>
+            <button type="submit" class="btn btn-primary">Gönder</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
