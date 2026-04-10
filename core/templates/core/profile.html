@@ -233,5 +233,37 @@
 
         new Chart(ctx, config);
     });
+    const countrySelect = document.getElementById('country-select');
+const citySelect = document.getElementById('city-select');
+
+// 1. Tüm dünyadaki ülkeleri çek ve listeye ekle
+fetch("https://countriesnow.space/api/v0.1/countries/positions")
+    .then(res => res.json())
+    .then(data => {
+        data.data.forEach(c => {
+            let opt = new Option(c.name, c.name);
+            countrySelect.add(opt);
+        });
+    });
+
+// 2. Ülke seçilince şehirleri getir
+countrySelect.addEventListener('change', function() {
+    const countryName = this.value;
+    citySelect.innerHTML = '<option>Yükleniyor...</option>';
+    
+    fetch("https://countriesnow.space/api/v0.1/countries/cities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ "country": countryName })
+    })
+    .then(res => res.json())
+    .then(data => {
+        citySelect.innerHTML = '<option value="">Şehir Seçin</option>';
+        data.data.forEach(city => {
+            let opt = new Option(city, city);
+            citySelect.add(opt);
+        });
+    });
+});
 </script>
 {% endblock %}
