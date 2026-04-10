@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from accounts.models import Profile
 
-# 3. EV ARKADAŞI TERCİHLERİ (KONSOLİDE EDİLMİŞ TABLO)
+# EV ARKADAŞI TERCİHLERİ
 class RoommatePreference(models.Model):
     ROOM_TYPE_CHOICES = [
         ('private', 'Private Room'),
@@ -49,7 +49,7 @@ class RoommatePreference(models.Model):
     def __str__(self):
         return f"{self.profile.user.username} Tercihleri"
 
-# 5. EŞLEŞME MOTORU TABLOSU
+# EŞLEŞME MOTORU TABLOSU
 class Match(models.Model):
     user_1 = models.ForeignKey(User, related_name='matches_as_user1', on_delete=models.CASCADE)
     user_2 = models.ForeignKey(User, related_name='matches_as_user2', on_delete=models.CASCADE)
@@ -62,17 +62,11 @@ class Match(models.Model):
     def __str__(self):
         return f"{self.user_1.username} & {self.user_2.username} - Skor: {self.algorithm_score}"
 
-# 6. ETKİLEŞİM TABLOLARI (Like, Message, Review)
+# ETKİLEŞİM TABLOLARI (Like, Review)
 class Like(models.Model):
     from_user = models.ForeignKey(User, related_name="likes_sent", on_delete=models.CASCADE)
     to_user = models.ForeignKey(User, related_name="likes_received", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-
-class Message(models.Model):
-    sender = models.ForeignKey(User, related_name="sent_messages", on_delete=models.CASCADE)
-    receiver = models.ForeignKey(User, related_name="received_messages", on_delete=models.CASCADE)
-    content = models.TextField()
-    sent_at = models.DateTimeField(auto_now_add=True)
 
 class Review(models.Model):
     reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="given_reviews")
@@ -80,20 +74,3 @@ class Review(models.Model):
     rating = models.IntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
-class Message(models.Model):
-    # Mesajı atan kişi
-    sender = models.ForeignKey(User, related_name="sent_messages", on_delete=models.CASCADE)
-    # Mesajı alan kişi
-    receiver = models.ForeignKey(User, related_name="received_messages", on_delete=models.CASCADE)
-    # Mesajın içeriği
-    content = models.TextField()
-    # Ne zaman atıldı? (Otomatik tarih atar)
-    sent_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.sender.username} -> {self.receiver.username}"
-
-class Message(models.Model):
-    # ... mevcut alanların (sender, receiver, content, sent_at) ...
-    is_read = models.BooleanField(default=False) # Yeni eklenen satır

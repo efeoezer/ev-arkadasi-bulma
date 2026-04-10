@@ -2,82 +2,29 @@ import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from accounts.models import Profile
 from .models import Like, Match
 from .services import generate_match_score, generate_bot_users
-from django.shortcuts import render, redirect
-from .models import Message
-from django.contrib.auth.models import User
-
-def calculate_match_api(request, user1_id, user2_id):
-    """İki kullanıcının eşleşme skorunu hesaplayıp JSON olarak döndüren API uç noktası."""
-    try:
-        # 1. Veritabanından profilleri çek (Kullanıcı yoksa güvenli bir şekilde 404 Not Found döndür)
-        profile1 = get_object_or_404(Profile, user_id=user1_id)
-        profile2 = get_object_or_404(Profile, user_id=user2_id)
-        
-        # 2. Servis katmanındaki soyut matematiksel algoritmayı tetikle
-        score = generate_match_score(profile1, profile2)
-        
-        # 3. Sonucu Frontend arayüzünün anlayacağı evrensel JSON formatında paketle
-        return JsonResponse({
-            'status': 'success',
-            'user_1': profile1.user.username,
-            'user1_mbti': profile1.mbti_type,
-            'user_2': profile2.user.username,
-            'user2_mbti': profile2.mbti_type,
-            'match_score_percentage': score,
-            'message': 'Kosinüs benzerliği başarıyla hesaplandı ve veritabanına kaydedildi.'
-        })
-    except Exception as e:
-        # Beklenmeyen bir hata durumunda kontrollü yanıt dön
-        return JsonResponse({
-            'status': 'error', 
-            'message': f'Hesaplama sırasında bir hata oluştu: {str(e)}'
-        }, status=500)
+from chat.models import Message 
 
 def index_view(request):
-    """Ana sayfa arayüzünü yükler."""
     return render(request, 'core/index.html')
-
-@login_required 
-def save_mbti_api(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            final_mbti = data.get('mbti')
-            
-            if not final_mbti:
-                return JsonResponse({'status': 'error', 'message': 'Veri eksik!'}, status=400)
-
-            profile, created = Profile.objects.get_or_create(user=request.user)
-            profile.mbti_type = final_mbti
-            profile.save()
-
-            return JsonResponse({'status': 'success', 'message': f'Kişilik tipin {final_mbti} olarak kaydedildi!'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-            
-    return JsonResponse({'status': 'error', 'message': 'Geçersiz metod.'}, status=405)
-def mbti_test_view(request):
-    # Kullanıcı testi çözmek istediğinde bu sayfayı göstereceğiz
-    return render(request, 'core/mbti_test.html')
 
 @login_required
 def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     
-    # 1. Profil Tamamlama Yüzdesi Hesaplama (Algoritma)
+    # 1. Profil Tamamlama Yüzdesi
     score = 0
     if profile.bio: score += 25
     if profile.city: score += 25
     if profile.mbti_type: score += 25
     if profile.userphoto_set.exists(): score += 25
     
-    # 2. Son Aktiviteleri Çekme
+    # 2. Son Aktiviteler
     recent_activities = []
     likes = Like.objects.filter(to_user=request.user).order_by('-created_at')[:3]
     for like in likes:
@@ -86,187 +33,77 @@ def dashboard(request):
     if not profile.mbti_type:
         recent_activities.append("⚙️ MBTI testini henüz çözmedin.")
         
-    # --- YENİ EKLENEN KISIM: FİLTRELEME ---
-    # Daha önce sağa kaydırdığımız (beğendiğimiz) kişilerin ID'lerini bir liste yapıyoruz
+    # 3. Filtreleme Algoritması
     swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
-
-    # Adayları çekerken: 1. Kendimizi çıkarıyoruz, 2. Daha önce beğendiklerimizi çıkarıyoruz
     candidates = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids).order_by('-id')[:6]
-    # --------------------------------------
 
     for candidate in candidates:
         candidate.match_score = generate_match_score(profile, candidate)
 
-    # --- RÖNTGEN KODLARI BAŞLANGIÇ ---
-    print("=== SİSTEM RÖNTGENİ ===")
-    print(f"1. Veritabanındaki Toplam Kullanıcı (User): {User.objects.count()}")
-    print(f"2. Veritabanındaki Toplam Profil (Profile): {Profile.objects.count()}")
-    print(f"3. Arayüze Gönderilen Aday Sayısı: {candidates.count()}")
-    print("=======================")
-    # --- RÖNTGEN KODLARI BİTİŞ ---
+    # Sistem Röntgeni
+    print(f"=== SİSTEM RÖNTGENİ ===\nAday Sayısı: {candidates.count()}\n=======================")
 
-    context = {
+    return render(request, 'core/dashboard.html', {
         'profile': profile,
         'completion_percentage': score,
         'recent_activities': recent_activities,
         'candidates': candidates
-    }
-    return render(request, 'core/dashboard.html', context)
-    
-    for item in match_results:
-        # Bu adaydan (candidate) bana gelen ve henüz okunmamış mesajları say
-        unread_count = Message.objects.filter(
-            sender=item['candidate'].user, 
-            receiver=request.user, 
-            is_read=False
-        ).count()
-        
-        # Sonucu listeye ekle
-        item['unread_count'] = unread_count
-        
-    return render(request, 'core/dashboard.html', {'matches': match_results})
-    
-def generate_bots_view(request):
-    print("--- 1. BOT ÜRETME BUTONUNA BASILDI ---")
-    
-    if request.user.is_superuser:
-        print("--- 2. KULLANICI ADMİN. FONKSİYON BAŞLIYOR ---")
-        try:
-            # Hızlı test için şimdilik 10 yerine 3 kişi üretelim
-            generate_bot_users(3) 
-            print("--- 3. İŞLEM BAŞARIYLA TAMAMLANDI! ---")
-        except Exception as e:
-            print(f"--- KRİTİK HATA: {e} ---")
-    else:
-        print("--- HATA: Kullanıcı yetkili değil (Superuser değil) ---")
-        
-    return redirect('dashboard')
-    
+    })
+
 @csrf_exempt
 @login_required
 def swipe_api(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            target_id = data.get('target_user_id')
+            target_user = User.objects.get(id=data.get('target_user_id'))
             action = data.get('action')
 
-            target_user = User.objects.get(id=target_id)
-
             if action == 'right':
-                # 1. Benim beğenimi veritabanına kaydet
                 Like.objects.get_or_create(from_user=request.user, to_user=target_user)
-                
-                # --- YENİ EKLENEN KISIM: KARŞILIKLI EŞLEŞME KONTROLÜ ---
-                # Hedef kullanıcı da beni daha önce sağa kaydırmış mı diye bakıyoruz
                 is_mutual = Like.objects.filter(from_user=target_user, to_user=request.user).exists()
 
                 if is_mutual:
-                    # Karşılıklı beğeni var! Match tablosuna bir eşleşme kaydı açıyoruz
-                    Match.objects.get_or_create(user1=request.user, user2=target_user)
-                    
-                    # Frontend'e özel bir 'match' statüsü gönderiyoruz ki Pop-Up açılabilsin
-                    return JsonResponse({
-                        'status': 'match', 
-                        'message': 'Eşleşme sağlandı!', 
-                        'matched_name': target_user.first_name or target_user.username
-                    })
-                # --------------------------------------------------------
-
-                # Karşılıklı değilse standart başarı mesajı dön
-                return JsonResponse({'status': 'success', 'message': f'{target_user.username} beğenildi!'})
+                    # Burada user_1 ve user_2 olarak düzelttik:
+                    Match.objects.get_or_create(user_1=request.user, user_2=target_user, defaults={'algorithm_score': 0})
+                    return JsonResponse({'status': 'match', 'matched_name': target_user.first_name or target_user.username})
+                
+                return JsonResponse({'status': 'success', 'message': 'Beğenildi'})
             
-            elif action == 'left':
-                # İleride 'Pass' tablosu oluşturursak sola kaydırmaları oraya kaydedeceğiz.
-                # Şimdilik sadece frontend'e onay dönüyoruz.
-                return JsonResponse({'status': 'success', 'message': f'{target_user.username} pas geçildi.'})
-
-        except User.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Kullanıcı bulunamadı.'}, status=404)
+            return JsonResponse({'status': 'success', 'message': 'Geçildi'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-    return JsonResponse({'status': 'error', 'message': 'Geçersiz metod.'}, status=405)
-
 @login_required
 def matches_view(request):
-    # Kullanıcının içinde bulunduğu tüm eşleşmeleri çek
-    # (user1 ben isem user2'yi, user2 ben isem user1'i almalıyım)
-    user_matches = Match.objects.filter(user_1=request.user) | Match.objects.filter(user_2=request.user)
-    
-    # Şablon için karşı tarafın profillerini hazırlayalım
-    matched_profiles = []
-    for match in user_matches:
-        if match.user_1 == request.user:
-            matched_profiles.append(match.user_2.profile)
-        else:
-            matched_profiles.append(match.user_1.profile)
+    user_matches = Match.objects.filter(Q(user_1=request.user) | Q(user_2=request.user))
+    matched_data = []
+
+    for m in user_matches:
+        other_user = m.user_2 if m.user_1 == request.user else m.user_1
+        # Arkadaşının istediği 'okunmamış mesaj sayısı' mantığını buraya ekledik:
+        unread = Message.objects.filter(sender=other_user, receiver=request.user, is_read=False).count()
+        
+        matched_data.append({
+            'profile': other_user.profile,
+            'unread_count': unread
+        })
             
-    return render(request, 'core/matches.html', {'matches': matched_profiles})
+    return render(request, 'core/matches.html', {'matches': matched_data})
+
+@login_required
+def mbti_test_view(request):
+    return render(request, 'core/mbti_test.html')
 
 @login_required
 def make_bots_like_me(request):
-    if not request.user.is_superuser:
-        return redirect('dashboard')
-    
-    # Veritabanındaki diğer kullanıcıları (botları) bul ve bana Like atsınlar
-    bots = User.objects.exclude(id=request.user.id).order_by('-id')[:5]
-    for bot in bots:
-        Like.objects.get_or_create(from_user=bot, to_user=request.user)
-        
+    if request.user.is_superuser:
+        bots = User.objects.exclude(id=request.user.id).order_by('-id')[:10]
+        for bot in bots:
+            Like.objects.get_or_create(from_user=bot, to_user=request.user)
     return redirect('dashboard')
 
-def chat_view(request, receiver_id):
-    receiver = get_object_or_404(User, id=receiver_id)
-    
-    # Karşı taraftan bana gelen tüm okunmamış mesajları "okundu" yap
-    Message.objects.filter(sender=receiver, receiver=request.user, is_read=False).update(is_read=True)
-    
-    # ... chat sayfasının geri kalan kodları ...
-    receiver = User.objects.get(id=receiver_id)
-    
-    # 1. Mesajları Çek: Benim attıklarım veya bana gelenler
-    messages = Message.objects.filter(
-        (models.Q(sender=request.user) & models.Q(receiver=receiver)) |
-        (models.Q(sender=receiver) & models.Q(receiver=request.user))
-    ).order_status('sent_at')
-
-    # 2. Mesaj Gönder: Eğer form doldurulup gönderildiyse
-    if request.method == 'POST':
-        msg_content = request.POST.get('message_text')
-        Message.objects.create(sender=request.user, receiver=receiver, content=msg_content)
-        return redirect('chat', receiver_id=receiver_id)
-
-    return render(request, 'core/chat.html', {'messages': messages, 'receiver': receiver})
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.models import User
-from .models import Message
-from django.db.models import Q
-
-def chat_view(request, receiver_id):
-    # 1. Mesajlaşacağımız kişiyi bul (Alıcı)
-    receiver = get_object_or_404(User, id=receiver_id)
-    
-    # 2. Eğer kullanıcı mesaj yazıp gönderdiyse (POST)
-    if request.method == "POST":
-        msg_content = request.POST.get('content')
-        if msg_content:
-            Message.objects.create(
-                sender=request.user, 
-                receiver=receiver, 
-                content=msg_content
-            )
-            return redirect('chat', receiver_id=receiver_id)
-
-    # 3. İki kişi arasındaki tüm eski mesajları getir
-    # (Benim attıklarım VEYA bana gelenler)
-    chat_messages = Message.objects.filter(
-        (Q(sender=request.user) & Q(receiver=receiver)) |
-        (Q(sender=receiver) & Q(receiver=request.user))
-    ).order_by('sent_at')
-
-    return render(request, 'core/chat.html', {
-        'messages': chat_messages,
-        'receiver': receiver
-    })
+def generate_bots_view(request):
+    if request.user.is_superuser:
+        generate_bot_users(3)
+    return redirect('dashboard')
