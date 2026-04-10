@@ -17,6 +17,10 @@ def index_view(request):
 def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     
+    # --- ŞEHİR FİLTRELEME BAŞLANGIÇ ---
+    selected_city = request.GET.get('city') # URL'den gelen ?city=İstanbul değerini yakalar
+    # ----------------------------------
+
     # 1. Profil Tamamlama Yüzdesi
     score = 0
     if profile.bio: score += 25
@@ -35,19 +39,33 @@ def dashboard(request):
         
     # 3. Filtreleme Algoritması
     swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
-    candidates = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids).order_by('-id')[:6]
+    
+    # Ana Sorgu: Kendimiz hariç ve kaydırmadıklarımız
+    candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
 
+    # --- ŞEHİR FİLTRELEME UYGULAMA ---
+    if selected_city:
+        candidates_query = candidates_query.filter(city=selected_city)
+    # ----------------------------------
+
+    # Adayları çek ve skorla
+    candidates = candidates_query.order_by('-id')[:6]
     for candidate in candidates:
         candidate.match_score = generate_match_score(profile, candidate)
 
+    # --- TÜM ŞEHİRLERİ LİSTELE (Menü için) ---
+    all_cities = Profile.objects.exclude(city__isnull=True).exclude(city="").values_list('city', flat=True).distinct().order_by('city')
+
     # Sistem Röntgeni
-    print(f"=== SİSTEM RÖNTGENİ ===\nAday Sayısı: {candidates.count()}\n=======================")
+    print(f"=== SİSTEM RÖNTGENİ ===\nAday Sayısı: {candidates.count()}\nSeçili Şehir: {selected_city}\n=======================")
 
     return render(request, 'core/dashboard.html', {
         'profile': profile,
         'completion_percentage': score,
         'recent_activities': recent_activities,
-        'candidates': candidates
+        'candidates': candidates,
+        'all_cities': all_cities,      # Şehir listesini gönderiyoruz
+        'selected_city': selected_city # Seçili şehri geri gönderiyoruz (inputu dolu tutmak için)
     })
 
 @csrf_exempt
