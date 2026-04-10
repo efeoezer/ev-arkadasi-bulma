@@ -66,7 +66,7 @@
                 }
             }
             
-            const endpoint = type === 'login' ? '/api/login/' : '/api/register/';
+            const endpoint = type === 'login' ? '/accounts/api/login/' : '/accounts/api/register/';
             
             try {
                 const response = await fetch(endpoint, {
