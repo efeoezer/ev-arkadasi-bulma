@@ -27,25 +27,29 @@ def calculate_cosine_similarity(vec1, vec2):
 
 def generate_match_score(profile1, profile2):
     """
-    Şu anki aşama için MBTI üzerinden 4 eksenli (yüzdelik) uyum skoru üretir.
-    Her ortak harf %25 uyum puanı kazandırır.
+    MBTI teorisine dayalı ağırlıklı uyum skoru.
+    N/S (Dünyayı algılama) uyumu en kritik olanıdır.
     """
     if not profile1.mbti_type or not profile2.mbti_type:
         return 0
         
-    mbti1 = profile1.mbti_type.upper()
-    mbti2 = profile2.mbti_type.upper()
+    p1 = profile1.mbti_type.upper()
+    p2 = profile2.mbti_type.upper()
     
-    if len(mbti1) != 4 or len(mbti2) != 4:
-        return 0
-        
-    score = 0
-    # 4 ekseni (E/I, S/N, T/F, J/P) sırasıyla karşılaştır
+    # Ağırlıklar: N/S (%40), E/I (%20), T/F (%20), J/P (%20)
+    weights = [20, 40, 20, 20] 
+    total_score = 0
+    
     for i in range(4):
-        if mbti1[i] == mbti2[i]:
-            score += 25
+        if p1[i] == p2[i]:
+            total_score += weights[i]
             
-    return score
+    # Eğer her şey zıtsa (Tam Zıtların Uyumu), 
+    # fiziksel çekim/tamamlayıcılık için taban bir puan verilebilir (%10)
+    if total_score == 0:
+        total_score = 10
+            
+    return total_score
 
 def generate_bot_users(count=10):
     url = f"https://randomuser.me/api/?results={count}&nat=tr,en,de" # TR, İngiltere ve Almanya karışık gelsin
