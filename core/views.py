@@ -94,13 +94,23 @@ def swipe_api(request):
 
 @login_required
 def matches_view(request):
-    user_matches = Match.objects.filter(Q(user_1=request.user) | Q(user_2=request.user))
+    # select_related ile User ve Profile verilerini tek seferde (JOIN) çekiyoruz
+    user_matches = Match.objects.filter(
+        Q(user_1=request.user) | Q(user_2=request.user)
+    ).select_related('user_1__profile', 'user_2__profile')
+    
     matched_data = []
 
     for m in user_matches:
+        # Karşı tarafın kim olduğunu belirle
         other_user = m.user_2 if m.user_1 == request.user else m.user_1
-        # Arkadaşının istediği 'okunmamış mesaj sayısı' mantığını buraya ekledik:
-        unread = Message.objects.filter(sender=other_user, receiver=request.user, is_read=False).count()
+        
+        # Okunmamış mesajları say
+        unread = Message.objects.filter(
+            sender=other_user, 
+            receiver=request.user, 
+            is_read=False
+        ).count()
         
         matched_data.append({
             'profile': other_user.profile,
