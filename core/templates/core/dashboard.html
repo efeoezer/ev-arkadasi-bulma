@@ -89,22 +89,39 @@
             </div>
             {% endif %}
 
-            <div class="filter-wrapper">
-                <div class="filter-bar">
-                    <span>📍</span>
-                    <form method="GET" action="{% url 'dashboard' %}" id="filter-form">
-                        <select name="city" onchange="document.getElementById('filter-form').submit();">
-                            <option value="">Tüm Şehirler</option>
-                            {% for city in all_cities %}
-                                <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
-                            {% endfor %}
-                        </select>
-                    </form>
-                    {% if selected_city %}
-                        <a href="{% url 'dashboard' %}" style="text-decoration: none; color: #e74c3c; font-weight: bold;">✕</a>
-                    {% endif %}
-                </div>
-            </div>
+            <div class="advanced-filter-panel" style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #f1f2f6;">
+    <form method="GET" action="{% url 'dashboard' %}" id="advanced-filter-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end;">
+        
+        <div>
+            <label style="display: block; font-size: 0.8em; font-weight: bold; color: #7f8c8d; margin-bottom: 5px;">📍 ŞEHİR</label>
+            <select name="city" class="custom-select" style="width: 100%;">
+                <option value="">Hepsi</option>
+                {% for city in all_cities %}
+                    <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label style="display: block; font-size: 0.8em; font-weight: bold; color: #7f8c8d; margin-bottom: 5px;">🏠 ODA TİPİ</label>
+            <select name="room_type" class="custom-select" style="width: 100%;">
+                <option value="">Fark Etmez</option>
+                <option value="private" {% if request.GET.room_type == 'private' %}selected{% endif %}>Özel Oda</option>
+                <option value="shared" {% if request.GET.room_type == 'shared' %}selected{% endif %}>Paylaşımlı Oda</option>
+            </select>
+        </div>
+
+        <div>
+            <label style="display: block; font-size: 0.8em; font-weight: bold; color: #7f8c8d; margin-bottom: 5px;">💰 MİN. BÜTÇE UYUMU</label>
+            <input type="range" name="budget" min="1" max="5" value="{{ request.GET.budget|default:1 }}" style="width: 100%;">
+        </div>
+
+        <button type="submit" style="background: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;">
+            Filtrele
+        </button>
+
+    </form>
+</div>
 
             <div class="card-stack-wrapper">
                 <div class="card-stack" id="card-stack">
