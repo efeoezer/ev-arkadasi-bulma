@@ -17,8 +17,10 @@ def index_view(request):
 def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     
-    # --- ŞEHİR FİLTRELEME BAŞLANGIÇ ---
+    # --- FİLTRELEME BAŞLANGIÇ ---
     selected_city = request.GET.get('city') # URL'den gelen ?city=İstanbul değerini yakalar
+    selected_room = request.GET.get('room_type')
+    max_budget = request.GET.get('budget')
     # ----------------------------------
 
     # 1. Profil Tamamlama Yüzdesi
@@ -43,9 +45,15 @@ def dashboard(request):
     # Ana Sorgu: Kendimiz hariç ve kaydırmadıklarımız
     candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
 
-    # --- ŞEHİR FİLTRELEME UYGULAMA ---
+    # --- FİLTRELEME UYGULAMA ---
     if selected_city:
         candidates_query = candidates_query.filter(city=selected_city)
+        
+    if selected_room:
+        candidates_query = candidates_query.filter(preferences__room_type=selected_room)
+    
+    if max_budget:
+        candidates_query = candidates_query.filter(preferences__budget_flexibility__gte=max_budget)
     # ----------------------------------
 
     # Adayları çek ve skorla
