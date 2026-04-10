@@ -86,7 +86,7 @@
                     <div style="display: flex; align-items: center; padding: 5px 15px; background: #f8f9fa; border-radius: 30px; border: 1px solid #ecf0f1;">
                         <span style="font-size: 1.2em; margin-right: 8px;">📍</span>
                         <select name="city" onchange="document.getElementById('premium-filter-form').submit();" style="border: none; background: transparent; font-weight: 700; color: #2c3e50; outline: none; cursor: pointer; font-size: 0.9em;">
-                            <option value="">Tüm Türkiye</option>
+                            <option value="">Tüm Lokasyonlar</option>
                             {% for city in all_cities %}
                                 <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
                             {% endfor %}
