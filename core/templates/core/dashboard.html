@@ -22,14 +22,6 @@
         min-height: 700px;
     }
 
-    .filter-wrapper { width: 100%; max-width: 400px; margin-bottom: 40px; z-index: 100; }
-    .filter-bar { 
-        background: white; padding: 10px 20px; border-radius: 30px; 
-        display: flex; align-items: center; justify-content: center; 
-        gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 2px solid #3498db;
-    }
-    .filter-bar select { border: none; background: transparent; font-weight: 700; color: #2c3e50; outline: none; cursor: pointer; }
-
     .card-stack-wrapper { position: relative; width: 320px; height: 450px; margin-top: 20px; }
     
     /* --- PERFORMANS ODAKLI KART CSS --- */
@@ -44,12 +36,11 @@
         flex-direction: column; 
         overflow: hidden;
         user-select: none; 
-        will-change: transform, opacity; /* PERFORMANS: Tarayıcıya hazırlık yaptırır */
+        will-change: transform, opacity;
         transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         border: 1px solid #ecf0f1; 
     }
     
-    /* PERFORMANS: Sürükleme anında lag'ı öldürür */
     .swipe-card.dragging { 
         transition: none !important; 
         box-shadow: 0 25px 60px rgba(0,0,0,0.2);
@@ -89,39 +80,41 @@
             </div>
             {% endif %}
 
-            <div class="advanced-filter-panel" style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #f1f2f6;">
-    <form method="GET" action="{% url 'dashboard' %}" id="advanced-filter-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end;">
-        
-        <div>
-            <label style="display: block; font-size: 0.8em; font-weight: bold; color: #7f8c8d; margin-bottom: 5px;">📍 ŞEHİR</label>
-            <select name="city" class="custom-select" style="width: 100%;">
-                <option value="">Hepsi</option>
-                {% for city in all_cities %}
-                    <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
-                {% endfor %}
-            </select>
-        </div>
+            <div style="width: 100%; max-width: 800px; margin: 0 auto 30px auto; z-index: 100;">
+                <form method="GET" action="{% url 'dashboard' %}" id="premium-filter-form" style="background: white; border-radius: 50px; padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 25px rgba(0,0,0,0.06); border: 1px solid #f1f2f6; flex-wrap: wrap; gap: 10px;">
+                    
+                    <div style="display: flex; align-items: center; padding: 5px 15px; background: #f8f9fa; border-radius: 30px; border: 1px solid #ecf0f1;">
+                        <span style="font-size: 1.2em; margin-right: 8px;">📍</span>
+                        <select name="city" onchange="document.getElementById('premium-filter-form').submit();" style="border: none; background: transparent; font-weight: 700; color: #2c3e50; outline: none; cursor: pointer; font-size: 0.9em;">
+                            <option value="">Tüm Türkiye</option>
+                            {% for city in all_cities %}
+                                <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-        <div>
-            <label style="display: block; font-size: 0.8em; font-weight: bold; color: #7f8c8d; margin-bottom: 5px;">🏠 ODA TİPİ</label>
-            <select name="room_type" class="custom-select" style="width: 100%;">
-                <option value="">Fark Etmez</option>
-                <option value="private" {% if request.GET.room_type == 'private' %}selected{% endif %}>Özel Oda</option>
-                <option value="shared" {% if request.GET.room_type == 'shared' %}selected{% endif %}>Paylaşımlı Oda</option>
-            </select>
-        </div>
+                    <div style="display: flex; align-items: center; padding: 5px 15px; background: #f8f9fa; border-radius: 30px; border: 1px solid #ecf0f1;">
+                        <span style="font-size: 1.2em; margin-right: 8px;">🛏️</span>
+                        <select name="room_style" onchange="document.getElementById('premium-filter-form').submit();" style="border: none; background: transparent; font-weight: 700; color: #2c3e50; outline: none; cursor: pointer; font-size: 0.9em;">
+                            <option value="">Ev & Oda Tipi</option>
+                            <option value="private" {% if request.GET.room_style == 'private' %}selected{% endif %}>Kendime Ait Oda</option>
+                            <option value="shared" {% if request.GET.room_style == 'shared' %}selected{% endif %}>Oda Paylaşımlı</option>
+                            <option value="entire" {% if request.GET.room_style == 'entire' %}selected{% endif %}>Boş Evime Arkadaş</option>
+                        </select>
+                    </div>
 
-        <div>
-            <label style="display: block; font-size: 0.8em; font-weight: bold; color: #7f8c8d; margin-bottom: 5px;">💰 MİN. BÜTÇE UYUMU</label>
-            <input type="range" name="budget" min="1" max="5" value="{{ request.GET.budget|default:1 }}" style="width: 100%;">
-        </div>
+                    <div style="display: flex; align-items: center; padding: 5px 15px; background: #f8f9fa; border-radius: 30px; border: 1px solid #ecf0f1; flex-grow: 1; max-width: 250px;">
+                        <span style="font-size: 1.2em; margin-right: 8px;">💰</span>
+                        <input type="number" name="max_rent" placeholder="Max Kira (TL)" value="{{ request.GET.max_rent }}" style="border: none; background: transparent; font-weight: 700; color: #2c3e50; outline: none; width: 100%; font-size: 0.9em;" onchange="document.getElementById('premium-filter-form').submit();">
+                    </div>
 
-        <button type="submit" style="background: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;">
-            Filtrele
-        </button>
-
-    </form>
-</div>
+                    {% if selected_city or request.GET.room_style or request.GET.max_rent %}
+                    <a href="{% url 'dashboard' %}" style="background: #ff7675; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3);" title="Filtreleri Temizle">
+                        ✕
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
 
             <div class="card-stack-wrapper">
                 <div class="card-stack" id="card-stack">
@@ -139,7 +132,17 @@
                         <div class="card-content">
                             <div>
                                 <h2>{{ candidate.user.first_name }}</h2>
-                                <p>{{ candidate.mbti_type|default:"MBTI Yok" }} • {{ candidate.city|default:"Konum Yok" }}</p>
+                                
+                                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px;">
+                                    {% if candidate.city == profile.city and profile.city %}
+                                        <span style="background: #e8f8f5; color: #1abc9c; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; border: 1px solid #a3e4d7;">📍 Seninle Aynı Şehir</span>
+                                    {% else %}
+                                        <span style="background: #f4f6f6; color: #7f8c8d; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">📍 {{ candidate.city|default:"Konum Yok" }}</span>
+                                    {% endif %}
+                                    <span style="background: #ebf5fb; color: #2980b9; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">🧠 {{ candidate.mbti_type|default:"MBTI Yok" }}</span>
+                                    <span style="background: #fdf2e9; color: #d35400; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">🚭 Sigara İçmez</span>
+                                </div>
+
                             </div>
                             <div class="match-score-badge">%{{ candidate.match_score }}</div>
                         </div>
@@ -202,7 +205,6 @@
         function initCards() {
             cards.forEach((card, index) => {
                 card.style.zIndex = cards.length - index;
-                // PERFORMANS: translate3d kullanarak GPU'yu zorla
                 card.style.transform = `translate3d(0, -${20 * index}px, 0) scale(${(25 - index) / 25})`;
                 card.style.opacity = index > 2 ? 0 : 1;
             });
@@ -215,7 +217,6 @@
 
             hammer.on('pan', (e) => {
                 card.classList.add('dragging');
-                // PERFORMANS: translate3d ve hafif rotate ile gerçekçi akıcılık
                 card.style.transform = `translate3d(${e.deltaX}px, ${e.deltaY}px, 0) rotate(${e.deltaX * 0.05}deg)`;
             });
 
@@ -225,7 +226,6 @@
                 
                 if (Math.abs(e.deltaX) > threshold) {
                     const direction = e.deltaX > 0 ? 1 : -1;
-                    // PERFORMANS: Hızlı uçuş animasyonu
                     card.style.transition = 'transform 0.3s ease-in, opacity 0.3s';
                     card.style.transform = `translate3d(${direction * window.innerWidth * 1.2}px, ${e.deltaY}px, 0) rotate(${direction * 40}deg)`;
                     card.style.opacity = '0';
@@ -238,9 +238,8 @@
                         cards.shift();
                         initCards();
                         sendSwipeData(targetId, action);
-                    }, 200); // 200ms bekleme hızı artırır
+                    }, 200);
                 } else {
-                    // PERFORMANS: Geri yerine zıplama
                     card.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                     card.style.transform = `translate3d(0, 0, 0) rotate(0deg)`;
                     initCards();
