@@ -48,7 +48,7 @@ def generate_match_score(profile1, profile2):
     return score
 
 def generate_bot_users(count=10):
-    url = f"https://randomuser.me/api/?results={count}"
+    url = f"https://randomuser.me/api/?results={count}&nat=tr,en,de" # TR, İngiltere ve Almanya karışık gelsin
     response = requests.get(url, verify=False)
     data = response.json()
     
