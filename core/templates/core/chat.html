@@ -60,6 +60,17 @@
     
     // Sayfa yüklendiğinde input'a odaklan
     document.querySelector('input[name="message_text"]').focus();
+    
+    // --- CANLI SOHBET HİLESİ (AUTO-REFRESH) ---
+setInterval(function() {
+    let inputField = document.querySelector('input[name="message_text"]');
+    
+    // Eğer mesaj kutusu boşsa (yani kullanıcı bir şey yazmıyorsa) sayfayı yenile
+    // Böylece karşıdan yeni mesaj geldiyse ekrana düşer!
+    if (inputField && inputField.value.trim() === "") {
+        window.location.reload();
+    }
+}, 10000); // 10000 milisaniye = 10 saniyede bir kontrol eder
 </script>
 
 <style>
