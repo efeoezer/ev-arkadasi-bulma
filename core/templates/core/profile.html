@@ -116,9 +116,13 @@
                     <input type="email" name="email" value="{{ u_form.email.value|default:'' }}" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;">
                 </div>
                 
-                <div>
-                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Şehir / Konum</label>
-                    <input type="text" name="city" value="{{ p_form.city.value|default:'' }}" placeholder="Örn: İstanbul" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;">
+                <div class="location-picker" style="display: flex; gap: 15px; width: 100%;">
+                    <select id="country-select" name="country" class="custom-select" style="flex: 1;">
+                        <option value="">Ülke Seçin</option>
+                    </select>
+                    <select id="city-select" name="city" class="custom-select" style="flex: 1;">
+                        <option value="">Önce Ülke Seçin</option>
+                    </select>
                 </div>
 
                 <div>
