@@ -18,9 +18,9 @@ def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     
     # --- FİLTRELEME BAŞLANGIÇ ---
-    selected_city = request.GET.get('city') # URL'den gelen ?city=İstanbul değerini yakalar
-    selected_room = request.GET.get('room_type')
-    max_budget = request.GET.get('budget')
+    selected_city = request.GET.get('city')
+    room_style = request.GET.get('room_style')
+    max_rent = request.GET.get('max_rent')
     # ----------------------------------
 
     # 1. Profil Tamamlama Yüzdesi
@@ -42,18 +42,21 @@ def dashboard(request):
     # 3. Filtreleme Algoritması
     swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
     
-    # Ana Sorgu: Kendimiz hariç ve kaydırmadıklarımız
-    candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
+    if not selected_city and profile.city:
+        selected_city = profile.city
 
+    swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
+    candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
+    
     # --- FİLTRELEME UYGULAMA ---
     if selected_city:
         candidates_query = candidates_query.filter(city=selected_city)
         
-    if selected_room:
-        candidates_query = candidates_query.filter(preferences__room_type=selected_room)
-    
-    if max_budget:
-        candidates_query = candidates_query.filter(preferences__budget_flexibility__gte=max_budget)
+    if room_style:
+        candidates_query = candidates_query.filter(preferences__room_type=room_style)
+        
+    if max_rent and max_rent.isdigit():
+        candidates_query = candidates_query.filter(preferences__max_budget__lte=int(max_rent))
     # ----------------------------------
 
     # Adayları çek ve skorla
@@ -72,8 +75,8 @@ def dashboard(request):
         'completion_percentage': score,
         'recent_activities': recent_activities,
         'candidates': candidates,
-        'all_cities': all_cities,      # Şehir listesini gönderiyoruz
-        'selected_city': selected_city # Seçili şehri geri gönderiyoruz (inputu dolu tutmak için)
+        'all_cities': all_cities,
+        'selected_city': selected_city,
     })
 
 @csrf_exempt
