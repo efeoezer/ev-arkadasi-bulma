@@ -113,31 +113,36 @@
 
         // 1. PYTHON'A VERİ GÖNDERECEK OLAN KÖPRÜ FONKSİYONUMUZ
         function sendSwipeData(targetId, swipeDirection) {
-            fetch('/api/swipe/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    'target_user_id': targetId,
-                    'action': swipeDirection
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // EĞER DURUM 'match' İSE POP-UP'I GÖSTER!
-                if (data.status === 'match') {
-                    document.getElementById('match-name').innerText = data.matched_name;
-                    document.getElementById('match-popup').style.display = 'flex';
-                } else {
-                    console.log("Sunucu:", data.message);
-                }
-            })
-            .catch(error => {
-                console.error("Bağlantı Hatası:", error);
-            });
+    fetch('/api/swipe/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}' // CSRF güvenliği için şart
+        },
+        body: JSON.stringify({
+            'target_user_id': targetId,
+            'action': swipeDirection
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // İŞTE POP-UP'I PATLATAN KISIM BURASI:
+        if (data.status === 'match') {
+            // Pop-up içindeki ismi güncelle
+            document.getElementById('match-name').innerText = data.matched_name;
+            // Pop-up ekranını göster
+            document.getElementById('match-popup').style.display = 'flex';
+            
+            console.log("🎉 TEBRİKLER: Karşılıklı eşleşme sağlandı!");
+        } else {
+            console.log("Sunucu yanıtı:", data.message);
         }
-
+    })
+    .catch(error => {
+        console.error("Bağlantı Hatası:", error);
+    });
+}
+        
         function initCards() {
             cards.forEach((card, index) => {
                 // Derinlik algoritması: Her arka kart Z ekseninde küçülür ve aşağı kayar
