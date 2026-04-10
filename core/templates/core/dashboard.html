@@ -56,6 +56,23 @@
             <p style="font-size: 0.8em; color: #d35400; margin-top: 5px;">Tıkladıktan sonra resimler inene kadar birkaç saniye bekleyin.</p>
         </div>
         {% endif %}
+        <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid #ecf0f1; width: 100%; max-width: 350px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-weight: bold; color: #34495e; font-size: 0.9em;">📍 Lokasyon:</span>
+                <form method="GET" action="{% url 'dashboard' %}" id="filter-form">
+                    <select name="city" onchange="document.getElementById('filter-form').submit();" 
+                            style="padding: 6px 12px; border-radius: 20px; border: 2px solid #3498db; background: white; color: #2c3e50; font-weight: 600; outline: none; cursor: pointer;">
+                        <option value="">Tüm Şehirler</option>
+                        {% for city in all_cities %}
+                            <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% if selected_city %}
+                    <a href="{% url 'dashboard' %}" style="color: #e74c3c; text-decoration: none; font-size: 0.8em; font-weight: bold;">✕</a>
+                {% endif %}
+            </div>
+        </div>
 
         <h2 style="color: #bdc3c7; margin-bottom: 10px;">Günün Adayları</h2>
         
