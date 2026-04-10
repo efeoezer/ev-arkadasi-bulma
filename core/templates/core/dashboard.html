@@ -6,121 +6,220 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 
 <style>
-    /* Ana Ekranın Grid (Izgara) Yapısı */
-    .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    /* --- Temel Izgara ve Arkaplan --- */
+    .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+    .dashboard-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 30px; align-items: start; }
     
-    /* Kaydırma Alanı Dış Çerçevesi */
-    .swipe-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; min-height: 500px; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
-    
-    /* Yan taraftaki profesyonel paneller */
-    .side-panel { display: flex; flex-direction: column; gap: 20px; }
-    .info-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .info-card h3 { color: #2c3e50; margin-bottom: 15px; font-size: 1.1em; border-bottom: 2px solid #f4f7f6; padding-bottom: 5px; }
+    /* --- Ana Kaydırma Alanı --- */
+    .swipe-section { 
+        background: #fdfdfd; 
+        border-radius: 20px; 
+        padding: 30px; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03); 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        border: 1px solid #f1f2f6;
+        min-height: 700px; /* Kartların sığması için alan açtık */
+    }
 
-    /* Yeni: Dinamik Kart Yığını Stilleri */
-    .card-stack { width: 300px; height: 400px; position: relative; margin-top: 20px; }
+    /* --- Lokasyon Filtresi (Modern Tasarım) --- */
+    .filter-wrapper {
+        width: 100%;
+        max-width: 400px;
+        margin-bottom: 40px; /* Kartlarla arasına net boşluk koyduk */
+        z-index: 100;
+    }
+    .filter-bar { 
+        background: white; 
+        padding: 10px 20px; 
+        border-radius: 30px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        gap: 12px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+        border: 2px solid #3498db;
+    }
+    .filter-bar select {
+        border: none;
+        background: transparent;
+        font-weight: 700;
+        color: #2c3e50;
+        outline: none;
+        cursor: pointer;
+        font-size: 1em;
+    }
+
+    /* --- Kart Yığını Konumlandırma (Overlap Çözümü) --- */
+    .card-stack-wrapper {
+        position: relative;
+        width: 320px;
+        height: 450px;
+        margin-top: 20px;
+    }
+    .card-stack { width: 100%; height: 100%; position: relative; }
     
-    .swipe-card { position: absolute; width: 100%; height: 100%; background-color: #ffffff; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; user-select: none; will-change: transform; transition: transform 0.3s ease-out; border: 1px solid #ecf0f1; }
+    /* --- Profesyonel Kart Tasarımı --- */
+    .swipe-card { 
+        position: absolute; 
+        width: 100%; 
+        height: 100%; 
+        background-color: #ffffff; 
+        border-radius: 25px; 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+        display: flex; 
+        flex-direction: column; 
+        overflow: hidden;
+        user-select: none; 
+        will-change: transform; 
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        border: 1px solid #ecf0f1; 
+    }
     
-    .swipe-card.dragging { transition: none; }
+    .card-header-bg {
+        height: 140px;
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        width: 100%;
+        position: relative;
+    }
+
+    .profile-img-container {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        border: 5px solid white;
+        overflow: hidden;
+        position: absolute;
+        bottom: -55px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .card-content {
+        padding: 65px 20px 20px 20px;
+        text-align: center;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .card-content h2 { color: #2c3e50; margin: 0; font-size: 1.5em; }
+    .card-content p { color: #7f8c8d; margin: 5px 0; font-weight: 500; }
     
-    .profile-img { width: 120px; height: 120px; border-radius: 50%; background-color: #ecf0f1; margin-bottom: 20px; border: 3px solid #3498db; }
-    
-    .match-score { font-size: 2.2em; font-weight: bold; color: #2ecc71; margin-top: 10px; }
+    .match-score-badge { 
+        font-size: 2.5em; 
+        font-weight: 900; 
+        color: #2ecc71; 
+        margin-top: 10px;
+        letter-spacing: -1px;
+    }
+
+    /* --- Yan Paneller --- */
+    .side-panel { display: flex; flex-direction: column; gap: 20px; }
+    .info-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f2f6; }
+    .info-card h3 { color: #2c3e50; font-size: 1em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 2px solid #f4f7f6; padding-bottom: 10px; }
+
+    /* --- Admin Paneli --- */
+    .admin-panel { background: #fff3e0; padding: 15px; border-radius: 12px; border: 1px dashed #e67e22; width: 100%; margin-bottom: 20px; }
+
+    @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 </style>
 
-<div id="match-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; animation: fadeIn 0.5s;">
-    <h1 style="font-family: 'Pacifico', cursive; font-size: 5em; color: #e74c3c; text-shadow: 0 0 20px rgba(231, 76, 60, 0.6); margin-bottom: 10px;">It's a Match!</h1>
-    <p style="font-size: 1.2em; margin-bottom: 30px;">Tebrikler! <strong id="match-name" style="color: #f1c40f;"></strong> ile karşılıklı eşleştin.</p>
+<div id="match-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center;">
+    <h1 style="font-family: 'Pacifico', cursive; font-size: 5em; color: #e74c3c; margin-bottom: 0;">It's a Match!</h1>
+    <p style="font-size: 1.4em; margin-bottom: 30px;">Tebrikler! <strong id="match-name" style="color: #f1c40f;"></strong> ile eşleştin.</p>
     <div style="display: flex; gap: 15px;">
-        <button onclick="document.getElementById('match-popup').style.display='none'" style="background: transparent; border: 2px solid white; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; font-size: 1em;">Kaydırmaya Devam Et</button>
-        <a href="{% url 'matches' %}" style="background: #e74c3c; border: none; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 1em;">Mesaj Gönder</a>
+        <button onclick="document.getElementById('match-popup').style.display='none'" style="background: transparent; border: 2px solid white; color: white; padding: 12px 30px; border-radius: 30px; font-weight: bold; cursor: pointer;">Kapat</button>
+        <a href="{% url 'matches' %}" style="background: #e74c3c; color: white; padding: 12px 30px; border-radius: 30px; text-decoration: none; font-weight: bold;">Mesaj At</a>
     </div>
 </div>
 
-<style>
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-</style>
-
-<div class="dashboard-grid">
-    <div class="swipe-section">
-        {% if request.user.is_superuser %}
-        <div style="margin-bottom: 20px; background: #fff3e0; padding: 15px; border-radius: 8px; border: 1px dashed #e67e22; width: 100%; max-width: 350px;">
-            <h4 style="color: #d35400; margin-bottom: 10px;">🛠️ Admin Kontrol Paneli</h4>
-            <a href="{% url 'generate_bots' %}" style="background: #e67e22; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block;">
-                🤖 10 Yeni Aday Üret (API)
-            </a>
-            <a href="{% url 'make_bots_like_me' %}" style="background: #e74c3c; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block; margin-top: 10px;">
-                💖 5 Bot Beni Likelasın (Test)
-            </a>
-            <p style="font-size: 0.8em; color: #d35400; margin-top: 5px;">Tıkladıktan sonra resimler inene kadar birkaç saniye bekleyin.</p>
-        </div>
-        {% endif %}
-        <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid #ecf0f1; width: 100%; max-width: 350px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-weight: bold; color: #34495e; font-size: 0.9em;">📍 Lokasyon:</span>
-                <form method="GET" action="{% url 'dashboard' %}" id="filter-form">
-                    <select name="city" onchange="document.getElementById('filter-form').submit();" 
-                            style="padding: 6px 12px; border-radius: 20px; border: 2px solid #3498db; background: white; color: #2c3e50; font-weight: 600; outline: none; cursor: pointer;">
-                        <option value="">Tüm Şehirler</option>
-                        {% for city in all_cities %}
-                            <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
-                        {% endfor %}
-                    </select>
-                </form>
-                {% if selected_city %}
-                    <a href="{% url 'dashboard' %}" style="color: #e74c3c; text-decoration: none; font-size: 0.8em; font-weight: bold;">✕</a>
-                {% endif %}
-            </div>
-        </div>
-
-        <h2 style="color: #bdc3c7; margin-bottom: 10px;">Günün Adayları</h2>
+<div class="dashboard-container">
+    <div class="dashboard-grid">
         
-        <div class="card-stack" id="card-stack">
-            {% for candidate in candidates %}
-            <div class="swipe-card" data-id="{{ candidate.user.id }}">
-                <div class="profile-img" style="overflow: hidden;">
-                    {% if candidate.userphoto_set.first %}
-                        <img src="{{ candidate.userphoto_set.first.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
-                    {% else %}
-                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #ecf0f1; color: #95a5a6; font-size: 0.8em;">Foto Yok</div>
+        <div class="swipe-section">
+            {% if request.user.is_superuser %}
+            <div class="admin-panel">
+                <h4 style="color: #d35400; margin: 0 0 10px 0;">🛠️ Yönetici Paneli</h4>
+                <a href="{% url 'generate_bots' %}" style="text-decoration: none; background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">🤖 Bot Üret</a>
+                <a href="{% url 'make_bots_like_me' %}" style="text-decoration: none; background: #e74c3c; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">💖 Like Al</a>
+            </div>
+            {% endif %}
+
+            <div class="filter-wrapper">
+                <div class="filter-bar">
+                    <span style="font-size: 1.2em;">📍</span>
+                    <form method="GET" action="{% url 'dashboard' %}" id="filter-form">
+                        <select name="city" onchange="document.getElementById('filter-form').submit();">
+                            <option value="">Tüm Şehirler</option>
+                            {% for city in all_cities %}
+                                <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    {% if selected_city %}
+                        <a href="{% url 'dashboard' %}" style="text-decoration: none; color: #e74c3c; font-weight: bold;">✕</a>
                     {% endif %}
                 </div>
-                <h2 style="margin-bottom: 5px;">{{ candidate.user.first_name }}</h2>
-                <p style="color: #7f8c8d; margin-top: 0;">{{ candidate.mbti_type|default:"Bilinmiyor" }} - {{ candidate.city|default:"Konum Yok" }}</p>
-                
-                <div class="match-score">%{{ candidate.match_score }}</div>
             </div>
-            {% empty %}
-            <div style="text-align: center; color: #7f8c8d; padding: 20px; font-weight: bold;">
-                Şu an eşleşebileceğin aday kalmadı. <br>
-                Admin panelinden yeni adaylar üretebilirsin.
+
+            <div class="card-stack-wrapper">
+                <div class="card-stack" id="card-stack">
+                    {% for candidate in candidates %}
+                    <div class="swipe-card" data-id="{{ candidate.user.id }}">
+                        <div class="card-header-bg">
+                            <div class="profile-img-container">
+                                {% if candidate.userphoto_set.first %}
+                                    <img src="{{ candidate.userphoto_set.first.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f8f9fa; color: #bdc3c7;">?</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div>
+                                <h2>{{ candidate.user.first_name }}</h2>
+                                <p>{{ candidate.mbti_type|default:"MBTI Yok" }} • {{ candidate.city|default:"Konum Yok" }}</p>
+                            </div>
+                            <div class="match-score-badge">%{{ candidate.match_score }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div style="text-align: center; color: #bdc3c7; padding-top: 100px;">
+                        <span style="font-size: 3em;">🔍</span>
+                        <p>Kriterlere uygun aday kalmadı.</p>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
-            {% endfor %}
         </div>
-    </div>
-    <div class="side-panel">
-        <div class="info-card">
-    <h3>Profil Durumu</h3>
-    <p style="font-size: 0.9em; color: #666;">Algoritmanın senin için en iyi ev arkadaşını bulabilmesi için profilini tamamla.</p>
-    <div style="background: #ecf0f1; border-radius: 5px; height: 10px; margin-top: 15px; overflow: hidden;">
-        <div style="background: #2ecc71; width: {{ completion_percentage }}%; height: 100%; transition: width 0.5s;"></div>
-    </div>
-    <p style="text-align: right; font-size: 0.8em; margin-top: 5px; color: #2ecc71; font-weight: bold;">%{{ completion_percentage }} Tamamlandı</p>
-</div>
 
-<div class="info-card">
-    <h3>Son Aktiviteler</h3>
-    <ul style="list-style: none; font-size: 0.9em; color: #666; line-height: 1.8; padding: 0;">
-        {% for activity in recent_activities %}
-            <li>{{ activity }}</li>
-        {% empty %}
-            <li>Henüz yeni bir aktivite yok.</li>
-        {% endfor %}
-    </ul>
-</div>
-    </div>
+        <div class="side-panel">
+            <div class="info-card">
+                <h3>Profil Tamamlama</h3>
+                <div style="background: #ecf0f1; border-radius: 10px; height: 12px; overflow: hidden; margin-bottom: 10px;">
+                    <div style="background: #2ecc71; width: {{ completion_percentage }}%; height: 100%;"></div>
+                </div>
+                <p style="text-align: right; font-weight: bold; color: #2ecc71; margin: 0;">%{{ completion_percentage }}</p>
+            </div>
 
+            <div class="info-card">
+                <h3>Son Aktiviteler</h3>
+                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9em; color: #7f8c8d;">
+                    {% for activity in recent_activities %}
+                        <li style="padding: 10px 0; border-bottom: 1px solid #f4f7f6;">{{ activity }}</li>
+                    {% empty %}
+                        <li style="padding: 10px 0; text-align: center;">Henüz hareket yok.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <script>
@@ -128,92 +227,65 @@
         const stack = document.getElementById('card-stack');
         let cards = Array.from(stack.querySelectorAll('.swipe-card')).reverse();
 
-        // 1. PYTHON'A VERİ GÖNDERECEK OLAN KÖPRÜ FONKSİYONUMUZ
         function sendSwipeData(targetId, swipeDirection) {
-    fetch('/api/swipe/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}' // CSRF güvenliği için şart
-        },
-        body: JSON.stringify({
-            'target_user_id': targetId,
-            'action': swipeDirection
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        // İŞTE POP-UP'I PATLATAN KISIM BURASI:
-        if (data.status === 'match') {
-            // Pop-up içindeki ismi güncelle
-            document.getElementById('match-name').innerText = data.matched_name;
-            // Pop-up ekranını göster
-            document.getElementById('match-popup').style.display = 'flex';
-            
-            console.log("🎉 TEBRİKLER: Karşılıklı eşleşme sağlandı!");
-        } else {
-            console.log("Sunucu yanıtı:", data.message);
+            fetch('/api/swipe/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    'target_user_id': targetId,
+                    'action': swipeDirection
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'match') {
+                    document.getElementById('match-name').innerText = data.matched_name;
+                    document.getElementById('match-popup').style.display = 'flex';
+                }
+            });
         }
-    })
-    .catch(error => {
-        console.error("Bağlantı Hatası:", error);
-    });
-}
-        
+
         function initCards() {
             cards.forEach((card, index) => {
-                // Derinlik algoritması: Her arka kart Z ekseninde küçülür ve aşağı kayar
                 card.style.zIndex = cards.length - index;
-                card.style.transform = `scale(${(20 - index) / 20}) translateY(-${50 * index}px)`;
-                card.style.opacity = (10 - index) / 10;
+                card.style.transform = `scale(${(25 - index) / 25}) translateY(-${20 * index}px)`;
+                card.style.opacity = index > 2 ? 0 : 1;
             });
-            
-            if (cards.length > 0) {
-                initHammer(cards[0]);
-            }
+            if (cards.length > 0) initHammer(cards[0]);
         }
 
         function initHammer(card) {
             const hammer = new Hammer(card);
             hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
 
-            hammer.on('pan', function(event) {
+            hammer.on('pan', (e) => {
                 card.classList.add('dragging');
-                const rotate = event.deltaX * 0.05;
-                card.style.transform = `translate(${event.deltaX}px, ${event.deltaY}px) rotate(${rotate}deg)`;
+                card.style.transform = `translate(${e.deltaX}px, ${e.deltaY}px) rotate(${e.deltaX * 0.05}deg)`;
             });
 
-            hammer.on('panend', function(event) {
+            hammer.on('panend', (e) => {
                 card.classList.remove('dragging');
-                
-                // Red/Kabul eşik değeri (Genişliğin %25'i)
-                const threshold = window.innerWidth * 0.25; 
-                const isSwipedRight = event.deltaX > threshold;
-                const isSwipedLeft = event.deltaX < -threshold;
-
-                if (isSwipedRight || isSwipedLeft) {
-                    const direction = isSwipedRight ? 1 : -1;
-                    card.style.transform = `translate(${direction * window.innerWidth}px, ${event.deltaY}px) rotate(${direction * 30}deg)`;
-                    
-                    // 2. KARTIN YÖNÜNÜ VE KİM OLDUĞUNU (ID) YAKALA
+                const threshold = window.innerWidth * 0.2;
+                if (Math.abs(e.deltaX) > threshold) {
+                    const direction = e.deltaX > 0 ? 1 : -1;
+                    card.style.transform = `translate(${direction * window.innerWidth}px, ${e.deltaY}px) rotate(${direction * 40}deg)`;
                     const targetId = card.getAttribute('data-id');
-                    const swipeAction = isSwipedRight ? 'right' : 'left';
-
+                    const action = e.deltaX > 0 ? 'right' : 'left';
                     setTimeout(() => {
                         card.remove();
-                        cards.shift(); 
-                        initCards(); 
-                        
-                        // 3. YAKALADIĞIN VERİYİ PYTHON'A FIRLAT
-                        sendSwipeData(targetId, swipeAction);
-                        
-                    }, 300); 
+                        cards.shift();
+                        initCards();
+                        sendSwipeData(targetId, action);
+                    }, 200);
                 } else {
-                    card.style.transform = ''; 
+                    card.style.transform = '';
+                    initCards();
                 }
             });
         }
-
         initCards();
     });
 </script>
