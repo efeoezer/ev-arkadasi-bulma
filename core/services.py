@@ -48,8 +48,16 @@ def generate_match_score(profile1, profile2):
     # fiziksel çekim/tamamlayıcılık için taban bir puan verilebilir (%10)
     if total_score == 0:
         total_score = 10
+      
+    # LOKASYON BONUSU
+    location_bonus = 0
+    if profile1.city and profile2.city:
+        if profile1.city.lower() == profile2.city.lower():
+            location_bonus = 20 # Aynı şehirdeyse ciddi bir avantaj
             
-    return total_score
+    # Toplam skoru hesapla ve 100 ile sınırla
+    final_score = total_score + location_bonus
+    return min(final_score, 100)
 
 def generate_bot_users(count=10):
     url = f"https://randomuser.me/api/?results={count}&nat=tr,en,de" # TR, İngiltere ve Almanya karışık gelsin
