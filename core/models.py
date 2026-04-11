@@ -151,3 +151,26 @@ class Profile(models.Model):
             now = timezone.now()
             return now < self.last_seen + timezone.timedelta(minutes=5)
         return False
+    
+    last_seen = models.DateTimeField(
+        null=True, 
+        blank=True, 
+        verbose_name="Son Görülme"
+    )
+
+    def is_online(self):
+        """
+        Kullanıcının son 5 dakika içinde bir aktivite 
+        gösterip göstermediğini kontrol eder.
+        """
+        if self.last_seen:
+            return timezone.now() < self.last_seen + datetime.timedelta(minutes=5)
+        return False
+
+    def get_online_status_display(self):
+        """
+        Arayüzde (Template) kullanılacak metinsel durum.
+        """
+        if self.is_online():
+            return "Şu an aktif"
+        return f"Son görülme: {self.last_seen.strftime('%d.%m.%Y %H:%M')}" if self.last_seen else "Çevrimdışı"
