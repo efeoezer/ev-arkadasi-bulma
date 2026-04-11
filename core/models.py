@@ -74,3 +74,80 @@ class Review(models.Model):
     rating = models.IntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+import os
+
+def profile_pic_path(instance, filename):
+    # Görselleri 'profile_pics/user_id/filename' şeklinde düzenli saklamak için
+    return f'profile_pics/{instance.user.id}/{filename}'
+
+class Profile(models.Model):
+    GENDER_CHOICES = [
+        ('male', 'Erkek'),
+        ('female', 'Kadın'),
+        ('other', 'Diğer'),
+        ('prefer_not_to_say', 'Belirtmek İstemiyorum')
+    ]
+    OCCUPATION_STATUS = [
+        ('student', 'Öğrenci'),
+        ('working', 'Çalışan'),
+        ('student_working', 'Hem Okuyor Hem Çalışıyor'),
+        ('unemployed', 'Şu an Çalışmıyor'),
+    ]
+    status = models.CharField(
+        max_length=20, 
+        choices=OCCUPATION_STATUS, 
+        default='student',
+        verbose_name="Çalışma Durumu"
+
+    # Temel Kullanıcı Bağlantısı
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    
+    # Kişisel Bilgiler
+    bio = models.TextField(max_length=500, blank=True, verbose_name="Hakkımda")
+    birth_date = models.DateField(null=True, blank=True, verbose_name="Doğum Tarihi")
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, default='prefer_not_to_say')
+    profile_picture = models.ImageField(upload_to=profile_pic_path, null=True, blank=True)
+    
+    # Eğitim Bilgileri
+    university = models.CharField(max_length=255, blank=True, null=True, verbose_name="Üniversite")
+    department = models.CharField(max_length=255, blank=True, null=True, verbose_name="Bölüm")
+    is_student = models.BooleanField(default=True)
+  
+    # İş Bilgileri (Opsiyonel)
+    job_title = models.CharField(max_length=100, blank=True, null=True, verbose_name="Meslek / Unvan")
+    company = models.CharField(max_length=100, blank=True, null=True, verbose_name="Çalıştığı Yer / Şirket")
+    
+    # Konum Bilgisi
+    city = models.CharField(max_length=100, blank=True, verbose_name="Yaşadığı Şehir")
+    district = models.CharField(max_length=100, blank=True, verbose_name="İlçe/Semt")
+
+    # Güvenilirlik ve Doğrulama
+    is_verified = models.BooleanField(default=False, help_text="E-posta veya kimlik doğrulaması yapıldı mı?")
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    
+    # Sosyal Medya Linkleri (Opsiyonel güven artırıcı)
+    instagram_username = models.CharField(max_length=50, blank=True, null=True)
+    
+    # Sistem Takibi
+    last_seen = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} ({self.user.username})"
+
+    @property
+    def age(self):
+        if self.birth_date:
+            import datetime
+            return (datetime.date.today() - self.birth_date).days // 365
+        return None
+
+    def is_online(self):
+        if self.last_seen:
+            now = timezone.now()
+            return now < self.last_seen + timezone.timedelta(minutes=5)
+        return False
