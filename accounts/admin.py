@@ -20,4 +20,6 @@ class ProfileAdmin(admin.ModelAdmin):
     online_status.short_description = "Aktif mi?" # Sütun başlığı
 
 # En önemli satır: Modeli ve yukarıdaki ayarları birbirine bağla
+admin.site.unregister(Profile)
 admin.site.register(Profile, ProfileAdmin)
+
