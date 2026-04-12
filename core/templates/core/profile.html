@@ -1,89 +1,269 @@
 {% extends 'core/base.html' %}
+
+{% block title %}TypeMatch | Profil Analizi{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="text-center mb-5">
-        <div style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin: 0 auto; border: 4px solid #eee;">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .profile-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 30px;
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+    .profile-card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        text-align: center;
+    }
+    .chart-container {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .mbti-badge {
+        display: inline-block;
+        background: #2c3e50;
+        color: white;
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-top: 15px;
+    }
+</style>
+
+<div class="profile-container">
+    <div class="profile-card">
+        
+        <div style="width: 150px; height: 150px; border-radius: 50%; background: #bdc3c7; margin: 0 auto 20px auto; overflow: hidden; border: 3px solid #eee;">
             {% if current_photo %}
-                <img src="{{ current_photo.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="{{ current_photo.image.url }}" alt="Profil Fotoğrafı" style="width: 100%; height: 100%; object-fit: cover;">
             {% else %}
-                <div style="background: #eee; height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">Foto Yok</div>
+                <div style="padding-top: 60px; color: white; font-weight: bold;">Foto Yok</div>
             {% endif %}
         </div>
-        <h2 class="mt-3 fw-bold">{{ profile.user.first_name }} {{ profile.user.last_name }}</h2>
+        
+        <h2 style="color: #2c3e50; margin-bottom: 5px;">{{ profile.user.username }}</h2>
+        <p style="color: #7f8c8d;">Sistem Kayıtlı Profil</p>
+        
+        <div class="mbti-badge">
+            {{ profile.mbti_type|default:"Test Çözülmedi" }}
+        </div>
+        
+        {% if not profile.mbti_type %}
+        <div style="margin-top: 20px;">
+            <a href="{% url 'mbti_test' %}" style="background-color: #e67e22; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(230, 126, 34, 0.3); transition: transform 0.2s;">
+                ✨ Kişilik Testini Başlat
+            </a>
+            <p style="font-size: 0.8em; color: #7f8c8d; margin-top: 10px;">Eşleşme algoritmasının çalışması için bu testi çözmelisin.</p>
+        </div>
+        {% else %}
+        <div style="margin-top: 15px;">
+            <a href="{% url 'mbti_test' %}" style="font-size: 0.85em; color: #3498db; text-decoration: none; border: 1px solid #3498db; padding: 6px 12px; border-radius: 5px; display: inline-block;">
+                Testi Yeniden Çöz
+            </a>
+        </div>
+        {% endif %}
+        
+        {% if profile.mbti_type %}
+        <div style="margin-top: 20px; text-align: left; background: #e8f6f3; padding: 20px; border-radius: 10px; border: 1px solid #d1f2eb;">
+            <h3 style="color: #1abc9c; font-size: 1.1em; margin-bottom: 10px;">Senin Analizin: {{ profile.mbti_type }}</h3>
+            <p style="font-size: 0.9em; color: #333; line-height: 1.6;">
+                {{ mbti_description }}
+            </p>
+        </div>
+        {% endif %}
+        
+        <div style="margin-top: 30px; text-align: left; background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #eee;">
+            <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 15px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px;">Bilgileri Güncelle</h3>
+            
+            <form method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
+                {% csrf_token %}
+
+                <div style="background: white; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 5px;">Profil Fotoğrafı Değiştir</label>
+                    {{ ph_form.image }}
+                    {% if ph_form.image.errors %}
+                        <p style="color: #e74c3c; font-size: 0.8em; margin-top: 5px;">{{ ph_form.image.errors.0 }}</p>
+                    {% endif %}
+
+                    {% if current_photo %}
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #eee;">
+                        <a href="{% url 'delete_photo' %}" style="color: #e74c3c; font-size: 0.85em; text-decoration: none; font-weight: bold; display: inline-block;">
+                            🗑️ Mevcut Fotoğrafı Kaldır
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Kullanıcı Adı</label>
+                    <input type="text" name="username" value="{{ u_form.username.value|default:'' }}" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;">
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">E-Posta</label>
+                    <input type="email" name="email" value="{{ u_form.email.value|default:'' }}" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;">
+                </div>
+                
+                <div class="location-picker" style="display: flex; gap: 15px; width: 100%;">
+                    <select id="country-select" name="country" class="custom-select" style="flex: 1;">
+                        <option value="">Ülke Seçin</option>
+                    </select>
+                    <select id="city-select" name="city" class="custom-select" style="flex: 1;">
+                        <option value="">Önce Ülke Seçin</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Biyografi</label>
+                    <textarea name="bio" rows="3" placeholder="Kendinden biraz bahset..." style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em; resize: none;">{{ p_form.bio.value|default:'' }}</textarea>
+                </div>
+
+                <button type="submit" style="background: #3498db; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px;">Kaydet ve Güncelle</button>
+            </form>
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #fee2e2;">
+    <h4 style="color: #991b1b; font-size: 0.9em;">Tehlikeli Alan</h4>
+    <a href="{% url 'delete_account' %}" style="color: #ef4444; font-size: 0.85em; text-decoration: underline;">
+        Hesabımı tamamen silmek istiyorum
+    </a>
+</div>
+        </div>
     </div>
-
-    <div class="row">
-        <div class="col-md-7">
-            <div class="card p-4 shadow-sm border-0 mb-4" style="border-radius: 15px;">
-                <h4 class="fw-bold mb-3">Bilgileri Güncelle</h4>
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="row mb-3">
-                        <div class="col">{{ u_form.first_name.label_tag }} {{ u_form.first_name }}</div>
-                        <div class="col">{{ u_form.last_name.label_tag }} {{ u_form.last_name }}</div>
-                    </div>
-                    <div class="mb-3">{{ u_form.email.label_tag }} {{ u_form.email }}</div>
-                    <div class="mb-3">{{ p_form.city.label_tag }} {{ p_form.city }}</div>
-                    <div class="mb-3">{{ p_form.bio.label_tag }} {{ p_form.bio }}</div>
-                    <div class="mb-4">{{ ph_form.image.label_tag }} {{ ph_form.image }}</div>
-                    <button type="submit" class="btn btn-primary w-100">Değişiklikleri Kaydet</button>
-                </form>
-            </div>
-            <div class="text-center">
-                <a href="{% url 'delete_account' %}" class="text-danger small">Hesabımı Sil</a>
-            </div>
-        </div>
-
-        <div class="col-md-5">
-            <div class="card p-4 shadow-sm border-0 text-center" style="border-radius: 15px; background: #fcfcfc;">
-                <h4 class="fw-bold mb-3">Kişilik Analizin</h4>
-                {% if profile.mbti_type %}
-                    <h1 class="display-4 fw-bold text-primary">{{ profile.mbti_type }}</h1>
-                    <canvas id="mbtiRadarChart" class="my-3"></canvas>
-                    <div class="p-3 bg-light rounded shadow-sm text-start mt-3" style="font-size: 0.9em; line-height: 1.6;">
-                        {{ mbti_description }}
-                    </div>
-                    <a href="{% url 'mbti_test' %}" class="btn btn-outline-secondary btn-sm mt-3">Testi Yeniden Çöz</a>
-                {% else %}
-                    <div class="py-5">
-                        <p class="text-muted">Analiz henüz mevcut değil.</p>
-                        <a href="{% url 'mbti_test' %}" class="btn btn-warning fw-bold">✨ Testi Başlat</a>
-                    </div>
-                {% endif %}
-            </div>
+    <div class="chart-container">
+        <div style="position: relative; height: 100%; width: 100%; max-height: 500px; max-width: 500px;">
+            <canvas id="mbtiRadarChart"></canvas>
         </div>
     </div>
+    </div>
+<div style="max-width: 1000px; margin: 0 auto 40px auto; background: #ffffff; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+    <h3 style="color: #2d3748; font-size: 1.2em; margin-bottom: 10px; border-bottom: 2px solid #edf2f7; padding-bottom: 10px;">🧠 MBTI Harfleri Ne Anlama Geliyor?</h3>
+    <p style="font-size: 0.9em; color: #718096; margin-bottom: 20px; line-height: 1.6;">
+        Ev arkadaşı eşleşme algoritmamız, psikolojik tercihlerinizi 4 farklı eksende analiz eder. Zıt harfler birbirini dengeleyebilir veya çatışma yaratabilir. İşte o 8 temel harfin anlamı:
+    </p>
 
-    <div class="mt-5 p-4 bg-white rounded shadow-sm">
-        <h5 class="fw-bold mb-3">MBTI Harfleri Nedir?</h5>
-        <div class="row g-3 small">
-            <div class="col-md-6"><b>E/I:</b> Dışadönük / İçe Dönük (Enerji)</div>
-            <div class="col-md-6"><b>S/N:</b> Duyusal / Sezgisel (Bilgi)</div>
-            <div class="col-md-6"><b>T/F:</b> Mantıksal / Duygusal (Karar)</div>
-            <div class="col-md-6"><b>J/P:</b> Planlı / Esnek (Düzen)</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        
+        <div style="background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #f6e05e;">
+            <h4 style="font-size: 0.95em; color: #4a5568; margin-bottom: 10px;">⚡ 1. Enerji Yönü (Dünya ile Etkileşim)</h4>
+            <p style="font-size: 0.85em; color: #4a5568; margin-bottom: 8px;"><strong>(E) Dışadönük (Extravert):</strong> Enerjisini dış dünyadan, insanlarla vakit geçirmekten ve aksiyondan alır.</p>
+            <p style="font-size: 0.85em; color: #4a5568; margin-bottom: 0;"><strong>(I) İçe Dönük (Introvert):</strong> Enerjisini iç dünyasından, düşüncelerinden ve yalnız kalmaktan alır.</p>
         </div>
+
+        <div style="background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #63b3ed;">
+            <h4 style="font-size: 0.95em; color: #4a5568; margin-bottom: 10px;">🔍 2. Bilgi İşleme (Algılama Biçimi)</h4>
+            <p style="font-size: 0.85em; color: #4a5568; margin-bottom: 8px;"><strong>(S) Duyusal (Sensing):</strong> Somut gerçeklere, detaylara ve ana odaklanır.</p>
+            <p style="font-size: 0.85em; color: #4a5568; margin-bottom: 0;"><strong>(N) Sezgisel (Intuition):</strong> Soyut kavramlara, büyük resme ve geleceğe odaklanır.</p>
+        </div>
+
+        <div style="background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #fc8181;">
+            <h4 style="font-size: 0.95em; color: #4a5568; margin-bottom: 10px;">⚖️ 3. Karar Verme (Kriterler)</h4>
+            <p style="font-size: 0.85em; color: #4a5568; margin-bottom: 8px;"><strong>(T) Mantıksal (Thinking):</strong> Kararlarını objektif mantık, analiz ve neden-sonuç ilişkisine göre alır.</p>
+            <p style="font-size: 0.85em; color: #4a5568; margin-bottom: 0;"><strong>(F) Duygusal (Feeling):</strong> Kararlarını kişisel değerler, empati ve diğer insanlara olan etkisine göre alır.</p>
+        </div>
+
+        <div style="background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #68d391;">
+            <h4 style="font-size: 0.95em; color: #4a5568; margin-bottom: 10px;">📅 4. Yaşam Tarzı (Dış Dünya Düzeni)</h4>
+            <p style="font-size: 0.85em; color: #4a5568; margin-bottom: 8px;"><strong>(J) Planlı (Judging):</strong> Düzeni, kuralları ve netliği sever.</p>
+            <p style="font-size: 0.85em; color: #4a5568; margin-bottom: 0;"><strong>(P) Esnek (Perceiving):</strong> Spontanlık ve açık uçluluk sever.</p>
+        </div>
+
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('mbtiRadarChart');
-        if (ctx) {
-            new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: ['E/I', 'S/N', 'T/F', 'J/P'],
-                    datasets: [{
-                        data: {{ chart_data|safe }},
-                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                        borderColor: 'rgba(52, 152, 219, 1)',
-                        borderWidth: 2
-                    }]
+        const ctx = document.getElementById('mbtiRadarChart').getContext('2d');
+        
+        const rawData = {{ chart_data|safe }};
+        
+        const data = {
+            labels: [
+                'Dışadönüklük (E)',
+                'Duyusallık (S)',
+                'Mantıksallık (T)',
+                'Planlılık (J)'
+            ],
+            datasets: [{
+                label: 'Bilişsel Fonksiyon Spektrumu',
+                data: rawData,
+                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
+            }]
+        };
+
+        const config = {
+            type: 'radar',
+            data: data,
+            options: {
+                // Grafiğin orantılı büyümesini sağlayan ayar
+                maintainAspectRatio: false,
+                elements: {
+                    line: { borderWidth: 3 }
                 },
-                options: { scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } }, plugins: { legend: { display: false } } }
-            });
-        }
+                scales: {
+                    r: {
+                        angleLines: { display: true },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        };
+
+        new Chart(ctx, config);
     });
+    const countrySelect = document.getElementById('country-select');
+const citySelect = document.getElementById('city-select');
+
+// 1. Tüm dünyadaki ülkeleri çek ve listeye ekle
+fetch("https://countriesnow.space/api/v0.1/countries/positions")
+    .then(res => res.json())
+    .then(data => {
+        data.data.forEach(c => {
+            let opt = new Option(c.name, c.name);
+            countrySelect.add(opt);
+        });
+    });
+
+// 2. Ülke seçilince şehirleri getir
+countrySelect.addEventListener('change', function() {
+    const countryName = this.value;
+    citySelect.innerHTML = '<option>Yükleniyor...</option>';
+    
+    fetch("https://countriesnow.space/api/v0.1/countries/cities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ "country": countryName })
+    })
+    .then(res => res.json())
+    .then(data => {
+        citySelect.innerHTML = '<option value="">Şehir Seçin</option>';
+        data.data.forEach(city => {
+            let opt = new Option(city, city);
+            citySelect.add(opt);
+        });
+    });
+});
 </script>
 {% endblock %}
