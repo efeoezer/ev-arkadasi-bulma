@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.http import HttpResponseForbidden
 from core.models import Match # Eşleşme kontrolü için
 from .models import Message
+from core.services import get_icebreaker_prompts
 
 @login_required
 def chat_view(request, receiver_id):
@@ -43,7 +44,11 @@ def chat_view(request, receiver_id):
         (Q(sender=receiver) & Q(receiver=request.user))
     ).select_related('sender').order_by('sent_at')
 
+    # Buzkıran soruları
+    icebreakers = get_icebreaker_prompts(request.user.profile, receiver.profile)
+
     return render(request, 'core/chat.html', {
         'messages': messages,
-        'receiver': receiver
+        'receiver': receiver,
+        'icebreakers': icebreakers,
     })
