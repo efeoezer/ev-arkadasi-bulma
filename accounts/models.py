@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-import datetime
 
 class Profile(models.Model):
     GENDER_CHOICES = [
@@ -32,7 +31,7 @@ class Profile(models.Model):
     def is_online(self):
         """Kullanıcının son 5 dakika içinde aktif olup olmadığını döner."""
         if self.last_seen:
-            return timezone.now() < self.last_seen + datetime.timedelta(minutes=5)
+            return timezone.now() < self.last_seen + timezone.timedelta(minutes=5)
         return False
 
     @property
