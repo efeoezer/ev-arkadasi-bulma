@@ -109,7 +109,7 @@
                     </div>
 
                     {% if selected_city or request.GET.room_style or request.GET.max_rent %}
-                    <a href="{% url 'dashboard' %}" style="background: #ff7675; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3);" title="Filtreleri Temizle">
+                    <a href="{% url 'dashboard' %}?city=" style="background: #ff7675; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3);" title="Filtreleri Temizle">
                         ✕
                     </a>
                     {% endif %}
