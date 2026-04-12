@@ -154,3 +154,24 @@ def generate_bots_view(request):
     if request.user.is_superuser:
         generate_bot_users(5)
     return redirect('dashboard')
+
+@login_required
+def like_user(request, to_user_id):
+    to_user = get_object_or_404(User, id=to_user_id)
+    
+    # 1. Beğeniyi kaydet (Veya varsa güncelle)
+    like, created = Like.objects.get_or_create(
+        from_user=request.user,
+        to_user=to_user
+    )
+
+    # 2. KARŞILIKLI BEĞENİ KONTROLÜ (Match Check)
+    reverse_like = Like.objects.filter(from_user=to_user, to_user=request.user).exists()
+
+    if reverse_like:
+        # Karşılıklı beğeni var! Match oluştur.
+        Match.objects.get_or_create(user1=request.user, user2=to_user)
+        # Opsiyonel: Burada bir "Eşleştin!" sayfasına yönlendirebilirsin
+        return redirect('match_success_view', match_with_id=to_user.id)
+
+    return redirect('dashboard')
