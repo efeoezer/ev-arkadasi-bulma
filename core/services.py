@@ -2,6 +2,7 @@ import requests
 import random
 import urllib3
 import math
+from django.db import transaction
 from django.core.files.base import ContentFile
 from django.contrib.auth.models import User
 from .models import Match, RoommatePreference
@@ -60,49 +61,63 @@ def generate_match_score(profile1, profile2):
     return min(final_score, 100)
 
 def generate_bot_users(count=10):
-    url = f"https://randomuser.me/api/?results={count}&nat=tr,en,de" # TR, İngiltere ve Almanya karışık gelsin
+    url = f"https://randomuser.me/api/?results={count}&nat=tr,gb,de" # gb = İngiltere (en yerine gb daha iyi sonuç verir)
     response = requests.get(url, verify=False)
     data = response.json()
     
     for item in data['results']:
-        first_name = item['name']['first']
-        last_name = item['name']['last']
-        username = item['login']['username']
-        email = item['email']
-        city = item['location']['city']
-        picture_url = item['picture']['large']
-        
-        if User.objects.filter(username=username).exists():
-            username = f"{username}{random.randint(100, 999)}"
-            
-        # 1. User Oluşturma
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password="BotPassword123!",
-            first_name=first_name,
-            last_name=last_name
-        )
-        
-        # 2. Profil Oluşturma (Zorunlu Eşleştirme Yöntemi)
-        mbti = random.choice(MBTI_TYPES)
-        bio = f"Selam! Ben {first_name}. {city} şehrinde yaşıyorum. Düzenli ve uyumlu bir ev arkadaşı arıyorum. MBTI tipim {mbti}."
-        
-        profile, created = Profile.objects.update_or_create(
-            user=user,
-            defaults={'city': city, 'bio': bio, 'mbti_type': mbti}
-        )
-        
-        # 3. Alt Tabloları Oluşturma
-        RoommatePreference.objects.get_or_create(profile=profile)
-        Verification.objects.get_or_create(user=user)
-        
-        # 4. Fotoğraf İndirme ve Profile Bağlama
-        img_response = requests.get(picture_url, verify=False)
-        if img_response.status_code == 200:
-            photo, created = UserPhoto.objects.get_or_create(profile=profile)
-            photo.image.save(f"{username}.jpg", ContentFile(img_response.content), save=True)
-            
+        try:
+            with transaction.atomic(): # Her bot için tek bir işlem başlat
+                first_name = item['name']['first']
+                last_name = item['name']['last']
+                username = item['login']['username']
+                email = item['email']
+                city = item['location']['city']
+                country = item['location']['country'] # YENİ: API'den ülkeyi çekiyoruz
+                picture_url = item['picture']['large']
+                
+                if User.objects.filter(username=username).exists():
+                    username = f"{username}{random.randint(100, 999)}"
+                    
+                # 1. User Oluşturma
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password="BotPassword123!",
+                    first_name=first_name,
+                    last_name=last_name
+                )
+                
+                # 2. Profil Oluşturma (Lokasyon Bilgileriyle)
+                mbti = random.choice(MBTI_TYPES)
+                bio = f"Selam! Ben {first_name}. {city}, {country} lokasyonunda yaşıyorum. MBTI tipim {mbti}."
+                
+                # Global Lokasyon API'si ile uyumlu hale getirdik
+                profile = Profile.objects.create(
+                    user=user,
+                    city=city,
+                    country=country, # YENİ: Ülke alanı artık boş kalmıyor
+                    mbti_type=mbti
+                )
+                profile.bio = bio # Eğer modelinde bio varsa ekle
+                profile.save()
+                
+                # 3. Alt Tablolar (Oto-yaratım)
+                RoommatePreference.objects.create(profile=profile)
+                Verification.objects.get_or_create(user=user)
+                
+                # 4. Fotoğraf İşlemi
+                img_response = requests.get(picture_url, verify=False)
+                if img_response.status_code == 200:
+                    photo = UserPhoto.objects.create(profile=profile)
+                    photo.image.save(f"{username}.jpg", ContentFile(img_response.content), save=True)
+                
+                print(f"✅ Bot başarıyla oluşturuldu: {username} ({country})")
+                
+        except Exception as e:
+            print(f"❌ Bot oluşturulurken hata: {e}")
+            continue # Hata olursa o botu atla, bir sonrakine geç
+
     return True
 
 def get_icebreaker_prompts(user1_profile, user2_profile):
