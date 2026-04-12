@@ -35,6 +35,10 @@ def dashboard(request):
     likes = Like.objects.filter(to_user=request.user).order_by('-created_at')[:3]
     for like in likes:
         recent_activities.append("Yeni bir beğeni aldın! Kim olduğunu görmek için kaydırmaya devam et. ✨")
+        
+    likes_count = people_who_liked_me.count()
+    if likes_count > 0:
+        recent_activities.append(f"Şu an seni bekleyen {likes_count} yeni beğeni var! 🔥")
     
     if not profile.mbti_type:
         recent_activities.append("⚙️ MBTI testini henüz çözmedin.")
