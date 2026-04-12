@@ -6,7 +6,6 @@
 <style>
     :root {
         --primary-blue: #4a90e2;
-        --soft-purple: #6c5ce7;
         --agree-green: #2ecc71;
         --disagree-red: #ff7675;
         --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -15,48 +14,57 @@
     body { background: var(--bg-gradient); min-height: 100vh; }
 
     .wizard-container {
-        max-width: 750px;
+        max-width: 800px; /* Sıkışıklığı gidermek için genişlettik */
         margin: 60px auto;
-        perspective: 1000px;
     }
 
     .wizard-card {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         border-radius: 40px;
-        padding: 60px;
-        box-shadow: 0 25px 50px rgba(0,0,0,0.1);
-        border: 1px solid rgba(255,255,255,0.3);
+        padding: 70px 50px; /* İç boşluğu (ferahlığı) artırdık */
+        box-shadow: 0 25px 50px rgba(0,0,0,0.08);
+        border: 1px solid rgba(255,255,255,0.4);
         text-align: center;
-        min-height: 500px;
+        min-height: 550px; /* Kartın boyunu sabitledik, zıplama yapmaz */
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
 
     .wizard-step { display: none; }
-    .wizard-step.active { display: block; animation: slideIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+    .wizard-step.active { display: block; animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
 
-    @keyframes slideIn {
+    @keyframes slideUp {
         from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Input Tasarımları */
+    /* Soru Geçiş Animasyonları */
+    .fade-container {
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        opacity: 1;
+        transform: translateX(0);
+    }
+    .fade-out {
+        opacity: 0;
+        transform: translateX(-40px); /* Sola doğru kayarak kaybolur */
+    }
+
     .custom-input {
         border: 2px solid #edf2f7;
         border-radius: 18px;
-        padding: 15px 25px;
+        padding: 18px 25px; /* Inputları ferahlattık */
         font-size: 1.1em;
         transition: 0.3s;
         width: 100%;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
         outline: none;
     }
     .custom-input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 5px rgba(74,144,226,0.1); }
 
-    /* MBTI Spektrum Butonları */
-    .spectrum-wrapper { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 40px 0; }
+    /* MBTI Butonları */
+    .spectrum-wrapper { display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 50px; }
     .circle-btn {
         border-radius: 50%;
         border: 3px solid;
@@ -66,30 +74,29 @@
         outline: none;
     }
     .circle-btn:hover { transform: scale(1.15); }
-    .circle-btn.active { transform: scale(1.2); }
-
+    
     .agree { border-color: var(--agree-green); }
-    .agree.active { background: var(--agree-green); box-shadow: 0 0 20px rgba(46, 204, 113, 0.4); }
+    .agree:active { background: var(--agree-green); transform: scale(1.3); }
     
     .disagree { border-color: var(--disagree-red); }
-    .disagree.active { background: var(--disagree-red); box-shadow: 0 0 20px rgba(255, 118, 117, 0.4); }
+    .disagree:active { background: var(--disagree-red); transform: scale(1.3); }
 
-    .neutral { border-color: #bdc3c7; width: 35px; height: 35px; }
-    .neutral.active { background: #bdc3c7; }
+    .neutral { border-color: #bdc3c7; width: 40px; height: 40px; }
+    .neutral:active { background: #bdc3c7; }
 
-    .size-lg { width: 65px; height: 65px; }
-    .size-md { width: 50px; height: 50px; }
-    .size-sm { width: 40px; height: 40px; }
+    .size-lg { width: 70px; height: 70px; }
+    .size-md { width: 55px; height: 55px; }
+    .size-sm { width: 45px; height: 45px; }
 
     /* İlerleme Çubuğu */
-    .prog-bar-container { height: 8px; background: #eee; border-radius: 10px; margin-bottom: 40px; overflow: hidden; }
-    .prog-bar-fill { height: 100%; background: var(--primary-blue); width: 0%; transition: width 0.4s ease; }
+    .prog-bar-container { height: 10px; background: #eee; border-radius: 10px; margin-bottom: 40px; overflow: hidden; }
+    .prog-bar-fill { height: 100%; background: var(--primary-blue); width: 0%; transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
 
     .btn-next {
         background: var(--primary-blue);
         color: white;
         border: none;
-        padding: 18px 45px;
+        padding: 20px 45px;
         border-radius: 20px;
         font-weight: 800;
         font-size: 1.1em;
@@ -105,48 +112,54 @@
         
         <div id="prog-section" class="d-none">
             <div class="prog-bar-container"><div id="prog-fill" class="prog-bar-fill"></div></div>
-            <p id="counter" class="text-muted fw-bold small mb-4">SORU 1 / 12</p>
+            <p id="counter" class="text-muted fw-bold small mb-4" style="letter-spacing: 1px;">SORU 1 / 12</p>
         </div>
 
         <form id="wizard-form">
             {% csrf_token %}
 
             <div class="wizard-step active" id="step-1">
-                <h1 class="fw-black mb-2" style="font-size: 2.5em; color: #2d3436;">Selam! 👋</h1>
-                <p class="text-muted mb-5">TypeMatch topluluğuna katılmadan önce seni biraz tanıyalım.</p>
-                <input type="text" name="first_name" placeholder="Adın" class="custom-input" required>
-                <input type="text" name="last_name" placeholder="Soyadın" class="custom-input">
-                <button type="button" class="btn-next w-100 mt-3" onclick="nextStep(2)">Devam Et ➔</button>
+                <h1 class="fw-black mb-3" style="font-size: 2.8em; color: #2d3436;">Selam! 👋</h1>
+                <p class="text-muted mb-5" style="font-size: 1.1em;">TypeMatch topluluğuna katılmadan önce seni biraz tanıyalım.</p>
+                
+                <div class="row">
+                    <div class="col-md-6"><input type="text" name="first_name" placeholder="Adın" class="custom-input" required></div>
+                    <div class="col-md-6"><input type="text" name="last_name" placeholder="Soyadın" class="custom-input"></div>
+                </div>
+                
+                <button type="button" class="btn-next w-100 mt-4" onclick="nextStep(2)">Devam Et ➔</button>
             </div>
 
             <div class="wizard-step" id="step-2">
-                <h2 class="fw-bold mb-4" style="color: #2d3436;">Nerede Yaşıyorsun? 📍</h2>
+                <h2 class="fw-bold mb-3" style="color: #2d3436; font-size: 2.2em;">Nerede Yaşıyorsun? 📍</h2>
                 <p class="text-muted mb-5">Sana en yakın ev arkadaşlarını bulmak için bu bilgi önemli.</p>
                 <input type="text" name="city" placeholder="Şehir (Örn: İstanbul)" class="custom-input">
-                <textarea name="bio" placeholder="Kendinden, alışkanlıklarından bahset..." class="custom-input" rows="3"></textarea>
-                <button type="button" class="btn-next w-100" onclick="startMBTI()">Analizi Başlat ✨</button>
+                <textarea name="bio" placeholder="Kendinden, ev alışkanlıklarından kısaca bahset..." class="custom-input" rows="3"></textarea>
+                <button type="button" class="btn-next w-100 mt-3" onclick="startMBTI()">Kişilik Analizini Başlat ✨</button>
             </div>
 
             <div class="wizard-step" id="step-3">
-                <h2 id="q-text" class="fw-bold mb-5" style="min-height: 90px; line-height: 1.4; color: #2d3436;"></h2>
-                
-                <div class="spectrum-wrapper">
-                    <span class="fw-bold text-danger small">KATILMIYORUM</span>
-                    <button type="button" class="circle-btn size-lg disagree" onclick="handleMBTI(-3)"></button>
-                    <button type="button" class="circle-btn size-md disagree" onclick="handleMBTI(-2)"></button>
-                    <button type="button" class="circle-btn size-sm disagree" onclick="handleMBTI(-1)"></button>
-                    <button type="button" class="circle-btn neutral" onclick="handleMBTI(0)"></button>
-                    <button type="button" class="circle-btn size-sm agree" onclick="handleMBTI(1)"></button>
-                    <button type="button" class="circle-btn size-md agree" onclick="handleMBTI(2)"></button>
-                    <button type="button" class="circle-btn size-lg agree" onclick="handleMBTI(3)"></button>
-                    <span class="fw-bold text-success small">KATILIYORUM</span>
+                <div id="q-container" class="fade-container">
+                    <h2 id="q-text" class="fw-bold px-3" style="min-height: 100px; line-height: 1.5; color: #2d3436;">Soru Yükleniyor...</h2>
+                    
+                    <div class="spectrum-wrapper">
+                        <span class="fw-bold text-danger small" style="letter-spacing: 1px;">KATILMIYORUM</span>
+                        <button type="button" class="circle-btn size-lg disagree" onclick="handleMBTI(-3)"></button>
+                        <button type="button" class="circle-btn size-md disagree" onclick="handleMBTI(-2)"></button>
+                        <button type="button" class="circle-btn size-sm disagree" onclick="handleMBTI(-1)"></button>
+                        <button type="button" class="circle-btn neutral" onclick="handleMBTI(0)"></button>
+                        <button type="button" class="circle-btn size-sm agree" onclick="handleMBTI(1)"></button>
+                        <button type="button" class="circle-btn size-md agree" onclick="handleMBTI(2)"></button>
+                        <button type="button" class="circle-btn size-lg agree" onclick="handleMBTI(3)"></button>
+                        <span class="fw-bold text-success small" style="letter-spacing: 1px;">KATILIYORUM</span>
+                    </div>
                 </div>
             </div>
 
             <div class="wizard-step" id="step-loading">
-                <div class="spinner-border text-primary mb-4" style="width: 3rem; height: 3rem;"></div>
-                <h2 class="fw-bold">Analizin Tamamlanıyor</h2>
-                <p class="text-muted">Ev arkadaşı uyum motoru profiline göre optimize ediliyor...</p>
+                <div class="spinner-border text-primary mb-4" style="width: 4rem; height: 4rem; border-width: 5px;"></div>
+                <h2 class="fw-bold mb-3">Analizin Tamamlanıyor</h2>
+                <p class="text-muted" style="font-size: 1.1em;">Ev arkadaşı uyum motoru profiline göre optimize ediliyor...</p>
             </div>
 
         </form>
@@ -155,7 +168,9 @@
 
 <script>
     let currentQ = 0;
+    let isAnimating = false; // Çift tıklamayı engellemek için
     const scores = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+    
     const questions = [
         { text: "Yeni insanlarla tanışmak beni yormak yerine bana enerji verir.", p: "E", m: "I" },
         { text: "Detaylarla uğraşmaktansa büyük resmi hayal etmeyi tercih ederim.", p: "N", m: "S" },
@@ -189,16 +204,38 @@
     }
 
     function handleMBTI(val) {
+        if (isAnimating) return; // Animasyon bitene kadar tıklamaları yoksay
+        isAnimating = true;
+
         const q = questions[currentQ];
         if (val > 0) scores[q.p] += Math.abs(val);
         else if (val < 0) scores[q.m] += Math.abs(val);
 
         currentQ++;
-        if (currentQ < 12) {
-            updateQuestion();
-        } else {
-            submitOnboarding();
-        }
+        
+        // Animasyonu Tetikle
+        const container = document.getElementById('q-container');
+        container.classList.add('fade-out');
+
+        setTimeout(() => {
+            if (currentQ < 12) {
+                updateQuestion();
+                // Sola kaybolan metni anında sağa al ve içeri kaydır
+                container.style.transition = 'none';
+                container.style.transform = 'translateX(40px)';
+                
+                // Tarayıcıya değişikliği okutmak için küçük bir bekleme
+                setTimeout(() => {
+                    container.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    container.classList.remove('fade-out');
+                    container.style.transform = 'translateX(0)';
+                    isAnimating = false;
+                }, 50);
+
+            } else {
+                submitOnboarding();
+            }
+        }, 400); // CSS transition süresi ile aynı olmalı
     }
 
     async function submitOnboarding() {
