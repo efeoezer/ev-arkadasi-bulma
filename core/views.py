@@ -19,6 +19,10 @@ def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
 
+    # Kontrol
+    if not profile.is_onboarded:
+        return redirect('onboarding')
+
     # 2. MESAJLARI ÇEK
     unread_messages = Message.objects.filter(receiver=request.user, is_read=False).order_by('-sent_at')
     unread_count = unread_messages.count()
