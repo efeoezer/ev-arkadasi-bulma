@@ -20,7 +20,7 @@ def dashboard(request):
     swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
 
     # 2. MESAJLARI ÇEK
-    unread_messages = Message.objects.filter(receiver=request.user, is_read=False).order_by('-created_at')
+    unread_messages = Message.objects.filter(receiver=request.user, is_read=False).order_by('-sent_at')
     unread_count = unread_messages.count()
 
     # 3. SENİ BEĞENENLER
