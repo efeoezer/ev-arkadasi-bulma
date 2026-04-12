@@ -46,12 +46,20 @@
     <div class="profile-card">
         
         <div style="width: 150px; height: 150px; border-radius: 50%; background: #bdc3c7; margin: 0 auto 20px auto; overflow: hidden; border: 3px solid #eee;">
-            {% if current_photo %}
-                <img src="{{ current_photo.image.url }}" alt="Profil Fotoğrafı" style="width: 100%; height: 100%; object-fit: cover;">
+            {% if profile.userphoto_set.first %}
+                <img src="{{ profile.userphoto_set.first.image.url }}" alt="Profil Fotoğrafı" style="width: 100%; height: 100%; object-fit: cover;">
             {% else %}
                 <div style="padding-top: 60px; color: white; font-weight: bold;">Foto Yok</div>
             {% endif %}
         </div>
+        
+        {% if profile.userphoto_set.first %}
+            <div style="margin-bottom: 20px;">
+                <a href="{% url 'delete_photo' %}" style="color: #e74c3c; font-size: 0.8em; text-decoration: none; font-weight: bold; border: 1px solid #e74c3c; padding: 4px 10px; border-radius: 5px;">
+                    🗑️ Fotoğrafı Kaldır
+                </a>
+            </div>
+        {% endif %}
         
         <h2 style="color: #2c3e50; margin-bottom: 5px;">{{ profile.user.username }}</h2>
         <p style="color: #7f8c8d;">Sistem Kayıtlı Profil</p>
