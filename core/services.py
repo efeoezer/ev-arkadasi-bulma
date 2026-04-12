@@ -104,3 +104,26 @@ def generate_bot_users(count=10):
             photo.image.save(f"{username}.jpg", ContentFile(img_response.content), save=True)
             
     return True
+
+def get_icebreaker_prompts(user1_profile, user2_profile):
+    prompts = []
+    
+    # 1. MBTI Temelli Sorular
+    if user1_profile.mbti_type == user2_profile.mbti_type:
+        prompts.append(f"İkiniz de {user1_profile.mbti_type} tipisiniz! Evin kuralları konusunda ne kadar titizsiniz?")
+    
+    # 2. Ortak Yaşam Tarzı (RoommatePreference üzerinden)
+    pref1 = getattr(user1_profile, 'preferences', None)
+    pref2 = getattr(user2_profile, 'preferences', None)
+    
+    if pref1 and pref2:
+        if pref1.has_pet and pref2.has_pet:
+            prompts.append("İkinizin de evcil hayvanı var! Onları tanıştırmaya ne dersiniz?")
+        if pref1.dietary_preference == pref2.dietary_preference and pref1.dietary_preference != 'none':
+            prompts.append(f"İkiniz de {pref1.get_dietary_preference_display()} besleniyorsunuz. Ortak yemek yapmak harika olabilir!")
+
+    # Eğer hiçbir ortak nokta yoksa genel bir soru
+    if not prompts:
+        prompts.append("Ev arkadaşlığından en büyük beklentiniz nedir?")
+        
+    return prompts[:3] # En iyi 3 öneriyi döndür
