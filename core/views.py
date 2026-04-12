@@ -51,12 +51,12 @@ def dashboard(request):
     if profile.userphoto_set.exists(): score += 25
 
     # 6. ADAY LİSTESİ VE FİLTRELEME
-    selected_city = request.GET.get('city')
     room_style = request.GET.get('room_style')
     max_rent = request.GET.get('max_rent')
 
-    # Eğer şehir seçilmediyse kullanıcının kendi şehrini default yap
-    if not selected_city and profile.city:
+    if 'city' in request.GET:
+        selected_city = request.GET.get('city')
+    else:
         selected_city = profile.city
 
     candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
