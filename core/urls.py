@@ -2,16 +2,13 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # 1. Ana Giriş Sayfası (Kayıt/Giriş butonu olan yer)
+    # Ana Giriş Sayfası (Kayıt/Giriş butonu olan yer)
     path('', views.index_view, name='index'),
 
-    # 2. Ana Panel (Kartların olduğu yer)
+    # Ana Panel (Kartların olduğu yer)
     path('dashboard/', views.dashboard, name='dashboard'),
 
-    # 3. MBTI Testi Sayfası
-    path('mbti-test/', views.mbti_test_view, name='mbti_test'),
-
-    # 4. Eşleşmelerim Sayfası
+    # Eşleşmelerim Sayfası
     path('matches/', views.matches_view, name='matches'),
 
     # --- API ve Bot Araçları (Arka Plandaki İşlemler) ---
