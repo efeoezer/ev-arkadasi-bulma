@@ -1,52 +1,168 @@
 {% extends 'core/base.html' %}
+
+{% block title %}TypeMatch | Eşleşme Gerçekleşti!{% endblock %}
+
 {% block content %}
 <style>
-    .match-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(15, 20, 30, 0.96); backdrop-filter: blur(15px);
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        z-index: 9999; color: white; text-align: center;
+    /* Arka Plan ve Genel Yapı */
+    .match-page {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 20, 30, 0.95);
+        backdrop-filter: blur(15px);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        overflow: hidden;
     }
-    .match-title {
-        font-size: 5em; font-weight: 900; color: #ff4757; font-style: italic;
-        text-shadow: 0 0 30px rgba(255, 71, 87, 0.6);
-        animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .match-avatars { display: flex; align-items: center; gap: 0; margin: 50px 0; position: relative; }
-    .match-avatar {
-        width: 180px; height: 180px; border-radius: 50%; border: 6px solid #fff;
-        object-fit: cover; box-shadow: 0 15px 45px rgba(0,0,0,0.6);
-    }
-    .avatar-left { transform: translateX(-30px) rotate(-10deg); animation: slideL 0.7s ease-out; }
-    .avatar-right { transform: translateX(30px) rotate(10deg); animation: slideR 0.7s ease-out; }
-    .match-fire { position: absolute; font-size: 4em; z-index: 10; animation: firePop 0.5s 0.6s both; }
-    
-    @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-    @keyframes slideL { 0% { transform: translateX(-200px); opacity: 0; } 100% { transform: translateX(-30px) rotate(-10deg); opacity: 1; } }
-    @keyframes slideR { 0% { transform: translateX(200px); opacity: 0; } 100% { transform: translateX(30px) rotate(10deg); opacity: 1; } }
-    @keyframes firePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 
-    .btn-match {
-        background: linear-gradient(45deg, #ff4757, #ff6b81); color: white !important;
-        padding: 20px 50px; border-radius: 40px; font-weight: 800; text-decoration: none;
-        box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4); transition: 0.3s;
+    /* Görkemli Başlık */
+    .match-title {
+        font-size: 5em;
+        font-weight: 900;
+        font-style: italic;
+        color: #ff4757;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 30px rgba(255, 71, 87, 0.6);
+        margin-bottom: 10px;
+        animation: titlePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
-    .btn-match:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(255, 71, 87, 0.6); }
+
+    @keyframes titlePop {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .match-subtitle {
+        color: #f1f2f6;
+        font-size: 1.4em;
+        margin-bottom: 60px;
+        opacity: 0;
+        animation: fadeIn 0.5s ease 0.4s forwards;
+    }
+
+    /* Avatarların Çarpışma Animasyonu */
+    .match-avatars {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 70px;
+        position: relative;
+    }
+
+    .match-avatar {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        border: 6px solid #fff;
+        object-fit: cover;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.6);
+        z-index: 2;
+    }
+
+    .avatar-left {
+        transform: translateX(-200px) rotate(-20deg);
+        opacity: 0;
+        animation: slideLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards;
+    }
+
+    .avatar-right {
+        transform: translateX(200px) rotate(20deg);
+        opacity: 0;
+        animation: slideRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards;
+    }
+
+    @keyframes slideLeft {
+        to { transform: translateX(20px) rotate(-5deg); opacity: 1; }
+    }
+
+    @keyframes slideRight {
+        to { transform: translateX(-20px) rotate(5deg); opacity: 1; }
+    }
+
+    /* Ortadaki Ateş İkonu */
+    .match-fire {
+        position: absolute;
+        font-size: 4em;
+        z-index: 3;
+        filter: drop-shadow(0 0 20px rgba(255, 165, 2, 0.8));
+        opacity: 0;
+        transform: scale(0);
+        animation: firePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.8s forwards;
+    }
+
+    @keyframes firePop {
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    /* Butonlar */
+    .match-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+        max-width: 380px;
+        opacity: 0;
+        animation: fadeIn 0.5s ease 1s forwards;
+    }
+
+    .btn-match-primary {
+        background: linear-gradient(45deg, #ff4757, #ff6b81);
+        color: white !important;
+        border: none;
+        padding: 20px;
+        border-radius: 40px;
+        font-size: 1.2em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 10px 30px rgba(255, 71, 87, 0.5);
+        text-decoration: none;
+        text-align: center;
+        transition: 0.3s;
+    }
+
+    .btn-match-primary:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(255, 71, 87, 0.7);
+    }
+
+    .btn-match-secondary {
+        background: transparent;
+        color: #bdc3c7 !important;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1em;
+        transition: 0.3s;
+        text-align: center;
+    }
+
+    .btn-match-secondary:hover { color: white !important; }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 
-<div class="match-overlay">
+<div class="match-page">
     <h1 class="match-title">EŞLEŞTİNİZ!</h1>
-    <p class="fs-4 text-light mt-2">{{ matched_with.first_name }} ile artık konuşabilirsin!</p>
+    <p class="match-subtitle">Sen ve <span class="text-warning fw-bold">{{ matched_with.first_name }}</span> artık birbirinizi tanıyabilirsiniz.</p>
     
     <div class="match-avatars">
-        <img src="{{ request.user.profile.userphoto_set.first.image.url }}" class="match-avatar avatar-left">
+        <img src="{% if request.user.profile.userphoto_set.first %}{{ request.user.profile.userphoto_set.first.image.url }}{% else %}https://via.placeholder.com/180{% endif %}" class="match-avatar avatar-left">
+        
         <div class="match-fire">🔥</div>
-        <img src="{{ matched_with.profile.userphoto_set.first.image.url }}" class="match-avatar avatar-right">
+        
+        <img src="{% if matched_with.profile.userphoto_set.first %}{{ matched_with.profile.userphoto_set.first.image.url }}{% else %}https://via.placeholder.com/180{% endif %}" class="match-avatar avatar-right">
     </div>
 
-    <div class="mt-4">
-        <a href="{% url 'chat_view' matched_with.id %}" class="btn-match">HEMEN MESAJ AT 💬</a>
-        <div class="mt-4"><a href="{% url 'dashboard' %}" class="text-white-50 text-decoration-none fw-bold">Kaydırmaya Devam Et</a></div>
+    <div class="match-actions">
+        <a href="{% url 'chat_view' matched_with.id %}" class="btn-match-primary">Hemen Mesaj At 💬</a>
+        <a href="{% url 'dashboard' %}" class="btn-match-secondary">Kaydırmaya Devam Et</a>
     </div>
 </div>
 {% endblock %}
