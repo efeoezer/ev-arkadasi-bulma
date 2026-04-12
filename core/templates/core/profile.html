@@ -58,4 +58,32 @@
         <h5 class="fw-bold mb-3">MBTI Harfleri Nedir?</h5>
         <div class="row g-3 small">
             <div class="col-md-6"><b>E/I:</b> Dışadönük / İçe Dönük (Enerji)</div>
-            <div
+            <div class="col-md-6"><b>S/N:</b> Duyusal / Sezgisel (Bilgi)</div>
+            <div class="col-md-6"><b>T/F:</b> Mantıksal / Duygusal (Karar)</div>
+            <div class="col-md-6"><b>J/P:</b> Planlı / Esnek (Düzen)</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('mbtiRadarChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['E/I', 'S/N', 'T/F', 'J/P'],
+                    datasets: [{
+                        data: {{ chart_data|safe }},
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: { scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } }, plugins: { legend: { display: false } } }
+            });
+        }
+    });
+</script>
+{% endblock %}
