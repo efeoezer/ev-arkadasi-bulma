@@ -15,70 +15,62 @@ def index_view(request):
 
 @login_required
 def dashboard(request):
+    # 1. KULLANICI PROFİLİ
     profile, created = Profile.objects.get_or_create(user=request.user)
     
-    # --- FİLTRELEME BAŞLANGIÇ ---
-    selected_city = request.GET.get('city')
-    room_style = request.GET.get('room_style')
-    max_rent = request.GET.get('max_rent')
-    # ----------------------------------
+    # 2. KAYDIRILMIŞ KULLANICILAR (Bir kere çekiyoruz, her yerde kullanıyoruz)
+    swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
 
-    # 1. Profil Tamamlama Yüzdesi
+    # 3. SENİ BEĞENENLER (Hata burada çözüldü: Değişkeni en yukarı aldık)
+    # Senin henüz etkileşime girmediğin (swipe yapmadığın) ama seni beğenenler.
+    people_who_liked_me_query = Like.objects.filter(to_user=request.user).exclude(
+        from_user__id__in=swiped_user_ids
+    ).select_related('from_user__profile')
+
+    # 4. SON AKTİVİTELER VE GİZEMLİ MESAJLAR
+    recent_activities = []
+    likes_count = people_who_liked_me_query.count()
+    
+    if likes_count > 0:
+        # Spoiler vermeden merak uyandırıyoruz
+        recent_activities.append(f"Şu an seni bekleyen {likes_count} yeni beğeni var! 🔥")
+        recent_activities.append("Biri profilini beğendi! Kim olduğunu bulmak için keşfetmeye başla. ✨")
+    
+    if not profile.mbti_type:
+        recent_activities.append("⚙️ MBTI testini henüz çözmedin.")
+
+    # 5. PROFİL TAMAMLAMA SKORU
     score = 0
     if profile.bio: score += 25
     if profile.city: score += 25
     if profile.mbti_type: score += 25
     if profile.userphoto_set.exists(): score += 25
-    
-    # 2. Son Aktiviteler
-    recent_activities = []
-    likes = Like.objects.filter(to_user=request.user).order_by('-created_at')[:3]
-    for like in likes:
-        recent_activities.append("Yeni bir beğeni aldın! Kim olduğunu görmek için kaydırmaya devam et. ✨")
-        
-    likes_count = people_who_liked_me.count()
-    if likes_count > 0:
-        recent_activities.append(f"Şu an seni bekleyen {likes_count} yeni beğeni var! 🔥")
-    
-    if not profile.mbti_type:
-        recent_activities.append("⚙️ MBTI testini henüz çözmedin.")
-        
-    # 3. Filtreleme Algoritması
-    swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
-    
+
+    # 6. ADAY LİSTESİ VE FİLTRELEME
+    selected_city = request.GET.get('city')
+    room_style = request.GET.get('room_style')
+    max_rent = request.GET.get('max_rent')
+
+    # Eğer şehir seçilmediyse kullanıcının kendi şehrini default yap
     if not selected_city and profile.city:
         selected_city = profile.city
 
-    swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
     candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
     
-    # --- FİLTRELEME UYGULAMA ---
     if selected_city:
         candidates_query = candidates_query.filter(city=selected_city)
-        
     if room_style:
         candidates_query = candidates_query.filter(preferences__room_type=room_style)
-        
     if max_rent and max_rent.isdigit():
         candidates_query = candidates_query.filter(preferences__max_budget__lte=int(max_rent))
-    # ----------------------------------
 
     # Adayları çek ve skorla
     candidates = candidates_query.order_by('-id')[:6]
     for candidate in candidates:
         candidate.match_score = generate_match_score(profile, candidate)
 
-    # --- TÜM ŞEHİRLERİ LİSTELE (Menü için) ---
+    # 7. MENÜ İÇİN ŞEHİRLER
     all_cities = Profile.objects.exclude(city__isnull=True).exclude(city="").values_list('city', flat=True).distinct().order_by('city')
-
-    # Sistem Röntgeni
-    print(f"=== SİSTEM RÖNTGENİ ===\nAday Sayısı: {candidates.count()}\nSeçili Şehir: {selected_city}\n=======================")
-
-    # SENİ BEĞENENLERİ BUL (Ama senin henüz beğenmediklerini)
-    # Yani: Like tablosunda sana doğru bir like var, ama senin giden bir like/dislike'ın yok.
-    people_who_liked_me = Like.objects.filter(to_user=request.user).exclude(
-        from_user__id__in=Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
-    ).select_related('from_user__profile')[:3] # Sadece 3 kişiyi göster, merak uyandır
 
     return render(request, 'core/dashboard.html', {
         'profile': profile,
@@ -87,7 +79,7 @@ def dashboard(request):
         'candidates': candidates,
         'all_cities': all_cities,
         'selected_city': selected_city,
-        'who_liked_me': people_who_liked_me,
+        'who_liked_me': people_who_liked_me_query[:3], # Sadece ilk 3 kişiyi blurlu göster
     })
 
 @csrf_exempt
