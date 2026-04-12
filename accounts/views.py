@@ -131,9 +131,10 @@ def profile_view(request):
             u_form.save()
             p_form.save()
 
-            if request.FILES.get('image'):
+            if 'image' in request.FILES and ph_form.is_valid():
                 if current_photo:
                     current_photo.delete()
+                    
                 new_photo = ph_form.save(commit=False)
                 new_photo.profile = profile
                 new_photo.save()
