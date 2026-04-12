@@ -55,3 +55,8 @@ class Verification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} Doğrulama Durumu"
+
+@property
+def display_name(self):
+    full_name = f"{self.user.first_name} {self.user.last_name}".strip()
+    return full_name if full_name else self.user.username
