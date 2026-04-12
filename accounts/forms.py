@@ -23,7 +23,7 @@ class UserUpdateForm(forms.ModelForm):
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['bio', 'city', 'country', 'mbti_type']
+        fields = ['bio', 'city', 'country']
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Kendinden biraz bahset...'}),
             'mbti_type': forms.Select(attrs={'class': 'custom-select'}),
