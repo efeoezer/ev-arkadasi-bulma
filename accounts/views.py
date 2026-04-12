@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+
 from .models import Profile, UserPhoto
 from core.models import RoommatePreference
 from .forms import UserUpdateForm, ProfileUpdateForm, PhotoUpdateForm
@@ -34,19 +35,14 @@ MBTI_DESCRIPTIONS = {
 def register_api(request):
     if request.method == 'POST':
         try:
-            # Gelen JSON verisini Python sözlüğüne çevir
             data = json.loads(request.body)
             username = data.get('username')
             password = data.get('password')
 
-            # Kullanıcı adı çakışmasını kontrol et
             if User.objects.filter(username=username).exists():
                 return JsonResponse({'status': 'error', 'message': 'Bu kullanıcı adı zaten sistemde kayıtlı.'}, status=400)
 
-            # Şifreyi hashleyerek veritabanına kaydet
             user = User.objects.create_user(username=username, password=password)
-            
-            # İlişkisel veritabanı gereği boş bir Profile satırı yarat ve bağla
             Profile.objects.create(user=user)
 
             return JsonResponse({'status': 'success', 'message': 'Kullanıcı ve profil başarıyla oluşturuldu.'}, status=201)
@@ -62,11 +58,9 @@ def login_api(request):
         username = data.get('username')
         password = data.get('password')
 
-        # Veritabanındaki hashlenmiş şifre ile girilen şifreyi kriptografik olarak karşılaştır
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
-            # Oturum (Session) başlat
             login(request, user)
             return JsonResponse({
                 'status': 'success', 
@@ -80,41 +74,44 @@ def login_api(request):
     return JsonResponse({'status': 'error', 'message': 'Geçersiz metod. Sadece POST kabul edilir.'}, status=405)
 
 def logout_api(request):
-    # Mevcut oturumu sunucu tarafından sonlandır
     logout(request)
     return JsonResponse({'status': 'success', 'message': 'Başarıyla çıkış yapıldı.'})
 
 def logout_view(request):
     """Kullanıcının oturumunu sonlandırır ve giriş/ana sayfaya yönlendirir."""
     logout(request)
-    return redirect('/') # Çıkış yapınca ana dizine yönlendir
+    return redirect('/')
 
 @login_required
 def onboarding_wizard(request):
     """Kullanıcının kayıt olduktan sonra geçtiği adım adım sihirbaz."""
     profile, created = Profile.objects.get_or_create(user=request.user)
-    # Eğer tercih tablosu yoksa oluştur
     prefs, _ = RoommatePreference.objects.get_or_create(profile=profile)
 
     if request.method == 'POST':
-        # 1. Adım: Kimlik Bilgileri
+        # Kimlik Bilgileri
         request.user.first_name = request.POST.get('first_name', '')
         request.user.last_name = request.POST.get('last_name', '')
         request.user.save()
 
-        # 2. Adım: Lokasyon ve MBTI
-        profile.city = request.POST.get('city', '')
-        profile.country = request.POST.get('country', '')
-        profile.mbti_type = request.POST.get('mbti_type', '')
+        # Lokasyon ve MBTI (Eğer formda varsa alınır, yoksa boş kalır)
+        profile.city = request.POST.get('city', profile.city)
+        profile.country = request.POST.get('country', profile.country)
+        profile.mbti_type = request.POST.get('mbti_type', profile.mbti_type)
         profile.save()
 
-        # 3. Adım: Yaşam Tarzı (RoommatePreference)
-        # JS'den gelen 'true'/'false' metinlerini Boolean'a çeviriyoruz
-        prefs.smoking_allowed = request.POST.get('smoking') == 'true'
-        prefs.has_pet = request.POST.get('pet') == 'true'
+        # Yaşam Tarzı Tercihleri
+        smoking_val = request.POST.get('smoking')
+        if smoking_val:
+            prefs.smoking_allowed = (smoking_val == 'true')
+        
+        pet_val = request.POST.get('pet')
+        if pet_val:
+            prefs.has_pet = (pet_val == 'true')
+            
         prefs.save()
 
-        messages.success(request, "Profilin harika görünüyor! Artık hazırsın.")
+        messages.success(request, "Sihirbazı tamamladın! Profilin harika görünüyor.")
         return redirect('dashboard')
 
     return render(request, 'accounts/onboarding_wizard.html')
@@ -126,7 +123,6 @@ def profile_view(request):
     current_photo = profile.userphoto_set.first()
     
     if request.method == 'POST':
-        # ÖNEMLİ: request.user ve profile instance'larını forma gönderiyoruz
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, instance=profile)
         ph_form = PhotoUpdateForm(request.POST, request.FILES, instance=current_photo)
@@ -136,7 +132,6 @@ def profile_view(request):
             p_form.save()
 
             if request.FILES.get('image'):
-                # Eski fotoğrafı silip yenisini kaydedelim
                 if current_photo:
                     current_photo.delete()
                 new_photo = ph_form.save(commit=False)
@@ -150,7 +145,7 @@ def profile_view(request):
         p_form = ProfileUpdateForm(instance=profile)
         ph_form = PhotoUpdateForm(instance=current_photo)
 
-    # --- Grafik (Chart.js) Veri Algoritması ---
+    # Grafik (Chart.js) Veri Algoritması
     mbti_type = profile.mbti_type if profile.mbti_type else "Bilinmiyor"
     
     chart_data = []
@@ -181,11 +176,9 @@ def profile_view(request):
 def delete_photo_view(request):
     """Kullanıcının mevcut profil fotoğrafını veritabanından siler."""
     profile = get_object_or_404(Profile, user=request.user)
-    
     photo = profile.userphoto_set.first()
     if photo:
         photo.delete()
-        
     return redirect('profile')
 
 @login_required
@@ -195,7 +188,6 @@ def delete_account_view(request):
         logout(request)
         user.delete()
         return redirect('/')
-        
     return render(request, 'core/delete_confirm.html')
 
 @login_required
