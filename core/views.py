@@ -70,6 +70,12 @@ def dashboard(request):
     # Sistem Röntgeni
     print(f"=== SİSTEM RÖNTGENİ ===\nAday Sayısı: {candidates.count()}\nSeçili Şehir: {selected_city}\n=======================")
 
+    # SENİ BEĞENENLERİ BUL (Ama senin henüz beğenmediklerini)
+    # Yani: Like tablosunda sana doğru bir like var, ama senin giden bir like/dislike'ın yok.
+    people_who_liked_me = Like.objects.filter(to_user=request.user).exclude(
+        from_user__id__in=Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
+    ).select_related('from_user__profile')[:3] # Sadece 3 kişiyi göster, merak uyandır
+
     return render(request, 'core/dashboard.html', {
         'profile': profile,
         'completion_percentage': score,
@@ -77,6 +83,7 @@ def dashboard(request):
         'candidates': candidates,
         'all_cities': all_cities,
         'selected_city': selected_city,
+        'who_liked_me': people_who_liked_me,
     })
 
 @csrf_exempt
