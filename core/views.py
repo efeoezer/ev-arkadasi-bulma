@@ -15,13 +15,15 @@ def index_view(request):
 
 @login_required
 def dashboard(request):
-    # 1. KULLANICI PROFİLİ
+    # 1. TEMEL VERİLER
     profile, created = Profile.objects.get_or_create(user=request.user)
-    
-    # 2. KAYDIRILMIŞ KULLANICILAR (Bir kere çekiyoruz, her yerde kullanıyoruz)
     swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
 
-    # 3. SENİ BEĞENENLER (Hata burada çözüldü: Değişkeni en yukarı aldık)
+    # 2. MESAJLARI ÇEK
+    unread_messages = Message.objects.filter(receiver=request.user, is_read=False).order_by('-created_at')
+    unread_count = unread_messages.count()
+
+    # 3. SENİ BEĞENENLER
     # Senin henüz etkileşime girmediğin (swipe yapmadığın) ama seni beğenenler.
     people_who_liked_me_query = Like.objects.filter(to_user=request.user).exclude(
         from_user__id__in=swiped_user_ids
@@ -30,14 +32,16 @@ def dashboard(request):
     # 4. SON AKTİVİTELER VE GİZEMLİ MESAJLAR
     recent_activities = []
     likes_count = people_who_liked_me_query.count()
+
+    # --- Mesaj Bildirimleri ---
+    if unread_count > 0:
+        recent_activities.append(f"📩 {unread_count} yeni mesajın var! Cevaplamak için sabırsızlanıyorlar.")
     
     if likes_count > 0:
-        # Spoiler vermeden merak uyandırıyoruz
         recent_activities.append(f"Şu an seni bekleyen {likes_count} yeni beğeni var! 🔥")
-        recent_activities.append("Biri profilini beğendi! Kim olduğunu bulmak için keşfetmeye başla. ✨")
     
     if not profile.mbti_type:
-        recent_activities.append("⚙️ MBTI testini henüz çözmedin.")
+        recent_activities.append("⚙️ MBTI testini çözerek daha iyi eşleşmeler bulabilirsin.")
 
     # 5. PROFİL TAMAMLAMA SKORU
     score = 0
@@ -76,6 +80,7 @@ def dashboard(request):
         'profile': profile,
         'completion_percentage': score,
         'recent_activities': recent_activities,
+        'unread_count': unread_count,
         'candidates': candidates,
         'all_cities': all_cities,
         'selected_city': selected_city,
