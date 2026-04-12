@@ -1,23 +1,120 @@
+{% extends 'core/base.html' %}
+{% block content %}
 <style>
-    .wizard-bg { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .step-card { background: white; padding: 50px; border-radius: 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
-    .wizard-input { border: 2px solid #eee; padding: 15px; border-radius: 15px; width: 100%; margin-top: 20px; outline: none; transition: 0.3s; }
-    .wizard-input:focus { border-color: #3498db; }
+    .wizard-step { display: none; animation: fadeIn 0.5s; }
+    .wizard-step.active { display: block; }
+    .option-card { border: 2px solid #eee; border-radius: 15px; padding: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 10px; }
+    .option-card:hover { border-color: #3498db; background: #f7fbff; }
+    .spectrum-btn { width: 50px; height: 50px; border-radius: 50%; border: 3px solid; cursor: pointer; background: transparent; transition: 0.2s; }
+    .spectrum-btn:hover { transform: scale(1.1); }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 
-<div class="wizard-bg">
-    <div class="step-card">
-        <h1 class="fw-bold" style="letter-spacing: -1px;">Hoş Geldin! 👋</h1>
-        <p class="text-muted">TypeMatch dünyasına ilk adımını at. Adın nedir?</p>
-        
-        <form action="{% url 'onboarding' %}" method="POST">
-            {% csrf_token %}
-            <input type="text" name="first_name" class="wizard-input" placeholder="Adını buraya yaz..." required>
-            <input type="text" name="last_name" class="wizard-input" placeholder="Soyadın (İsteğe bağlı)">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 card shadow-lg p-5" style="border-radius: 25px; border: none;">
             
-            <button type="submit" class="btn btn-primary w-100 py-3 mt-4 fw-bold" style="border-radius: 15px; font-size: 1.1em;">
-                Başlayalım!
-            </button>
-        </form>
+            <form id="wizard-form">
+                {% csrf_token %}
+                
+                <div class="wizard-step active" id="step-1">
+                    <h2 class="fw-bold mb-4">Hoş Geldin! 👋</h2>
+                    <p class="text-muted">Önce ismini belirleyelim.</p>
+                    <input type="text" name="first_name" placeholder="Adın" class="form-control mb-3 p-3">
+                    <input type="text" name="last_name" placeholder="Soyadın" class="form-control mb-4 p-3">
+                    <button type="button" class="btn btn-primary w-100 py-3 fw-bold" onclick="nextStep(2)">Devam Et</button>
+                </div>
+
+                <div class="wizard-step" id="step-2">
+                    <h2 class="fw-bold mb-4">Neredesin? 📍</h2>
+                    <input type="text" name="city" placeholder="Yaşadığın Şehir" class="form-control mb-3 p-3">
+                    <textarea name="bio" placeholder="Kendinden biraz bahset..." class="form-control mb-4 p-3" rows="3"></textarea>
+                    <button type="button" class="btn btn-primary w-100 py-3 fw-bold" onclick="nextStep(3)">Testi Başlat</button>
+                </div>
+
+                <div class="wizard-step" id="step-3">
+                    <div class="progress mb-4"><div id="prog" class="progress-bar" style="width: 0%;"></div></div>
+                    <h4 id="q-text" class="fw-bold mb-5">Soru metni buraya gelecek...</h4>
+                    <div class="d-flex justify-content-center gap-3 align-items-center">
+                        <span class="small fw-bold text-danger">HAYIR</span>
+                        <button type="button" class="spectrum-btn" style="border-color: #e74c3c;" onclick="handleAnswer(-2)"></button>
+                        <button type="button" class="spectrum-btn" style="border-color: #bdc3c7;" onclick="handleAnswer(0)"></button>
+                        <button type="button" class="spectrum-btn" style="border-color: #2ecc71;" onclick="handleAnswer(2)"></button>
+                        <span class="small fw-bold text-success">EVET</span>
+                    </div>
+                </div>
+
+                <div class="wizard-step" id="step-finish">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3"></div>
+                        <h3 class="fw-bold">Her şey hazır!</h3>
+                        <p>Profilin oluşturuluyor...</p>
+                    </div>
+                </div>
+
+            </form>
+        </div>
     </div>
 </div>
+
+<script>
+    let currentQ = 0;
+    const scores = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+    const questions = [
+        { text: "Yeni insanlarla tanışmak bana enerji verir.", p: "E", m: "I" },
+        { text: "Büyük resmi görmek detaylardan daha önemlidir.", p: "N", m: "S" },
+        { text: "Kararlarımı mantığa dayandırırım.", p: "T", m: "F" },
+        { text: "Planlı yaşamak benim için vazgeçilmezdir.", p: "J", m: "P" },
+        { text: "Duygusal destek vermek çözüm sunmaktan daha iyidir.", p: "F", m: "T" },
+        { text: "Yalnız kalmak beni dinlendirir.", p: "I", m: "E" },
+        { text: "Detaylar benim için her şeydir.", p: "S", m: "N" },
+        { text: "Spontane yaşamayı çok severim.", p: "P", m: "J" },
+        { text: "Karar verirken başkalarının ne hissettiği önemlidir.", p: "F", m: "T" },
+        { text: "Günlük listeler tutarım.", p: "J", m: "P" },
+        { text: "Kalabalıklar beni yorar.", p: "I", m: "E" },
+        { text: "Teoriler pratik verilerden daha çekicidir.", p: "N", m: "S" }
+    ];
+
+    function nextStep(step) {
+        document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step-' + step).classList.add('active');
+        if(step === 3) updateQuestion();
+    }
+
+    function updateQuestion() {
+        document.getElementById('q-text').innerText = questions[currentQ].text;
+        document.getElementById('prog').style.width = (currentQ / 12 * 100) + '%';
+    }
+
+    function handleAnswer(val) {
+        const q = questions[currentQ];
+        if (val > 0) scores[q.p] += val;
+        else if (val < 0) scores[q.m] += Math.abs(val);
+
+        currentQ++;
+        if (currentQ < 12) {
+            updateQuestion();
+        } else {
+            finishWizard();
+        }
+    }
+
+    async function finishWizard() {
+        nextStep('finish');
+        const mbti = (scores.E >= scores.I ? 'E' : 'I') + (scores.S >= scores.N ? 'S' : 'N') + 
+                     (scores.T >= scores.F ? 'T' : 'F') + (scores.J >= scores.P ? 'J' : 'P');
+        
+        const formData = new FormData(document.getElementById('wizard-form'));
+        formData.append('mbti_result', mbti);
+
+        const response = await fetch('/accounts/onboarding/', {
+            method: 'POST',
+            body: formData,
+            headers: {'X-CSRFToken': '{{ csrf_token }}'}
+        });
+        
+        const data = await response.json();
+        if(data.status === 'success') window.location.href = data.redirect;
+    }
+</script>
+{% endblock %}
