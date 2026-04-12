@@ -10,4 +10,6 @@ urlpatterns = [
     path('profile/delete-photo/', views.delete_photo_view, name='delete_photo'),
     path('profile/delete-account/', views.delete_account_view, name='delete_account'),
     path('onboarding/', views.onboarding_wizard, name='onboarding'),
+    path('mbti-test/', views.mbti_test_view, name='mbti_test'),
+    path('api/save_mbti/', views.save_mbti_api, name='save_mbti_api'),
 ]
