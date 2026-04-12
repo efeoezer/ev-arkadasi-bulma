@@ -5,7 +5,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from .models import Profile, UserPhoto
+from core.models import RoommatePreference
 from .forms import UserUpdateForm, ProfileUpdateForm, PhotoUpdateForm
 
 # 16 MBTI Tipinin Standart Açıklamaları
@@ -87,15 +89,44 @@ def logout_view(request):
     logout(request)
     return redirect('/') # Çıkış yapınca ana dizine yönlendir
 
-def profile_view(request):
-    """Kullanıcının profil verilerini, güncelleme formunu ve MBTI grafiğini döndürür."""
+@login_required
+def onboarding_wizard(request):
+    """Kullanıcının kayıt olduktan sonra geçtiği adım adım sihirbaz."""
     profile, created = Profile.objects.get_or_create(user=request.user)
-    
-    # Kullanıcının mevcut fotoğrafını çek (Varsa)
+    # Eğer tercih tablosu yoksa oluştur
+    prefs, _ = RoommatePreference.objects.get_or_create(profile=profile)
+
+    if request.method == 'POST':
+        # 1. Adım: Kimlik Bilgileri
+        request.user.first_name = request.POST.get('first_name', '')
+        request.user.last_name = request.POST.get('last_name', '')
+        request.user.save()
+
+        # 2. Adım: Lokasyon ve MBTI
+        profile.city = request.POST.get('city', '')
+        profile.country = request.POST.get('country', '')
+        profile.mbti_type = request.POST.get('mbti_type', '')
+        profile.save()
+
+        # 3. Adım: Yaşam Tarzı (RoommatePreference)
+        # JS'den gelen 'true'/'false' metinlerini Boolean'a çeviriyoruz
+        prefs.smoking_allowed = request.POST.get('smoking') == 'true'
+        prefs.has_pet = request.POST.get('pet') == 'true'
+        prefs.save()
+
+        messages.success(request, "Profilin harika görünüyor! Artık hazırsın.")
+        return redirect('dashboard')
+
+    return render(request, 'accounts/onboarding_wizard.html')
+
+@login_required
+def profile_view(request):
+    """Gelişmiş Profil Görünümü: Ad, Soyad ve Görsel Veriler"""
+    profile, created = Profile.objects.get_or_create(user=request.user)
     current_photo = profile.userphoto_set.first()
     
-    # Form Gönderildiyse (POST işlemi) verileri kaydet
     if request.method == 'POST':
+        # ÖNEMLİ: request.user ve profile instance'larını forma gönderiyoruz
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, instance=profile)
         ph_form = PhotoUpdateForm(request.POST, request.FILES, instance=current_photo)
@@ -105,13 +136,16 @@ def profile_view(request):
             p_form.save()
 
             if request.FILES.get('image'):
+                # Eski fotoğrafı silip yenisini kaydedelim
+                if current_photo:
+                    current_photo.delete()
                 new_photo = ph_form.save(commit=False)
                 new_photo.profile = profile
                 new_photo.save()
                 
+            messages.success(request, "Bilgilerin güncellendi!")
             return redirect('profile')
     else:
-        # Form henüz gönderilmediyse mevcut verilerle dolu olarak getir
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=profile)
         ph_form = PhotoUpdateForm(instance=current_photo)
@@ -135,12 +169,11 @@ def profile_view(request):
 
     context = {
         'profile': profile,
-        'current_photo': current_photo,
-        'chart_data': chart_data,
         'u_form': u_form,
         'p_form': p_form,
         'ph_form': ph_form,
-        'mbti_description': mbti_description
+        'chart_data': chart_data,
+        'mbti_description': mbti_description,
     }
     return render(request, 'core/profile.html', context)
 
