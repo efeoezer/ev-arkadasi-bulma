@@ -208,7 +208,7 @@
         statusMsg.innerText = "Veritabanına işleniyor...";
 
         try {
-            const response = await fetch('/api/save_mbti/', {
+            const response = await fetch('/accounts/api/save_mbti/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
                 body: JSON.stringify({ mbti: finalMBTI })
