@@ -17,6 +17,7 @@ class Profile(models.Model):
     bio = models.TextField(max_length=500, blank=True, null=True, verbose_name="Hakkımda")
     birth_date = models.DateField(null=True, blank=True, verbose_name="Doğum Tarihi")
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, default='prefer_not_to_say', verbose_name="Cinsiyet")
+    country = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True, verbose_name="Yaşadığı Şehir")
     mbti_type = models.CharField(max_length=4, blank=True, null=True, verbose_name="MBTI Tipi")
     budget_limit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Bütçe Limiti")
@@ -54,7 +55,3 @@ class Verification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} Doğrulama Durumu"
-
-
-   
-
