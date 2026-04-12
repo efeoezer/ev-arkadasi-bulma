@@ -151,5 +151,5 @@ def make_bots_like_me(request):
 
 def generate_bots_view(request):
     if request.user.is_superuser:
-        generate_bot_users(3)
+        generate_bot_users(5)
     return redirect('dashboard')
