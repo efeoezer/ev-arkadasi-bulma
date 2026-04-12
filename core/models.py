@@ -75,12 +75,4 @@ class Review(models.Model):
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-from django.db import models
-from django.contrib.auth.models import User
-from django.utils import timezone
-import os
-
-def profile_pic_path(instance, filename):
-    # Görselleri 'profile_pics/user_id/filename' şeklinde düzenli saklamak için
-    return f'profile_pics/{instance.user.id}/{filename}'
 
