@@ -1,169 +1,225 @@
 {% extends 'core/base.html' %}
 
-{% block title %}TypeMatch | Profilini Tamamla{% endblock %}
+{% block title %}TypeMatch | Profilim{% endblock %}
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-    /* Sihirbaz Adımları Gizleme/Gösterme */
-    .wizard-step { display: none; }
-    .wizard-step.active { display: block; animation: fadeIn 0.4s ease-out; }
+    :root {
+        --primary-blue: #3498db;
+        --success-green: #2ecc71;
+        --bg-light: #f8f9fa;
+        --text-dark: #2c3e50;
+    }
 
-    .profile-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 40px;
-        max-width: 1100px;
+    .profile-wrapper {
+        max-width: 1200px;
         margin: 40px auto;
-        padding: 20px;
+        padding: 0 20px;
     }
 
-    /* Kart Tasarımları */
-    .wizard-card {
+    .glass-card {
         background: white;
-        padding: 35px;
         border-radius: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.05);
         border: 1px solid #f1f2f6;
+        padding: 35px;
+        height: 100%;
     }
 
-    .form-group { margin-bottom: 20px; text-align: left; }
-    .form-group label { font-weight: 700; color: #34495e; display: block; margin-bottom: 8px; font-size: 0.9em; }
-    
+    /* Form Tasarımı */
+    .form-section-title {
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-group label {
+        font-weight: 700;
+        color: #7f8c8d;
+        font-size: 0.85em;
+        margin-bottom: 8px;
+        display: block;
+    }
+
     input, select, textarea {
-        width: 100%; padding: 12px 15px; border-radius: 12px;
-        border: 2px solid #edf2f7; transition: 0.3s; outline: none;
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 12px;
+        border: 2px solid #edf2f7;
+        transition: 0.3s;
+        outline: none;
+        margin-bottom: 15px;
     }
-    input:focus { border-color: #3498db; box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
 
-    /* İlerleme Çubuğu */
-    .progress-dots { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
-    .dot { width: 12px; height: 12px; background: #dcdde1; border-radius: 50%; transition: 0.3s; }
-    .dot.active { background: #3498db; width: 30px; border-radius: 10px; }
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+    }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    /* Fotoğraf Alanı */
+    .photo-preview {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: #f1f2f6;
+        margin-bottom: 20px;
+        overflow: hidden;
+        border: 4px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* MBTI Bölümü */
+    .mbti-result-box {
+        background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+        border-radius: 20px;
+        padding: 25px;
+        text-align: center;
+    }
+
+    .mbti-badge {
+        font-size: 3em;
+        font-weight: 900;
+        color: var(--text-dark);
+        letter-spacing: -2px;
+    }
+
+    .btn-premium {
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 15px;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+
+    .btn-premium:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+    }
+
+    .btn-test {
+        background: #e67e22;
+        color: white;
+        border-radius: 15px;
+        font-weight: 800;
+        padding: 15px;
+        text-decoration: none;
+        display: inline-block;
+        width: 100%;
+        margin-top: 15px;
+    }
 </style>
 
-<div class="profile-container">
-    <div class="wizard-section">
-        <div class="progress-dots">
-            <div class="dot active" id="dot-1"></div>
-            <div class="dot" id="dot-2"></div>
-            <div class="dot" id="dot-3"></div>
+<div class="profile-wrapper">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="glass-card">
+                <h3 class="form-section-title">👤 Profil Ayarlarını Güncelle</h3>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label>Adın</label>
+                            {{ u_form.first_name }}
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Soyadın</label>
+                            {{ u_form.last_name }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>E-Posta Adresi</label>
+                        {{ u_form.email }}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label>Ülke</label>
+                            <select id="country-select" name="country">
+                                <option value="{{ profile.country }}">{{ profile.country|default:"Ülke Seçin" }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Şehir</label>
+                            <select id="city-select" name="city">
+                                <option value="{{ profile.city }}">{{ profile.city|default:"Şehir Seçin" }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Hakkında / Biyografi</label>
+                        {{ p_form.bio }}
+                    </div>
+
+                    <div class="d-flex align-items-center gap-4 mt-3">
+                        <div class="photo-preview">
+                            {% if current_photo %}
+                                <img src="{{ current_photo.image.url }}" style="width:100%; height:100%; object-fit:cover;">
+                            {% else %}
+                                <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#bdc3c7;">Foto Yok</div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <label class="form-label fw-bold small text-muted">Profil Fotoğrafını Değiştir</label>
+                            {{ ph_form.image }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-premium w-100 mt-4">Tüm Değişiklikleri Kaydet</button>
+                </form>
+            </div>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" id="main-wizard-form">
-            {% csrf_token %}
+        <div class="col-lg-5">
+            <div class="glass-card">
+                <h3 class="form-section-title">🧠 Kişilik Analizin</h3>
+                
+                <div class="mbti-result-box mb-4">
+                    {% if profile.mbti_type %}
+                        <div class="mbti-badge">{{ profile.mbti_type }}</div>
+                        <p class="text-muted fw-bold">Eşleşme Motoru Aktif</p>
+                    {% else %}
+                        <div class="py-3">
+                            <span style="font-size: 3em;">❔</span>
+                            <p class="fw-bold mt-2">Henüz Testi Çözmedin</p>
+                        </div>
+                    {% endif %}
+                </div>
 
-            <div class="wizard-step active" id="step-1">
-                <div class="wizard-card">
-                    <h2 style="color: #2c3e50; font-weight: 800; margin-bottom: 10px;">Selam! Seni tanıyalım 👋</h2>
-                    <p style="color: #7f8c8d; margin-bottom: 30px;">Eşleşme kartlarında görünecek ismini belirle.</p>
-                    
-                    <div class="form-group">
-                        <label>Adın</label>
-                        <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="Örn: Adınız" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Soyadın (Opsiyonel)</label>
-                        <input type="text" name="last_name" value="{{ user.last_name }}" placeholder="Örn: Soyadınız">
-                    </div>
+                <div style="height: 300px; position: relative;" class="mb-4">
+                    <canvas id="mbtiRadarChart"></canvas>
+                </div>
 
-                    <button type="button" class="btn btn-primary w-100 py-3 mt-3" style="border-radius: 15px; font-weight: bold;" onclick="changeStep(2)">
-                        Devam Et ➔
-                    </button>
+                <div class="p-3" style="background: #f8f9fa; border-radius: 15px;">
+                    <p style="font-size: 0.85em; color: #7f8c8d; line-height: 1.6;">
+                        {{ mbti_description }}
+                    </p>
+                    <a href="{% url 'mbti_test' %}" class="btn-test text-center">
+                        {% if profile.mbti_type %}Testi Yeniden Çöz{% else %}✨ Hemen Testi Başlat{% endif %}
+                    </a>
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    <a href="{% url 'delete_account' %}" class="text-danger small fw-bold text-decoration-none">Hesabımı Sil</a>
                 </div>
             </div>
-
-            <div class="wizard-step" id="step-2">
-                <div class="wizard-card">
-                    <h2 style="color: #2c3e50; font-weight: 800; margin-bottom: 10px;">Neredesin? 📍</h2>
-                    <p style="color: #7f8c8d; margin-bottom: 30px;">Sana en yakın ev arkadaşlarını bulmamıza yardımcı ol.</p>
-                    
-                    <div class="form-group">
-                        <label>Ülke</label>
-                        <select id="country-select" name="country" class="custom-select">
-                            <option value="{{ profile.country }}">{{ profile.country|default:"Ülke Seçin" }}</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Şehir</label>
-                        <select id="city-select" name="city" class="custom-select">
-                            <option value="{{ profile.city }}">{{ profile.city|default:"Şehir Seçin" }}</option>
-                        </select>
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-light w-50" onclick="changeStep(1)">Geri</button>
-                        <button type="button" class="btn btn-primary w-50" onclick="changeStep(3)">Devam Et</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="wizard-step" id="step-3">
-                <div class="wizard-card text-center">
-                    <h2 style="color: #2c3e50; font-weight: 800; margin-bottom: 10px;">Son Dokunuş! ✨</h2>
-                    
-                    <div style="width: 120px; height: 120px; border-radius: 50%; background: #f1f2f6; margin: 0 auto 20px auto; overflow: hidden; border: 3px solid #3498db;">
-                        {% if current_photo %}
-                            <img src="{{ current_photo.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        {% else %}
-                            <div style="padding-top: 45px; color: #bdc3c7;">Foto Seç</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
-                        <label>Profil Fotoğrafı</label>
-                        <input type="file" name="image" accept="image/*" style="font-size: 0.8em; border: none; padding: 0;">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Biyografi</label>
-                        <textarea name="bio" rows="3" placeholder="Kendinden bahset...">{{ profile.bio }}</textarea>
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-light w-50" onclick="changeStep(2)">Geri</button>
-                        <button type="submit" class="btn btn-success w-50" style="font-weight: bold;">Bitir ve Keşfet! 🎉</button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <div class="chart-section text-center">
-        <div class="wizard-card" style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
-            <h4 style="color: #2c3e50; font-weight: 700; margin-bottom: 20px;">Kişilik Spektrumun</h4>
-            <div style="position: relative; height: 350px;">
-                <canvas id="mbtiRadarChart"></canvas>
-            </div>
-            <div class="mbti-badge" style="margin-top: 20px;">
-                {{ profile.mbti_type|default:"TEST ÇÖZÜLMEDİ" }}
-            </div>
-            <p style="font-size: 0.85em; color: #7f8c8d; margin-top: 15px; padding: 0 20px;">
-                {{ mbti_description|truncatewords:25 }}
-            </p>
         </div>
     </div>
 </div>
 
 <script>
-    // --- ADIM GEÇİŞ MANTIĞI ---
-    function changeStep(step) {
-        // Tüm adımları gizle
-        document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
-        
-        // Aktif olanı göster
-        document.getElementById('step-' + step).classList.add('active');
-        document.getElementById('dot-' + step).classList.add('active');
-    }
-
-    // --- CHART.JS (Aynen Kalıyor) ---
     document.addEventListener('DOMContentLoaded', function() {
+        // --- CHART.JS ---
         const ctx = document.getElementById('mbtiRadarChart').getContext('2d');
         const rawData = {{ chart_data|safe }};
         
@@ -172,17 +228,24 @@
             data: {
                 labels: ['Dışadönüklük', 'Duyusallık', 'Mantıksallık', 'Planlılık'],
                 datasets: [{
-                    label: 'Karakter Analizi',
+                    label: 'Spektrum Skoru',
                     data: rawData,
                     backgroundColor: 'rgba(52, 152, 219, 0.2)',
                     borderColor: 'rgba(52, 152, 219, 1)',
-                    borderWidth: 3
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgba(52, 152, 219, 1)'
                 }]
             },
-            options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 100 } } }
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
         });
 
-        // --- ÜLKE/ŞEHİR API (Senin Kodun) ---
+        // --- LOKASYON API ---
         const countrySelect = document.getElementById('country-select');
         const citySelect = document.getElementById('city-select');
 
