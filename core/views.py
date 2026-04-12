@@ -140,7 +140,27 @@ def matches_view(request):
 
 @login_required
 def mbti_test_view(request):
+    """Sadece test sayfasını yükler"""
     return render(request, 'core/mbti_test.html')
+
+@csrf_exempt
+@login_required
+def save_mbti_api(request):
+    """Test sonucunu AJAX ile kaydeden API"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            mbti_result = data.get('mbti')
+            
+            if mbti_result:
+                profile = request.user.profile
+                profile.mbti_type = mbti_result
+                profile.save()
+                return JsonResponse({'status': 'success', 'message': 'Profil güncellendi!'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Geçersiz istek'}, status=400)
 
 @login_required
 def make_bots_like_me(request):
