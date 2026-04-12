@@ -1,11 +1,168 @@
-<div style="text-align: center; padding: 50px; background: #2c3e50; color: white; height: 100vh;">
-    <h1 style="font-size: 3em;">🎉 IT'S A MATCH! 🎉</h1>
-    <div style="display: flex; justify-content: center; gap: 20px; margin: 30px;">
-        <img src="{{ request.user.profile.userphoto_set.first.image.url }}" style="width:150px; border-radius:50%; border: 5px solid white;">
-        <img src="{{ matched_with.profile.userphoto_set.first.image.url }}" style="width:150px; border-radius:50%; border: 5px solid white;">
+{% extends 'core/base.html' %}
+
+{% block title %}TypeMatch | Eşleşme Gerçekleşti!{% endblock %}
+
+{% block content %}
+<style>
+    /* Arka Plan ve Genel Yapı */
+    .match-page {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 20, 30, 0.95);
+        backdrop-filter: blur(15px);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        overflow: hidden;
+    }
+
+    /* Görkemli Başlık */
+    .match-title {
+        font-size: 5em;
+        font-weight: 900;
+        font-style: italic;
+        color: #ff4757;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 30px rgba(255, 71, 87, 0.6);
+        margin-bottom: 10px;
+        animation: titlePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes titlePop {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .match-subtitle {
+        color: #f1f2f6;
+        font-size: 1.4em;
+        margin-bottom: 60px;
+        opacity: 0;
+        animation: fadeIn 0.5s ease 0.4s forwards;
+    }
+
+    /* Avatarların Çarpışma Animasyonu */
+    .match-avatars {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 70px;
+        position: relative;
+    }
+
+    .match-avatar {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        border: 6px solid #fff;
+        object-fit: cover;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.6);
+        z-index: 2;
+    }
+
+    .avatar-left {
+        transform: translateX(-200px) rotate(-20deg);
+        opacity: 0;
+        animation: slideLeft 0.7s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards;
+    }
+
+    .avatar-right {
+        transform: translateX(200px) rotate(20deg);
+        opacity: 0;
+        animation: slideRight 0.7s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards;
+    }
+
+    @keyframes slideLeft {
+        to { transform: translateX(20px) rotate(-5deg); opacity: 1; }
+    }
+
+    @keyframes slideRight {
+        to { transform: translateX(-20px) rotate(5deg); opacity: 1; }
+    }
+
+    /* Ortadaki Ateş İkonu */
+    .match-fire {
+        position: absolute;
+        font-size: 4em;
+        z-index: 3;
+        filter: drop-shadow(0 0 20px rgba(255, 165, 2, 0.8));
+        opacity: 0;
+        transform: scale(0);
+        animation: firePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.8s forwards;
+    }
+
+    @keyframes firePop {
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    /* Butonlar */
+    .match-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+        max-width: 380px;
+        opacity: 0;
+        animation: fadeIn 0.5s ease 1s forwards;
+    }
+
+    .btn-match-primary {
+        background: linear-gradient(45deg, #ff4757, #ff6b81);
+        color: white !important;
+        border: none;
+        padding: 20px;
+        border-radius: 40px;
+        font-size: 1.2em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 10px 30px rgba(255, 71, 87, 0.5);
+        text-decoration: none;
+        text-align: center;
+        transition: 0.3s;
+    }
+
+    .btn-match-primary:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(255, 71, 87, 0.7);
+    }
+
+    .btn-match-secondary {
+        background: transparent;
+        color: #bdc3c7 !important;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1em;
+        transition: 0.3s;
+        text-align: center;
+    }
+
+    .btn-match-secondary:hover { color: white !important; }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="match-page">
+    <h1 class="match-title">EŞLEŞTİNİZ!</h1>
+    <p class="match-subtitle">Sen ve <span class="text-warning fw-bold">{{ matched_with.first_name }}</span> artık birbirinizi tanıyabilirsiniz.</p>
+    
+    <div class="match-avatars">
+        <img src="{% if request.user.profile.userphoto_set.first %}{{ request.user.profile.userphoto_set.first.image.url }}{% else %}https://via.placeholder.com/180{% endif %}" class="match-avatar avatar-left">
+        
+        <div class="match-fire">🔥</div>
+        
+        <img src="{% if matched_with.profile.userphoto_set.first %}{{ matched_with.profile.userphoto_set.first.image.url }}{% else %}https://via.placeholder.com/180{% endif %}" class="match-avatar avatar-right">
     </div>
-    <h2>{{ matched_with.first_name }} ile artık konuşabilirsin!</h2>
-    <a href="{% url 'chat_view' matched_with.id %}" style="background: #27ae60; color: white; padding: 15px 30px; text-decoration: none; border-radius: 30px; font-weight: bold;">Hemen Mesaj At</a>
-    <br><br>
-    <a href="{% url 'dashboard' %}" style="color: #bdc3c7;">Kaydırmaya Devam Et</a>
+
+    <div class="match-actions">
+        <a href="{% url 'chat_view' matched_with.id %}" class="btn-match-primary">Hemen Mesaj At 💬</a>
+        <a href="{% url 'dashboard' %}" class="btn-match-secondary">Kaydırmaya Devam Et</a>
+    </div>
 </div>
+{% endblock %}
