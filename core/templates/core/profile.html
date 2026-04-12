@@ -106,6 +106,17 @@
                     {% endif %}
                 </div>
                 
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Adın</label>
+                        <input type="text" name="first_name" value="{{ u_form.first_name.value|default:'' }}" placeholder="Örn: Efe" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Soyadın (Opsiyonel)</label>
+                        <input type="text" name="last_name" value="{{ u_form.last_name.value|default:'' }}" placeholder="Örn: Özer" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;">
+                    </div>
+                </div>
+                
                 <div>
                     <label style="font-size: 0.85em; color: #7f8c8d; font-weight: bold;">Kullanıcı Adı</label>
                     <input type="text" name="username" value="{{ u_form.username.value|default:'' }}" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 0.9em;">
