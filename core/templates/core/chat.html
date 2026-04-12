@@ -42,7 +42,18 @@
             </div>
         {% endfor %}
     </div>
-
+    <div class="icebreaker-container" style="display: flex; gap: 10px; padding: 10px; overflow-x: auto; white-space: nowrap; border-top: 1px solid #f1f2f6; background: #fafbfc;">
+    <span style="font-size: 0.8em; color: #95a5a6; align-self: center;">💡 Buzkıranlar:</span>
+    {% for prompt in icebreakers %}
+        <button type="button" 
+                onclick="document.getElementsByName('message_text')[0].value = '{{ prompt }}'"
+                style="background: white; border: 1px solid #3498db; color: #3498db; padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; cursor: pointer; transition: 0.2s;"
+                onmouseover="this.style.background='#3498db'; this.style.color='white';"
+                onmouseout="this.style.background='white'; this.style.color='#3498db';">
+            {{ prompt }}
+        </button>
+    {% endfor %}
+</div>
     <form method="POST" style="padding: 20px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px;">
         {% csrf_token %}
         <input type="text" name="message_text" placeholder="Mesajınızı buraya yazın..." required 
