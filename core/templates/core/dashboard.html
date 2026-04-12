@@ -131,7 +131,7 @@
                         </div>
                         <div class="card-content">
                             <div>
-                                <h2>{{ candidate.user.first_name }}</h2>
+                                <h2 style="font-weight: 800; letter-spacing: -0.5px;">{{ candidate.display_name }}</h2>
                                 
                                 <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px;">
                                     {% if candidate.city == profile.city and profile.city %}
@@ -140,7 +140,7 @@
                                         <span style="background: #f4f6f6; color: #7f8c8d; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">📍 {{ candidate.city|default:"Konum Yok" }}</span>
                                     {% endif %}
                                     <span style="background: #ebf5fb; color: #2980b9; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">🧠 {{ candidate.mbti_type|default:"MBTI Yok" }}</span>
-                                    <span style="background: #fdf2e9; color: #d35400; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">🚭 Sigara İçmez</span>
+                                    <span style="background: #fdf2e9; color: #d35400; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">🚭 {% if candidate.preferences.smoking_allowed %}Sigara İçiyor{% else %}Sigara İçmez{% endif %}</span>
                                 </div>
 
                             </div>
