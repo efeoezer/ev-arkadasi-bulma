@@ -25,6 +25,7 @@ class Profile(models.Model):
     # Sistem Takibi
     last_seen = models.DateTimeField(null=True, blank=True, verbose_name="Son Görülme")
     created_at = models.DateTimeField(auto_now_add=True)
+    is_onboarded = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} - {self.mbti_type if self.mbti_type else 'Profil'}"
