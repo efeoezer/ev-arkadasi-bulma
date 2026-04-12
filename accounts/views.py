@@ -84,35 +84,22 @@ def logout_view(request):
 
 @login_required
 def onboarding_wizard(request):
-    """Kullanıcının kayıt olduktan sonra geçtiği adım adım sihirbaz."""
-    profile, created = Profile.objects.get_or_create(user=request.user)
-    prefs, _ = RoommatePreference.objects.get_or_create(profile=profile)
+    profile = request.user.profile
+    if profile.is_onboarded:
+        return redirect('dashboard')
 
     if request.method == 'POST':
-        # Kimlik Bilgileri
-        request.user.first_name = request.POST.get('first_name', '')
-        request.user.last_name = request.POST.get('last_name', '')
+        request.user.first_name = request.POST.get('first_name')
+        request.user.last_name = request.POST.get('last_name')
         request.user.save()
-
-        # Lokasyon ve MBTI (Eğer formda varsa alınır, yoksa boş kalır)
-        profile.city = request.POST.get('city', profile.city)
-        profile.country = request.POST.get('country', profile.country)
-        profile.mbti_type = request.POST.get('mbti_type', profile.mbti_type)
-        profile.save()
-
-        # Yaşam Tarzı Tercihleri
-        smoking_val = request.POST.get('smoking')
-        if smoking_val:
-            prefs.smoking_allowed = (smoking_val == 'true')
         
-        pet_val = request.POST.get('pet')
-        if pet_val:
-            prefs.has_pet = (pet_val == 'true')
-            
-        prefs.save()
-
-        messages.success(request, "Sihirbazı tamamladın! Profilin harika görünüyor.")
-        return redirect('dashboard')
+        profile.city = request.POST.get('city')
+        profile.bio = request.POST.get('bio')
+        profile.mbti_type = request.POST.get('mbti_result')
+        profile.is_onboarded = True
+        profile.save()
+        
+        return JsonResponse({'status': 'success', 'redirect': '/dashboard/'})
 
     return render(request, 'accounts/onboarding_wizard.html')
 
