@@ -6,211 +6,104 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-    :root {
-        --primary-blue: #3498db;
-        --success-green: #2ecc71;
-        --bg-light: #f8f9fa;
-        --text-dark: #2c3e50;
-    }
+    .profile-header { background: white; padding: 40px 0; border-bottom: 1px solid #eee; text-align: center; margin-bottom: 40px; }
+    .avatar-wrapper { width: 150px; height: 150px; border-radius: 50%; border: 5px solid white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: 0 auto 20px auto; overflow: hidden; position: relative; }
+    
+    .glass-card { background: white; border-radius: 25px; padding: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); border: 1px solid #f1f2f6; height: 100%; }
+    
+    .mbti-description-box { font-style: italic; line-height: 1.8; color: #576574; background: #f9f9fb; padding: 25px; border-radius: 15px; border-left: 5px solid #3498db; margin-top: 20px; font-size: 1.05em; }
+    
+    .danger-zone { margin-top: 40px; padding: 25px; border-radius: 20px; background: #fff5f5; border: 1px solid #feb2b2; }
+    .btn-delete { background: transparent; color: #e53e3e; border: 2px solid #e53e3e; padding: 10px 20px; border-radius: 12px; font-weight: bold; transition: 0.3s; text-decoration: none; display: inline-block; }
+    .btn-delete:hover { background: #e53e3e; color: white; }
 
-    .profile-wrapper {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 0 20px;
-    }
-
-    .glass-card {
-        background: white;
-        border-radius: 25px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-        border: 1px solid #f1f2f6;
-        padding: 35px;
-        height: 100%;
-    }
-
-    /* Form Tasarımı */
-    .form-section-title {
-        font-weight: 800;
-        color: var(--text-dark);
-        margin-bottom: 25px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .form-group label {
-        font-weight: 700;
-        color: #7f8c8d;
-        font-size: 0.85em;
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    input, select, textarea {
-        width: 100%;
-        padding: 12px 15px;
-        border-radius: 12px;
-        border: 2px solid #edf2f7;
-        transition: 0.3s;
-        outline: none;
-        margin-bottom: 15px;
-    }
-
-    input:focus, select:focus, textarea:focus {
-        border-color: var(--primary-blue);
-        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
-    }
-
-    /* Fotoğraf Alanı */
-    .photo-preview {
-        width: 130px;
-        height: 130px;
-        border-radius: 50%;
-        background: #f1f2f6;
-        margin-bottom: 20px;
-        overflow: hidden;
-        border: 4px solid white;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-
-    /* MBTI Bölümü */
-    .mbti-result-box {
-        background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
-        border-radius: 20px;
-        padding: 25px;
-        text-align: center;
-    }
-
-    .mbti-badge {
-        font-size: 3em;
-        font-weight: 900;
-        color: var(--text-dark);
-        letter-spacing: -2px;
-    }
-
-    .btn-premium {
-        background: var(--primary-blue);
-        color: white;
-        border: none;
-        padding: 15px 30px;
-        border-radius: 15px;
-        font-weight: 700;
-        transition: 0.3s;
-    }
-
-    .btn-premium:hover {
-        background: #2980b9;
-        transform: translateY(-2px);
-    }
-
-    .btn-test {
-        background: #e67e22;
-        color: white;
-        border-radius: 15px;
-        font-weight: 800;
-        padding: 15px;
-        text-decoration: none;
-        display: inline-block;
-        width: 100%;
-        margin-top: 15px;
-    }
+    .mbti-info-section { background: white; margin-top: 60px; padding: 50px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
 </style>
 
-<div class="profile-wrapper">
+<div class="profile-header">
+    <div class="avatar-wrapper">
+        {% if current_photo %}
+            <img src="{{ current_photo.image.url }}" style="width:100%; height:100%; object-fit:cover;">
+        {% else %}
+            <div style="background:#dfe6e9; height:100%; display:flex; align-items:center; justify-content:center; color:#b2bec3;">FOTO YOK</div>
+        {% endif %}
+    </div>
+    <h2 class="fw-bold">{{ profile.user.first_name }} {{ profile.user.last_name }}</h2>
+    <p class="text-muted">@{{ profile.user.username }}</p>
+</div>
+
+<div class="container">
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="glass-card">
-                <h3 class="form-section-title">👤 Profil Ayarlarını Güncelle</h3>
-                
+                <h4 class="fw-bold mb-4">⚙️ Profil Ayarlarını Güncelle</h4>
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
-                    
-                    <div class="row">
-                        <div class="col-md-6 form-group">
-                            <label>Adın</label>
-                            {{ u_form.first_name }}
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label>Soyadın</label>
-                            {{ u_form.last_name }}
-                        </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6"><label class="small fw-bold">Ad</label>{{ u_form.first_name }}</div>
+                        <div class="col-md-6"><label class="small fw-bold">Soyad</label>{{ u_form.last_name }}</div>
                     </div>
-
-                    <div class="form-group">
-                        <label>E-Posta Adresi</label>
-                        {{ u_form.email }}
+                    <div class="mb-3"><label class="small fw-bold">E-Posta</label>{{ u_form.email }}</div>
+                    <div class="row mb-3">
+                        <div class="col-md-6"><label class="small fw-bold">Ülke</label><select id="country-select" name="country"><option value="{{ profile.country }}">{{ profile.country|default:"Ülke Seç" }}</option></select></div>
+                        <div class="col-md-6"><label class="small fw-bold">Şehir</label><select id="city-select" name="city"><option value="{{ profile.city }}">{{ profile.city|default:"Şehir Seç" }}</option></select></div>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6 form-group">
-                            <label>Ülke</label>
-                            <select id="country-select" name="country">
-                                <option value="{{ profile.country }}">{{ profile.country|default:"Ülke Seçin" }}</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label>Şehir</label>
-                            <select id="city-select" name="city">
-                                <option value="{{ profile.city }}">{{ profile.city|default:"Şehir Seçin" }}</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Hakkında / Biyografi</label>
-                        {{ p_form.bio }}
-                    </div>
-
-                    <div class="d-flex align-items-center gap-4 mt-3">
-                        <div class="photo-preview">
-                            {% if current_photo %}
-                                <img src="{{ current_photo.image.url }}" style="width:100%; height:100%; object-fit:cover;">
-                            {% else %}
-                                <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#bdc3c7;">Foto Yok</div>
-                            {% endif %}
-                        </div>
-                        <div class="flex-grow-1">
-                            <label class="form-label fw-bold small text-muted">Profil Fotoğrafını Değiştir</label>
-                            {{ ph_form.image }}
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-premium w-100 mt-4">Tüm Değişiklikleri Kaydet</button>
+                    <div class="mb-3"><label class="small fw-bold">Biyografi</label>{{ p_form.bio }}</div>
+                    <div class="mb-4"><label class="small fw-bold">Yeni Fotoğraf</label>{{ ph_form.image }}</div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold" style="border-radius:15px;">Güncelle</button>
                 </form>
+
+                <div class="danger-zone">
+                    <h5 class="fw-bold text-danger">Tehlikeli Bölge</h5>
+                    <p class="small text-muted">Hesabınızı sildiğinizde tüm verileriniz kalıcı olarak yok edilir.</p>
+                    <a href="{% url 'delete_account' %}" class="btn-delete">Hesabımı Sil</a>
+                </div>
             </div>
         </div>
 
         <div class="col-lg-5">
             <div class="glass-card">
-                <h3 class="form-section-title">🧠 Kişilik Analizin</h3>
-                
-                <div class="mbti-result-box mb-4">
-                    {% if profile.mbti_type %}
-                        <div class="mbti-badge">{{ profile.mbti_type }}</div>
-                        <p class="text-muted fw-bold">Eşleşme Motoru Aktif</p>
-                    {% else %}
-                        <div class="py-3">
-                            <span style="font-size: 3em;">❔</span>
-                            <p class="fw-bold mt-2">Henüz Testi Çözmedin</p>
+                <h4 class="fw-bold mb-4">🧠 Kişilik Analizin</h4>
+                {% if profile.mbti_type %}
+                    <div class="text-center">
+                        <span class="display-3 fw-black text-primary">{{ profile.mbti_type }}</span>
+                        <canvas id="mbtiRadarChart" class="my-4"></canvas>
+                        <div class="mbti-description-box">
+                            "{{ mbti_description }}"
                         </div>
-                    {% endif %}
-                </div>
+                        <a href="{% url 'mbti_test' %}" class="btn btn-outline-primary mt-3 w-100">Testi Yeniden Çöz</a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <p class="text-muted">Analiz için testi çözmelisin.</p>
+                        <a href="{% url 'mbti_test' %}" class="btn btn-warning w-100 py-3 fw-bold">Testi Başlat</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
-                <div style="height: 300px; position: relative;" class="mb-4">
-                    <canvas id="mbtiRadarChart"></canvas>
+    <div class="mbti-info-section">
+        <h3 class="fw-bold mb-4">🧠 MBTI Harfleri Ne Anlama Geliyor?</h3>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="p-3 border-start border-4 border-warning mb-3">
+                    <h5 class="fw-bold">⚡ Enerji: (E) Dışadönük vs (I) İçe Dönük</h5>
+                    <p class="small text-muted">Enerjini nereden alıyorsun? Sosyal ortamlardan mı (E), yoksa yalnızlıktan mı (I)?</p>
                 </div>
-
-                <div class="p-3" style="background: #f8f9fa; border-radius: 15px;">
-                    <p style="font-size: 0.85em; color: #7f8c8d; line-height: 1.6;">
-                        {{ mbti_description }}
-                    </p>
-                    <a href="{% url 'mbti_test' %}" class="btn-test text-center">
-                        {% if profile.mbti_type %}Testi Yeniden Çöz{% else %}✨ Hemen Testi Başlat{% endif %}
-                    </a>
+                <div class="p-3 border-start border-4 border-info">
+                    <h5 class="fw-bold">🔍 Bilgi: (S) Duyusal vs (N) Sezgisel</h5>
+                    <p class="small text-muted">Bilgiyi nasıl işlersin? Somut verilere mi (S), yoksa büyük resme ve teorilere mi (N) odaklanırsın?</p>
                 </div>
-
-                <div class="mt-4 pt-3 border-top">
-                    <a href="{% url 'delete_account' %}" class="text-danger small fw-bold text-decoration-none">Hesabımı Sil</a>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 border-start border-4 border-danger mb-3">
+                    <h5 class="fw-bold">⚖️ Karar: (T) Mantıksal vs (F) Duygusal</h5>
+                    <p class="small text-muted">Kararlarını ne belirler? Objektif analizler mi (T), yoksa kişisel değerler ve empati mi (F)?</p>
+                </div>
+                <div class="p-3 border-start border-4 border-success">
+                    <h5 class="fw-bold">📅 Düzen: (J) Yargılayıcı vs (P) Algılayıcı</h5>
+                    <p class="small text-muted">Hayatı nasıl yaşarsın? Planlı ve düzenli mi (J), yoksa esnek ve spontane mi (P)?</p>
                 </div>
             </div>
         </div>
