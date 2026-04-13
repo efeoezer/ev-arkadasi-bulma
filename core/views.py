@@ -178,14 +178,24 @@ def like_user(request, to_user_id):
 
 @login_required
 def match_success_view(request, match_with_id):
-    """Eşleşme ekranını render eden fonksiyon"""
-    # Eşleşilen kullanıcıyı veritabanından getir
+    """
+    Eski eşleşme ekranını atlayıp, kullanıcıyı doğrudan
+    Pazarlık Masası'na (Negotiation Board) yönlendiren köprü fonksiyon.
+    """
     matched_with = get_object_or_404(User, id=match_with_id)
     
-    # Yeni animasyonlu kodu yazdığımız dosyayı render et
-    return render(request, 'core/match_success.html', {
-        'matched_with': matched_with
-    })
+    # İki kullanıcı arasındaki Match (Eşleşme) objesini bulalım
+    # Eşleşmede kimin user1 kimin user2 olduğu değişebileceği için iki duruma da bakıyoruz
+    match_obj = Match.objects.filter(user1=request.user, user2=matched_with).first()
+    if not match_obj:
+        match_obj = Match.objects.filter(user1=matched_with, user2=request.user).first()
+
+    # Eğer gerçekten bir eşleşme varsa, direkt kriz masasına ışınla!
+    if match_obj:
+        return redirect('negotiation_board', match_id=match_obj.id)
+    
+    # Bir hata olduysa ve eşleşme yoksa ana sayfaya dön
+    return redirect('dashboard')
 
 @login_required
 def negotiation_board_view(request, match_id):
