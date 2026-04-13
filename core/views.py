@@ -159,51 +159,47 @@ def generate_bots_view(request):
 def like_user(request, to_user_id):
     to_user = get_object_or_404(User, id=to_user_id)
     
-    # 1. Beğeniyi kaydet (Veya varsa güncelle)
+    # 1. Beğeniyi kaydet
     like, created = Like.objects.get_or_create(
         from_user=request.user,
         to_user=to_user
     )
 
-    # 2. KARŞILIKLI BEĞENİ KONTROLÜ (Match Check)
+    # 2. Karşılıklı beğeni kontrolü
     reverse_like = Like.objects.filter(from_user=to_user, to_user=request.user).exists()
 
     if reverse_like:
-        # Karşılıklı beğeni var! Match oluştur.
-        Match.objects.get_or_create(user1=request.user, user2=to_user)
-        # Opsiyonel: Burada bir "Eşleştin!" sayfasına yönlendirebilirsin
+        # HATA DÜZELTİLDİ: user_1 ve user_2 kullanıldı, match_obj doğru tanımlandı
+        match_obj, created = Match.objects.get_or_create(
+            user_1=request.user, 
+            user_2=to_user, 
+            defaults={'algorithm_score': 0}
+        )
         return redirect('negotiation_board', match_id=match_obj.id)
 
     return redirect('dashboard')
 
 @login_required
 def match_success_view(request, match_with_id):
-    """
-    Eski eşleşme ekranını atlayıp, kullanıcıyı doğrudan
-    Pazarlık Masası'na (Negotiation Board) yönlendiren köprü fonksiyon.
-    """
+    """Eski ekranı atlayıp köprü görevi gören fonksiyon"""
     matched_with = get_object_or_404(User, id=match_with_id)
     
-    # İki kullanıcı arasındaki Match (Eşleşme) objesini bulalım
-    # Eşleşmede kimin user1 kimin user2 olduğu değişebileceği için iki duruma da bakıyoruz
-    match_obj = Match.objects.filter(user1=request.user, user2=matched_with).first()
+    # HATA DÜZELTİLDİ: user_1 ve user_2 ile sorgulama yapılıyor
+    match_obj = Match.objects.filter(user_1=request.user, user_2=matched_with).first()
     if not match_obj:
-        match_obj = Match.objects.filter(user1=matched_with, user2=request.user).first()
+        match_obj = Match.objects.filter(user_1=matched_with, user_2=request.user).first()
 
-    # Eğer gerçekten bir eşleşme varsa, direkt kriz masasına ışınla!
     if match_obj:
         return redirect('negotiation_board', match_id=match_obj.id)
     
-    # Bir hata olduysa ve eşleşme yoksa ana sayfaya dön
     return redirect('dashboard')
 
 @login_required
 def negotiation_board_view(request, match_id):
-    # Eşleşme detaylarını alıyoruz
     match = get_object_or_404(Match, id=match_id)
     
-    # Karşı tarafı bul (Eğer sen user1 isen karşı taraf user2'dir)
-    opponent = match.user2 if match.user1 == request.user else match.user1
+    # HATA DÜZELTİLDİ: user_1 ve user_2 çağrıldı
+    opponent = match.user_2 if match.user_1 == request.user else match.user_1
     
     return render(request, 'core/negotiation_board.html', {
         'match': match,
