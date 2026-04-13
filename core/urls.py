@@ -21,4 +21,6 @@ urlpatterns = [
 
     # Admin: Test amaçlı botların kendine like atmasını sağlama
     path('api/bots-like-me/', views.make_bots_like_me, name='make_bots_like_me'),
+
+    path('match-success/<int:match_with_id>/', views.match_success_view, name='match_success_view'),
 ]
