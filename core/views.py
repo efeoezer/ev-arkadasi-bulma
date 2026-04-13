@@ -156,17 +156,6 @@ def generate_bots_view(request):
     return redirect('dashboard')
 
 @login_required
-def match_success_view(request, match_with_id):
-    """Eşleşme ekranını render eden fonksiyon"""
-    # Eşleşilen kullanıcıyı veritabanından getir
-    matched_with = get_object_or_404(User, id=match_with_id)
-    
-    # Yeni animasyonlu kodu yazdığımız dosyayı render et
-    return render(request, 'core/match_success.html', {
-        'matched_with': matched_with
-    })
-
-@login_required
 def like_user(request, to_user_id):
     to_user = get_object_or_404(User, id=to_user_id)
     
@@ -186,3 +175,15 @@ def like_user(request, to_user_id):
         return redirect('match_success_view', match_with_id=to_user.id)
 
     return redirect('dashboard')
+
+@login_required
+def match_success_view(request, match_with_id):
+    """Eşleşme ekranını render eden fonksiyon"""
+    # Eşleşilen kullanıcıyı veritabanından getir
+    matched_with = get_object_or_404(User, id=match_with_id)
+    
+    # Yeni animasyonlu kodu yazdığımız dosyayı render et
+    return render(request, 'core/match_success.html', {
+        'matched_with': matched_with
+    })
+
