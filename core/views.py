@@ -139,7 +139,8 @@ def matches_view(request):
         
         matched_data.append({
             'profile': other_user.profile,
-            'unread_count': unread
+            'unread_count': unread,
+            'match_id': m.id
         })
             
     return render(request, 'core/matches.html', {'matches': matched_data})
