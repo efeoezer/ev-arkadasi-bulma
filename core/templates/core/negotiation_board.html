@@ -91,24 +91,41 @@
     let goodwill = 0;
     let myUltimatum = null;
 
-    fetch(API_URL).then(res => res.json()).then(data => {
-        if (data.status === 'error') throw new Error(data.message);
-        document.getElementById('loading').style.display = 'none';
-        
-        goodwill = data.goodwill;
-        updateGoodwillDisplay();
+    fetch(API_URL)
+        .then(async res => {
+            // Sunucudan gelen cevabı kontrol et
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || `Sunucu Hatası: ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(data => {
+            document.getElementById('loading').style.display = 'none';
+            goodwill = data.goodwill;
+            updateGoodwillDisplay();
 
-        if (data.user_ready && data.opponent_ready) {
-            myChoices = data.my_choices;
-            oppChoices = data.opp_choices;
-            renderConfrontation();
-        } else if (data.user_ready && !data.opponent_ready) {
-            document.getElementById('phase-waiting').style.display = 'block';
-        } else {
-            renderPrepPhase();
-        }
-    }).catch(err => console.error(err));
-
+            if (data.user_ready && data.opponent_ready) {
+                myChoices = data.my_choices;
+                oppChoices = data.opp_choices;
+                renderConfrontation();
+            } else if (data.user_ready && !data.opponent_ready) {
+                document.getElementById('phase-waiting').style.display = 'block';
+            } else {
+                renderPrepPhase();
+            }
+        })
+        .catch(err => {
+            // Takılma olduğunda ekrana kırmızı hata basar
+            document.getElementById('loading').innerHTML = `
+                <div class="alert alert-danger mt-5">
+                    <h4>⚠️ Bağlantı Hatası</h4>
+                    <p>${err.message}</p>
+                    <button onclick="location.reload()" class="btn btn-outline-danger btn-sm">Tekrar Dene</button>
+                </div>
+            `;
+        });
+    
     function updateGoodwillDisplay() {
         document.getElementById('goodwill-display').innerText = `⭐ İyi Niyet: ${goodwill}`;
     }
