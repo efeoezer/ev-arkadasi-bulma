@@ -280,3 +280,21 @@
     });
 </script>
 {% endblock %}
+
+<div class="match-container">
+    {% for match in matches %}
+    <div class="match-card">
+        <img src="{{ match.profile.userphoto_set.first.image.url }}" alt="{{ match.profile.user.first_name }}">
+        
+        <div class="match-info">
+            <h3>{{ match.profile.user.first_name }} {{ match.profile.user.last_name }}</h3>
+            <p><strong>Uyum Skoru: %{{ match.score }}</strong></p>
+            <p>{{ match.profile.city }} | {{ match.profile.mbti_type }}</p>
+            <p>{{ match.profile.bio|truncatechars:100 }}</p>
+            <button class="btn-chat">Mesaj At</button>
+        </div>
+    </div>
+    {% empty %}
+    <p>Henüz uygun bir eşleşme bulunamadı.</p>
+    {% endfor %}
+</div>
