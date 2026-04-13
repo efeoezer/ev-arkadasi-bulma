@@ -223,12 +223,12 @@ def api_negotiation(request, match_id):
     match = get_object_or_404(Match, id=match_id)
 
     # 🔒 GÜVENLİK KONTROLÜ: Sadece eşleşen 2 kişi bu masaya oturabilir!
-    if request.user != match.user_1 and request.user != match.user_2:
+    if request.user.id != match.user_1.id and request.user.id != match.user_2.id:
         return JsonResponse({'status': 'error', 'message': 'Bu masaya erişim yetkiniz yok.'}, status=403)
         
     nego, created = Negotiation.objects.get_or_create(match=match)
 
-    is_user1 = (request.user == match.user_1)
+    is_user1 = (request.user.id == match.user_1.id)
     
     if request.method == 'POST':
         data = json.loads(request.body)
