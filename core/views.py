@@ -105,9 +105,8 @@ def swipe_api(request):
                 is_mutual = Like.objects.filter(from_user=target_user, to_user=request.user).exists()
 
                 if is_mutual:
-                    # Burada user_1 ve user_2 olarak düzelttik:
                     Match.objects.get_or_create(user_1=request.user, user_2=target_user, defaults={'algorithm_score': 0})
-                    return JsonResponse({'status': 'match', 'matched_name': target_user.first_name or target_user.username})
+                    return JsonResponse({'status': 'match', 'matched_name': target_user.first_name or target_user.username, 'match_id': match_obj.id})
                 
                 return JsonResponse({'status': 'success', 'message': 'Beğenildi'})
             
