@@ -106,7 +106,10 @@ def swipe_api(request):
 
                 if is_mutual:
                     Match.objects.get_or_create(user_1=request.user, user_2=target_user, defaults={'algorithm_score': 0})
-                    return JsonResponse({'status': 'match', 'matched_name': target_user.first_name or target_user.username, 'match_id': match_obj.id})
+                    return JsonResponse({'status': 'match',
+                                         'matched_name': target_user.first_name or target_user.username,
+                                         'target_user_id': target_user.id
+                                        })
                 
                 return JsonResponse({'status': 'success', 'message': 'Beğenildi'})
             
