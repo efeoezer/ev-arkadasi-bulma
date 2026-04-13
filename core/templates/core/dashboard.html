@@ -115,9 +115,18 @@
                     {% endif %}
                 </form>
             </div>
-
             <div class="card-stack-wrapper">
-                <div class="card-stack" id="card-stack">
+                
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 1;">
+                    <span style="font-size: 4.5em; text-shadow: 0 10px 20px rgba(0,0,0,0.1);">🌍</span>
+                    <h3 style="color: #2c3e50; font-weight: 900; margin-top: 15px;">Herkesi Gördün!</h3>
+                    <p style="color: #7f8c8d; font-size: 0.95em; padding: 0 20px; line-height: 1.5;">Sola kaydırdığın kişilere tekrar bir şans vermek ister misin?</p>
+                    <button onclick="window.location.reload()" style="margin-top: 20px; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 12px 30px; border-radius: 30px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        🔄 Desteyi Başa Sar
+                    </button>
+                </div>
+
+                <div class="card-stack" id="card-stack" style="position: relative; z-index: 10; width: 100%; height: 100%;">
                     {% for candidate in candidates %}
                     <div class="swipe-card" data-id="{{ candidate.user.id }}">
                         <div class="card-header-bg">
@@ -148,11 +157,7 @@
                         </div>
                     </div>
                     {% empty %}
-                    <div style="text-align: center; color: #bdc3c7; padding-top: 100px;">
-                        <span style="font-size: 3em;">🔍</span>
-                        <p>Kriterlere uygun aday kalmadı.</p>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
                 </div>
             </div>
         </div>
