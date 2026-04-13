@@ -101,9 +101,22 @@
     let myUltimatum = null;
 
     // Sayfa Yüklendiğinde Durumu Çek
+// Sayfa Yüklendiğinde Durumu Çek
     fetch(API_URL)
-        .then(res => res.json())
+        .then(res => {
+            // Eğer sunucudan JSON yerine HTML (Login/Hata sayfası) dönerse JS'yi durdur
+            if (!res.ok || res.headers.get("content-type")?.indexOf("application/json") === -1) {
+                throw new Error("Oturumunuz kapanmış veya yetkisiz erişim.");
+            }
+            return res.json();
+        })
         .then(data => {
+            // Eğer backend API'miz (views.py) bize özel bir 'error' döndürdüyse:
+            if (data.status === 'error') {
+                throw new Error(data.message);
+            }
+
+            // Hata yoksa masayı kurmaya başla
             document.getElementById('loading').style.display = 'none';
             if (data.user_ready) {
                 oppChoices = data.opp_choices;
@@ -111,6 +124,19 @@
             } else {
                 renderPrepPhase();
             }
+        })
+        .catch(err => {
+            // SONSUZ YÜKLEME ÇARKINI DURDUR VE EKRANA HATA BAS:
+            document.getElementById('loading').innerHTML = `
+                <div class="text-center">
+                    <h3 class="text-danger mt-4">⚠️ Bir Sorun Oluştu</h3>
+                    <p class="text-muted">Bu masaya erişim izniniz yok veya oturumunuz kapandı.</p>
+                    <div class="alert alert-danger d-inline-block mt-2">${err.message}</div>
+                    <br>
+                    <a href="/dashboard/" class="btn btn-outline-light mt-4">Ana Sayfaya Dön</a>
+                </div>
+            `;
+            console.error("Masa Yükleme Hatası:", err);
         });
 
     function renderPrepPhase() {
