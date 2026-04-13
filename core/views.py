@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from accounts.models import Profile
-from .models import Like, Match
+from .models import Like, Match, Negotiation
 from .services import generate_match_score, generate_bot_users
 from chat.models import Message 
 
