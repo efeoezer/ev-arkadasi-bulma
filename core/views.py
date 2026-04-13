@@ -58,11 +58,8 @@ def dashboard(request):
     room_style = request.GET.get('room_style')
     max_rent = request.GET.get('max_rent')
 
-    if 'city' in request.GET:
-        selected_city = request.GET.get('city')
-    else:
-        selected_city = profile.city
-
+    selected_city = request.GET.get('city', '')
+    
     candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
     
     if selected_city:
