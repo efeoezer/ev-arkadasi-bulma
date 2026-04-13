@@ -1,0 +1,240 @@
+{% extends 'core/base.html' %}
+{% block title %}TypeMatch | Kriz Masası{% endblock %}
+
+{% block content %}
+<style>
+    body { background: #0f141e; color: white; overflow-x: hidden; }
+    
+    .board-container { max-width: 900px; margin: 40px auto; padding: 20px; }
+    
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+
+    .header-bar {
+        display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 20px; margin-bottom: 30px;
+    }
+
+    .goodwill-badge {
+        background: linear-gradient(45deg, #f1c40f, #f39c12);
+        color: #000; padding: 10px 20px; border-radius: 30px;
+        font-weight: 900; font-size: 1.2em;
+        box-shadow: 0 0 20px rgba(241, 196, 15, 0.4);
+        transition: transform 0.3s;
+    }
+
+    /* Kural Kartları */
+    .rule-row {
+        display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px;
+        align-items: center; background: rgba(0,0,0,0.2);
+        padding: 15px; border-radius: 12px; margin-bottom: 15px;
+    }
+
+    .rule-title { font-weight: 700; font-size: 1.1em; color: #bdc3c7; }
+
+    .custom-select {
+        background: #1e2736; color: white; border: 1px solid #34495e;
+        padding: 10px; border-radius: 8px; width: 100%; outline: none;
+    }
+
+    .ultimatum-btn {
+        background: transparent; color: #e74c3c; border: 2px solid #e74c3c;
+        padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;
+        transition: 0.3s;
+    }
+    .ultimatum-btn.active { background: #e74c3c; color: white; box-shadow: 0 0 15px rgba(231, 76, 60, 0.4); }
+    .ultimatum-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; }
+
+    /* Kriz Çözüm Ekranı */
+    .conflict-card {
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(0,0,0,0.2));
+        border-left: 4px solid #e74c3c; padding: 20px; border-radius: 12px; margin-bottom: 15px;
+    }
+    
+    .resolved-card {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(0,0,0,0.2));
+        border-left: 4px solid #2ecc71; padding: 20px; border-radius: 12px; margin-bottom: 15px;
+    }
+
+    .action-btn { border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-concede { background: #34495e; color: white; }
+    .btn-concede:hover { background: #2ecc71; color: #000; }
+    .btn-leverage { background: #f1c40f; color: #000; }
+    .btn-leverage:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(241, 196, 15, 0.5); }
+    .btn-leverage:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    .btn-start { background: #3498db; color: white; padding: 15px 40px; font-size: 1.2em; font-weight: bold; border-radius: 30px; border: none; width: 100%; cursor: pointer; margin-top: 20px; }
+</style>
+
+<div class="board-container">
+    <div class="header-bar">
+        <h2>🤝 Anlaşma Masası</h2>
+        <div class="goodwill-badge" id="goodwill-display">⭐ İyi Niyet: 0</div>
+    </div>
+
+    <div id="phase-prep" class="glass-panel">
+        <p class="text-muted mb-4">Senin için en önemli 2 kuralı "Ültimatom" olarak işaretleyebilirsin. Kalanlarda esnek olmak zorundasın.</p>
+        <div id="prep-rules-container"></div>
+        <button class="btn-start" id="start-btn" onclick="startConfrontation()">Kriz Masasını Aç ➔</button>
+    </div>
+
+    <div id="phase-conflict" class="glass-panel" style="display: none;">
+        <h3 class="mb-4 text-warning">Karşı Tarafın Talepleri Geldi!</h3>
+        <p class="text-muted mb-4">Taviz vererek "İyi Niyet Puanı" (⭐) kazan. Bu puanı başka bir kuralı zorla kabul ettirmek (Koz Kullan) için harcayabilirsin.</p>
+        <div id="conflict-container"></div>
+        <button class="btn-start bg-success d-none" id="finish-btn" onclick="signContract()">✍️ Sözleşmeyi İmzala ve Sohbete Geç</button>
+    </div>
+</div>
+
+<script>
+    const rulesData = [
+        { id: 'cleaning', label: 'Temizlik Sıklığı', options: ['Her Gün', 'Haftalık', 'Gevşek'] },
+        { id: 'guests', label: 'Misafir', options: ['Sıfır Tolerans', 'Haberli İzin', 'Serbest'] },
+        { id: 'bio', label: 'Evcil Hayvan', options: ['Yasak', 'Kafes/Küçük', 'Serbest'] },
+        { id: 'noise', label: 'Gürültü', options: ['Mutlak Sessizlik', 'Normal', 'Farketmez'] },
+        { id: 'shared', label: 'Ortak Alan', options: ['Sınırlı', 'Zaman Çizelgeli', 'Tamamen Ortak'] }
+    ];
+
+    let myChoices = {};
+    let myUltimatums = [];
+    let opponentChoices = {};
+    let goodwill = 0;
+
+    // Arayüzü Başlat
+    function renderPrepPhase() {
+        const container = document.getElementById('prep-rules-container');
+        container.innerHTML = '';
+        
+        rulesData.forEach(rule => {
+            myChoices[rule.id] = rule.options[0]; // Varsayılan seçim
+            
+            let optionsHtml = rule.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+            
+            container.innerHTML += `
+                <div class="rule-row">
+                    <div class="rule-title">${rule.label}</div>
+                    <select class="custom-select" onchange="updateChoice('${rule.id}', this.value)">
+                        ${optionsHtml}
+                    </select>
+                    <button class="ultimatum-btn" id="btn-ult-${rule.id}" onclick="toggleUltimatum('${rule.id}')">
+                        Kırmızı Çizgi
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    function updateChoice(ruleId, value) { myChoices[ruleId] = value; }
+
+    function toggleUltimatum(ruleId) {
+        const btn = document.getElementById(`btn-ult-${ruleId}`);
+        if (myUltimatums.includes(ruleId)) {
+            myUltimatums = myUltimatums.filter(id => id !== ruleId);
+            btn.classList.remove('active');
+        } else {
+            if (myUltimatums.length >= 2) return alert("Sadece 2 adet Kırmızı Çizgi belirleyebilirsin!");
+            myUltimatums.push(ruleId);
+            btn.classList.add('active');
+        }
+        
+        // Diğer butonları kilitle veya aç
+        rulesData.forEach(rule => {
+            const b = document.getElementById(`btn-ult-${rule.id}`);
+            if (!myUltimatums.includes(rule.id)) {
+                b.disabled = myUltimatums.length >= 2;
+            }
+        });
+    }
+
+    // Karşılaşma Fazına Geçiş
+    function startConfrontation() {
+        document.getElementById('phase-prep').style.display = 'none';
+        document.getElementById('phase-conflict').style.display = 'block';
+        
+        // Demo: Karşı tarafın cevaplarını yapay zeka gibi zıt üretelim (Mekaniği test etmek için)
+        rulesData.forEach(rule => {
+            let oppOpt = rule.options[Math.floor(Math.random() * rule.options.length)];
+            // En az 3 kriz çıksın diye ilk 3 kuralı zorla farklı yapıyoruz
+            if (rulesData.indexOf(rule) < 3 && oppOpt === myChoices[rule.id]) {
+                oppOpt = rule.options.find(o => o !== oppOpt); 
+            }
+            opponentChoices[rule.id] = oppOpt;
+        });
+
+        renderConflicts();
+    }
+
+    function renderConflicts() {
+        const container = document.getElementById('conflict-container');
+        container.innerHTML = '';
+        let pendingConflicts = 0;
+
+        rulesData.forEach(rule => {
+            const myVal = myChoices[rule.id];
+            const oppVal = opponentChoices[rule.id];
+
+            if (myVal === oppVal) {
+                // Uzlaşıldı
+                container.innerHTML += `
+                    <div class="resolved-card">
+                        <div class="d-flex justify-content-between">
+                            <span class="rule-title">${rule.label}</span>
+                            <span class="text-success fw-bold">✓ Uzlaşıldı (${myVal})</span>
+                        </div>
+                    </div>`;
+            } else {
+                // Kriz!
+                pendingConflicts++;
+                const canLeverage = goodwill > 0 ? "" : "disabled";
+                container.innerHTML += `
+                    <div class="conflict-card">
+                        <h5 class="text-danger fw-bold mb-3">⚠️ Kriz: ${rule.label}</h5>
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="p-2 bg-dark rounded" style="width: 48%;"><b>Sen:</b> ${myVal} ${myUltimatums.includes(rule.id) ? '🔴' : ''}</div>
+                            <div class="p-2 bg-dark rounded" style="width: 48%;"><b>Karşı Taraf:</b> ${oppVal}</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="action-btn btn-concede w-50" onclick="resolveConflict('${rule.id}', 'concede')">Taviz Ver (+1 ⭐)</button>
+                            <button class="action-btn btn-leverage w-50" ${canLeverage} onclick="resolveConflict('${rule.id}', 'leverage')">Koz Kullan (-1 ⭐)</button>
+                        </div>
+                    </div>`;
+            }
+        });
+
+        document.getElementById('goodwill-display').innerText = `⭐ İyi Niyet: ${goodwill}`;
+        
+        // Tüm krizler çözüldüyse bitirme butonunu göster
+        if (pendingConflicts === 0) {
+            document.getElementById('finish-btn').classList.remove('d-none');
+            document.getElementById('goodwill-display').style.transform = "scale(1.2)";
+        }
+    }
+
+    function resolveConflict(ruleId, action) {
+        if (action === 'concede') {
+            myChoices[ruleId] = opponentChoices[ruleId]; // Onun dediği oldu
+            goodwill++;
+        } else if (action === 'leverage') {
+            opponentChoices[ruleId] = myChoices[ruleId]; // Senin dediğin oldu
+            goodwill--;
+        }
+        renderConflicts(); // Ekranı tazele
+    }
+
+    function signContract() {
+        alert("🎉 Sözleşme İmzalandı! Artık sohbet edebilirsiniz.");
+        // Gerçek versiyonda burası fetch() ile backend'e veri gönderip chat sayfasına (/chat/{{match.id}}/) yönlendirir.
+        window.location.href = "/dashboard/"; 
+    }
+
+    // Başlat
+    renderPrepPhase();
+</script>
+{% endblock %}
