@@ -39,6 +39,11 @@
                     💬 Mesaj Gönder
                 {% endif %}
             </a>
+            <a href="{% url 'delete_match' item.match_id %}" 
+               onclick="return confirm('Bu eşleşmeyi silmek istediğine emin misin? Bu işlem geri alınamaz.');" 
+               style="display: block; margin-top: 12px; color: #e74c3c; text-decoration: none; font-size: 0.85em; font-weight: bold;">
+                ✖ Eşleşmeyi Sil
+            </a>
         </div>
         {% empty %}
         <div style="grid-column: 1 / -1; text-align: center; padding: 50px; background: white; border-radius: 15px;">
