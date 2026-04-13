@@ -27,4 +27,6 @@ urlpatterns = [
     path('negotiation/<int:match_id>/', views.negotiation_board_view, name='negotiation_board'),
 
     path('delete-match/<int:match_id>/', views.delete_match, name='delete_match'),
+
+    path('api/negotiation/<int:match_id>/', views.api_negotiation, name='api_negotiation'),
 ]
