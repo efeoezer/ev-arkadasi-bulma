@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from accounts.models import Profile
+from django.db.models import JSONField
 
 # EV ARKADAŞI TERCİHLERİ
 class RoommatePreference(models.Model):
@@ -75,4 +76,22 @@ class Review(models.Model):
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+class Negotiation(models.Model):
+    match = models.OneToOneField(Match, on_delete=models.CASCADE, related_name='negotiation_board')
+    
+    # Kullanıcıların seçimleri JSON olarak tutulacak
+    user1_choices = JSONField(default=dict, blank=True)
+    user2_choices = JSONField(default=dict, blank=True)
+    
+    # Seçimler kilitlendi mi?
+    user1_ready = models.BooleanField(default=False)
+    user2_ready = models.BooleanField(default=False)
+    
+    # İyi niyet (Taviz) puanları
+    user1_goodwill = models.IntegerField(default=0)
+    user2_goodwill = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Müzakere: {self.match.user_1.username} & {self.match.user_2.username}"
