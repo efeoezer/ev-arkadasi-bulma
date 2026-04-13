@@ -66,8 +66,8 @@
             </div>
         </div>
         
-        <button onclick="walkAway()" class="btn btn-outline-danger w-100 mt-4 py-3 fw-bold" style="border-radius: 30px; transition: 0.3s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#e74c3c';">
-            ☢️ ANLAŞAMIYORUZ (Masadan Kalk ve Eşleşmeyi Boz)
+        <button onclick="walkAway()" style="display: block; width: 100%; margin-top: 40px; background: rgba(231, 76, 60, 0.05); border: 2px solid #e74c3c; color: #e74c3c; padding: 18px 0; border-radius: 30px; font-size: 1.1em; font-weight: 800; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'; this.style.boxShadow='0 10px 30px rgba(231, 76, 60, 0.5)';" onmouseout="this.style.background='rgba(231, 76, 60, 0.05)'; this.style.color='#e74c3c'; this.style.boxShadow='none';">
+            ☢️ ANLAŞAMIYORUZ (Masayı Devir)
         </button>
     </div>
 </div>
@@ -257,11 +257,11 @@
         const container = document.getElementById('conflict-container');
         if (container.children.length === 0) {
             container.innerHTML = `
-                <div class="alert alert-success text-center fw-bold fs-4 mb-3" style="background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71;">
-                    Tüm Krizler Çözüldü! 🎉
+                <div style="background: rgba(46, 204, 113, 0.15); border: 2px solid #2ecc71; color: #2ecc71; padding: 25px; border-radius: 15px; text-align: center; font-weight: 900; font-size: 1.5em; margin-bottom: 25px;">
+                    🎉 Tüm Krizler Çözüldü!
                 </div>
-                <a href="/matches/" class="btn btn-success w-100 py-3 fs-5 fw-bold" style="border-radius: 15px; box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);">
-                    💬 Mesajlaşmaya Başla
+                <a href="/matches/" style="display: block; width: 100%; text-align: center; background: linear-gradient(45deg, #2ecc71, #27ae60); color: white; padding: 20px 0; border-radius: 15px; text-decoration: none; font-size: 1.4em; font-weight: 900; box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    💬 MESAJLAŞMAYA BAŞLA
                 </a>
             `;
         }
