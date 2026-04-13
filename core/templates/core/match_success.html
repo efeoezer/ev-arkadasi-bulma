@@ -35,6 +35,23 @@
         box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4); transition: 0.3s;
     }
     .btn-action:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(108, 92, 231, 0.6); color: white; }
+
+    .btn-action-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: #bdc3c7;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 15px 40px;
+        border-radius: 40px;
+        font-size: 1.1em;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    .btn-action-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #fff;
+        color: #fff;
+    }
 </style>
 
 <div class="match-overlay">
@@ -47,9 +64,9 @@
         <img src="{{ matched_with.profile.userphoto_set.first.image.url }}" class="m-avatar a-right">
     </div>
 
-    <div class="d-flex flex-column gap-3 w-100 align-items: center;" style="max-width: 400px;">
-        <a href="{% url 'negotiation_board' match.id %}" class="btn-action text-center">🤝 Pazarlık Masasına Otur</a>
-        <a href="{% url 'dashboard' %}" class="text-muted text-center text-decoration-none fw-bold mt-2" style="font-size: 0.9em; letter-spacing: 1px;">Daha Sonra Hallet</a>
+    <div class="d-flex flex-column gap-3 w-100 align-items-center" style="max-width: 400px; margin: 0 auto;">
+        <a href="{% url 'negotiation_board' match.id %}" class="btn-action text-center w-100">🤝 Pazarlık Masasına Otur</a>
+        <a href="{% url 'dashboard' %}" class="btn-action-secondary text-center w-100">Daha Sonra Hallet</a>
     </div>
 </div>
 {% endblock %}
