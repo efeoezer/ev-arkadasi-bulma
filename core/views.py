@@ -172,7 +172,7 @@ def like_user(request, to_user_id):
         # Karşılıklı beğeni var! Match oluştur.
         Match.objects.get_or_create(user1=request.user, user2=to_user)
         # Opsiyonel: Burada bir "Eşleştin!" sayfasına yönlendirebilirsin
-        return redirect('match_success_view', match_with_id=to_user.id)
+        return redirect('negotiation_board', match_id=match_obj.id)
 
     return redirect('dashboard')
 
