@@ -53,6 +53,10 @@ def generate_match_score(profile1, profile2):
     # Mutfak uyumu (Bonus 10 Puan)
     if profile1.diet_preference == profile2.diet_preference:
       total_score += 10
+    # Zıt kutuplar için küçük bir tolerans (Opsiyonel)
+    # Örneğin biri Vegan biri Vejetaryen ise 5 puan verilebilir.
+    elif (profile1.diet_preference == 'vegan' and profile2.diet_preference == 'vegetarian'):
+        total_score += 5
        
       
     # LOKASYON BONUSU
