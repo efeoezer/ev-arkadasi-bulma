@@ -229,6 +229,15 @@
                 card.style.transform = `translate3d(0, -${20 * index}px, 0) scale(${(25 - index) / 25})`;
                 card.style.opacity = index > 2 ? 0 : 1;
             });
+            if (cards.length === 0) {
+                stack.style.pointerEvents = 'none'; 
+            }
+
+            cards.forEach((card, index) => {
+                card.style.zIndex = cards.length - index;
+                card.style.transform = `translate3d(0, -${20 * index}px, 0) scale(${(25 - index) / 25})`;
+                card.style.opacity = index > 2 ? 0 : 1;
+            });
             if (cards.length > 0) initHammer(cards[0]);
         }
 
