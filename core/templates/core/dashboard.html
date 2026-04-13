@@ -213,7 +213,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'match') {
-                    window.location.href = `/negotiation/${data.match_id}/`;
+                    window.location.href = `/match-success/${data.target_user_id}/`;
                 }
             });
         }
