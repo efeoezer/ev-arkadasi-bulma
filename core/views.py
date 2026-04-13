@@ -218,59 +218,85 @@ def delete_match(request, match_id):
 @login_required
 def api_negotiation(request, match_id):
     match = get_object_or_404(Match, id=match_id)
-
-    # 🔒 GÜVENLİK KONTROLÜ: Sadece eşleşen 2 kişi bu masaya oturabilir!
+    
     if request.user.id != match.user_1.id and request.user.id != match.user_2.id:
         return JsonResponse({'status': 'error', 'message': 'Bu masaya erişim yetkiniz yok.'}, status=403)
-        
-    nego, created = Negotiation.objects.get_or_create(match=match)
 
+    nego, created = Negotiation.objects.get_or_create(match=match)
     is_user1 = (request.user.id == match.user_1.id)
     
+    # Karşı taraf BOT ise (veya test için otomatik doldurulması gerekiyorsa)
+    opponent_user = match.user_2 if is_user1 else match.user_1
+    opponent_ready = nego.user2_ready if is_user1 else nego.user1_ready
+    
+    # EĞER KARŞI TARAF BİR BOTSA (is_superuser falan üretimi ise) OTOMATİK SEÇİM YAPAR
+    # Gerçek kullanıcıysa bu bloğu atlar ve bekler!
+    if not opponent_ready and getattr(opponent_user, 'is_bot', True): # is_bot yoksa True sayıp bot simülasyonu yapar (Test için)
+        bot_choices = {}
+        options = {
+            'cleaning': ['Her Gün', 'Haftalık', 'Gevşek'],
+            'guests': ['Yasak', 'Haberli İzin', 'Serbest'],
+            'noise': ['Sıfır Tolerans', 'Normal', 'Farketmez'],
+            'pets': ['Yasak', 'Kafes', 'Serbest']
+        }
+        for k, v in options.items():
+            bot_choices[k] = {'choice': random.choice(v), 'is_ultimatum': random.random() < 0.2, 'status': 'pending'}
+        
+        if is_user1:
+            nego.user2_choices = bot_choices
+            nego.user2_ready = True
+        else:
+            nego.user1_choices = bot_choices
+            nego.user1_ready = True
+        nego.save()
+
     if request.method == 'POST':
         data = json.loads(request.body)
         action = data.get('action')
         
         if action == 'lock_choices':
             choices = data.get('choices')
+            # Başlangıçta tüm kuralların statüsü 'pending' (beklemede) olur
+            for k in choices: choices[k]['status'] = 'pending'
+            
             if is_user1:
                 nego.user1_choices = choices
                 nego.user1_ready = True
             else:
                 nego.user2_choices = choices
                 nego.user2_ready = True
-            
-            # --- BOT SİMÜLASYONU (Test için) ---
-            # Eğer karşı taraf bot ise veya henüz seçmediyse, oyunu oynayabilmen için ona rastgele seçimler atıyoruz.
-            opponent_ready = nego.user2_ready if is_user1 else nego.user1_ready
-            if not opponent_ready:
-                bot_choices = {}
-                options = {
-                    'cleaning': ['Her Gün', 'Haftalık', 'Gevşek'],
-                    'guests': ['Yasak', 'Haberli İzin', 'Serbest'],
-                    'noise': ['Sıfır Tolerans', 'Normal', 'Farketmez'],
-                    'pets': ['Yasak', 'Kafes', 'Serbest']
-                }
-                for k, v in options.items():
-                    # %30 ihtimalle Kırmızı Çizgi (Ültimatom) seçsin
-                    bot_choices[k] = {'choice': random.choice(v), 'is_ultimatum': random.random() > 0.7}
-                
-                if is_user1:
-                    nego.user2_choices = bot_choices
-                    nego.user2_ready = True
-                else:
-                    nego.user1_choices = bot_choices
-                    nego.user1_ready = True
-            # ------------------------------------
-
             nego.save()
             return JsonResponse({'status': 'locked'})
             
+        elif action == 'resolve_conflict':
+            # Kriz çözüldüğünde (Taviz, Koz, Orta Yol) sözleşmeye yazılır
+            rule_id = data.get('rule_id')
+            res_type = data.get('resolution_type')
+            final_val = data.get('final_value')
+            
+            my_choices = nego.user1_choices if is_user1 else nego.user2_choices
+            
+            if res_type == 'koz':
+                if is_user1: nego.user1_goodwill -= 1
+                else: nego.user2_goodwill -= 1
+            elif res_type == 'taviz':
+                if is_user1: nego.user1_goodwill += 1
+                else: nego.user2_goodwill += 1
+                
+            my_choices[rule_id]['status'] = 'resolved'
+            my_choices[rule_id]['final_choice'] = final_val
+            
+            if is_user1: nego.user1_choices = my_choices
+            else: nego.user2_choices = my_choices
+            nego.save()
+            
+            return JsonResponse({'status': 'resolved', 'goodwill': nego.user1_goodwill if is_user1 else nego.user2_goodwill})
+
         elif action == 'walk_away':
-            match.delete() # Resti çekti, eşleşmeyi sil
+            match.delete()
             return JsonResponse({'status': 'destroyed'})
 
-    # GET İsteği: Mevcut durumu frontend'e gönder
+    # GET İsteği
     return JsonResponse({
         'user_ready': nego.user1_ready if is_user1 else nego.user2_ready,
         'opponent_ready': nego.user2_ready if is_user1 else nego.user1_ready,
