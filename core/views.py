@@ -187,3 +187,15 @@ def match_success_view(request, match_with_id):
         'matched_with': matched_with
     })
 
+@login_required
+def negotiation_board_view(request, match_id):
+    # Eşleşme detaylarını alıyoruz
+    match = get_object_or_404(Match, id=match_id)
+    
+    # Karşı tarafı bul (Eğer sen user1 isen karşı taraf user2'dir)
+    opponent = match.user2 if match.user1 == request.user else match.user1
+    
+    return render(request, 'core/negotiation_board.html', {
+        'match': match,
+        'opponent': opponent
+    })
