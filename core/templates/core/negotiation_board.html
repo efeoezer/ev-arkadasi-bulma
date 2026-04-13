@@ -83,6 +83,9 @@
     }
 
     const API_URL = `/api/negotiation/${MATCH_ID}/`;
+
+    const OPPONENT_ID = "{% if request.user == match.user_1 %}{{ match.user_2.id }}{% else %}{{ match.user_1.id }}{% endif %}";
+    const CHAT_URL = "{% url 'chat' 0 %}".replace('0', OPPONENT_ID);
     
     const rulesData = [
         { id: 'cleaning', label: 'Temizlik', options: ['Her Gün', 'Haftalık', 'Gevşek'] },
@@ -260,8 +263,8 @@
                 <div style="background: rgba(46, 204, 113, 0.15); border: 2px solid #2ecc71; color: #2ecc71; padding: 25px; border-radius: 15px; text-align: center; font-weight: 900; font-size: 1.5em; margin-bottom: 25px;">
                     🎉 Tüm Krizler Çözüldü!
                 </div>
-                <a href="/matches/" style="display: block; width: 100%; text-align: center; background: linear-gradient(45deg, #2ecc71, #27ae60); color: white; padding: 20px 0; border-radius: 15px; text-decoration: none; font-size: 1.4em; font-weight: 900; box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-                    💬 MESAJLAŞMAYA BAŞLA
+                <a href="${CHAT_URL}" style="display: block; width: 100%; text-align: center; background: linear-gradient(45deg, #2ecc71, #27ae60); color: white; padding: 20px 0; border-radius: 15px; text-decoration: none; font-size: 1.4em; font-weight: 900; box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                   💬 MESAJLAŞMAYA BAŞLA
                 </a>
             `;
         }
