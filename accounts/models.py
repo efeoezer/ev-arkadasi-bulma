@@ -61,24 +61,3 @@ class Verification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} Doğrulama Durumu"
-
-class NegotiationBoard(models.Model):
-    match = models.OneToOneField('core.Match', on_delete=models.CASCADE, related_name='negotiation')
-    
-    # Kural Kartları (JSON olarak tutmak daha esnektir)
-    # Örn: {"cleaning": "weekly", "guests": "no_stay", "smoking": "balcony"}
-    user1_choices = models.JSONField(default=dict)
-    user2_choices = models.JSONField(default=dict)
-    
-    agreed_rules = models.JSONField(default=dict)
-    is_completed = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def check_consensus(self):
-        """İki kullanıcının seçimlerini karşılaştır ve ortak olanları kilitle."""
-        consensus = {}
-        for key, val in self.user1_choices.items():
-            if self.user2_choices.get(key) == val:
-                consensus[key] = val
-        self.agreed_rules = consensus
-        return consensus
