@@ -221,7 +221,13 @@
     function checkIfAllResolved() {
         const container = document.getElementById('conflict-container');
         if (container.children.length === 0) {
-            container.innerHTML = `<div class="alert alert-success text-center fw-bold fs-4">Tüm Krizler Çözüldü! Ev arkadaşlığınız hayırlı olsun. 🎉</div>`;
+            container.innerHTML = `
+                <div class="alert alert-success text-center fw-bold fs-4 mb-3" style="background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71;">
+                    Tüm Krizler Çözüldü! 🎉
+                </div>
+                <a href="/matches/" class="btn btn-success w-100 py-3 fs-5 fw-bold" style="border-radius: 15px; box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);">
+                    💬 Mesajlaşmaya Başla
+                </a>
         }
     }
 </script>
