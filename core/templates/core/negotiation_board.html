@@ -99,7 +99,7 @@
     let goodwill = 0;
     let myUltimatum = null;
 
-    // KURŞUN GEÇİRMEZ FETCH İŞLEMİ
+    // FETCH İŞLEMİ
     fetch(API_URL)
         .then(async res => {
             const textResponse = await res.text();
@@ -110,7 +110,6 @@
                 }
                 return data;
             } catch (err) {
-                // EĞER DJANGO HTML HATA SAYFASI YOLLARSA BURADA EKRANA BASILIR
                 document.getElementById('main-board').innerHTML = `
                     <div class="glass-panel text-danger">
                         <h3>⚠️ Sunucu HTML Döndürdü (500 veya Login Hatası)</h3>
@@ -140,7 +139,6 @@
         })
         .catch(err => {
             console.error("Masa Yükleme Hatası:", err);
-            // Zaten HTML basıldıysa tekrar basmasın
             if(document.getElementById('loading')) {
                 document.getElementById('loading').innerHTML = `
                     <div class="alert alert-danger mt-5">
