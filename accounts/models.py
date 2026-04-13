@@ -63,7 +63,7 @@ class Verification(models.Model):
         return f"{self.user.username} Doğrulama Durumu"
 
 class NegotiationBoard(models.Model):
-    match = models.OneToOneField('Match', on_delete=models.CASCADE, related_name='negotiation')
+    match = models.OneToOneField('core.Match', on_delete=models.CASCADE, related_name='negotiation')
     
     # Kural Kartları (JSON olarak tutmak daha esnektir)
     # Örn: {"cleaning": "weekly", "guests": "no_stay", "smoking": "balcony"}
