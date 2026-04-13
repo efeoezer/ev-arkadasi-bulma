@@ -213,8 +213,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'match') {
-                    document.getElementById('match-name').innerText = data.matched_name;
-                    document.getElementById('match-popup').style.display = 'flex';
+                    window.location.href = `/negotiation/${data.match_id}/`;
                 }
             });
         }
