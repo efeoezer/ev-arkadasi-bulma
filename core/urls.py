@@ -25,4 +25,6 @@ urlpatterns = [
     path('match-success/<int:match_with_id>/', views.match_success_view, name='match_success_view'),
 
     path('negotiation/<int:match_id>/', views.negotiation_board_view, name='negotiation_board'),
+
+    path('delete-match/<int:match_id>/', views.delete_match, name='delete_match'),
 ]
