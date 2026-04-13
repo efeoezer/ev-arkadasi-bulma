@@ -9,13 +9,11 @@
     
     .goodwill-badge { background: linear-gradient(45deg, #f1c40f, #f39c12); color: #000; padding: 10px 25px; border-radius: 30px; font-weight: 900; font-size: 1.2em; transition: transform 0.3s; }
     
-    /* Kural Kartları */
     .rule-row { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px; align-items: center; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin-bottom: 15px; }
     .custom-select { background: #1e2736; color: white; border: 1px solid #34495e; padding: 12px; border-radius: 10px; width: 100%; outline: none; }
     .ultimatum-btn { background: transparent; color: #e74c3c; border: 2px solid #e74c3c; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
     .ultimatum-btn.active { background: #e74c3c; color: white; box-shadow: 0 0 20px rgba(231, 76, 60, 0.5); }
 
-    /* Kriz Kartları ve Aksiyonlar */
     .confront-card { background: linear-gradient(90deg, rgba(231,76,60,0.1) 0%, rgba(0,0,0,0.4) 100%); border-left: 5px solid #e74c3c; border-radius: 15px; padding: 20px; margin-bottom: 20px; transition: all 0.5s ease; }
     .action-row { display: flex; gap: 10px; margin-top: 15px; }
     .btn-action { flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
@@ -23,16 +21,14 @@
     .btn-koz { background: #e74c3c; color: #fff; } .btn-koz:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-orta { background: #3498db; color: #fff; } .btn-orta:hover { background: #2980b9; }
 
-    /* Sözleşme Bölgesi */
     .contract-zone { background: rgba(46, 204, 113, 0.1); border: 2px dashed #2ecc71; border-radius: 15px; padding: 20px; min-height: 150px; }
     .contract-item { background: #2ecc71; color: #000; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; animation: slideDown 0.5s forwards; }
-    
     @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     
     .btn-lock { background: linear-gradient(45deg, #3498db, #2980b9); color: white; padding: 15px; width: 100%; font-size: 1.2em; font-weight: 900; border-radius: 15px; border: none; margin-top: 20px; cursor: pointer; }
 </style>
 
-<div class="board-container">
+<div class="board-container" id="main-board">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>🤝 Anlaşma Masası</h2>
         <div class="goodwill-badge" id="goodwill-display">⭐ İyi Niyet: 0</div>
@@ -69,14 +65,23 @@
                 <p class="text-muted text-center mt-4" id="empty-contract-msg">Çözülen kurallar buraya düşecek...</p>
             </div>
         </div>
-            <button onclick="walkAway()" class="btn btn-outline-danger w-100 mt-4 py-3 fw-bold" style="border-radius: 30px; transition: 0.3s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white';">
+        
+        <button onclick="walkAway()" class="btn btn-outline-danger w-100 mt-4 py-3 fw-bold" style="border-radius: 30px; transition: 0.3s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#e74c3c';">
             ☢️ ANLAŞAMIYORUZ (Masadan Kalk ve Eşleşmeyi Boz)
         </button>
     </div>
 </div>
 
 <script>
-    const MATCH_ID = {{ match.id }};
+    // 1. Tırnak işaretleri hatayı önler
+    const MATCH_ID = "{{ match.id }}";
+    
+    // Eğer Match ID gelmezse Javascript'i baştan durdur
+    if (!MATCH_ID) {
+        document.getElementById('loading').innerHTML = `<h3 class="text-danger mt-4">⚠️ Sistem Hatası</h3><p>Eşleşme ID'si bulunamadı (views.py kontrol edilmeli).</p>`;
+        throw new Error("Match ID yok.");
+    }
+
     const API_URL = `/api/negotiation/${MATCH_ID}/`;
     
     const rulesData = [
@@ -91,27 +96,28 @@
     let goodwill = 0;
     let myUltimatum = null;
 
+    // KURŞUN GEÇİRMEZ FETCH İŞLEMİ
     fetch(API_URL)
         .then(async res => {
-            // 1. ADIM: Cevabı doğrudan JSON olarak değil, düz metin (HTML) olarak al.
-            const textResponse = await res.text(); 
-            
+            const textResponse = await res.text();
             try {
-                // 2. ADIM: Bu metni JSON'a çevirmeyi dene. 
-                // Eğer başarılı olursa, sorun yok demektir, devam et.
                 const data = JSON.parse(textResponse);
-                
-                // Eğer backend'den özel bir hata mesajı geldiyse fırlat
                 if (!res.ok || data.status === 'error') {
                     throw new Error(data.message || `HTTP Hatası: ${res.status}`);
                 }
-                
                 return data;
             } catch (err) {
-                // 3. ADIM: JSON'A ÇEVİRİRKEN ÇÖKERSE (Yani HTML geldiyse)
-                // O zaman Django'nun gönderdiği o gizli HTML sayfasını zorla ekrana bas!
-                document.body.innerHTML = textResponse; 
-                throw new Error("Sunucu JSON yerine HTML sayfası döndürdü. Detaylar ekranda.");
+                // EĞER DJANGO HTML HATA SAYFASI YOLLARSA BURADA EKRANA BASILIR
+                document.getElementById('main-board').innerHTML = `
+                    <div class="glass-panel text-danger">
+                        <h3>⚠️ Sunucu HTML Döndürdü (500 veya Login Hatası)</h3>
+                        <p>Django çöktü veya oturumun kapandı. Gelen yanıt aşağıdadır:</p>
+                        <div style="background: white; color: black; padding: 15px; border-radius: 10px; max-height: 400px; overflow-y: auto;">
+                            ${textResponse}
+                        </div>
+                    </div>
+                `;
+                throw new Error("JSON beklenirken HTML geldi.");
             }
         })
         .then(data => {
@@ -130,19 +136,20 @@
             }
         })
         .catch(err => {
-            // Normal takılmalar için kırmızı hata mesajı
-            if (document.getElementById('loading')) {
+            console.error("Masa Yükleme Hatası:", err);
+            // Zaten HTML basıldıysa tekrar basmasın
+            if(document.getElementById('loading')) {
                 document.getElementById('loading').innerHTML = `
-                    <div class="alert alert-danger mt-5 text-center">
-                        <h4>⚠️ Bağlantı Hatası</h4>
+                    <div class="alert alert-danger mt-5">
+                        <h4>⚠️ Bir Şeyler Ters Gitti</h4>
                         <p>${err.message}</p>
-                        <button onclick="location.reload()" class="btn btn-outline-danger btn-sm">Tekrar Dene</button>
                     </div>
                 `;
             }
-            console.error("Masa Hatası:", err);
         });
-    
+
+    // --- FONKSİYONLAR ---
+
     function updateGoodwillDisplay() {
         document.getElementById('goodwill-display').innerText = `⭐ İyi Niyet: ${goodwill}`;
     }
@@ -187,14 +194,12 @@
             const myData = myChoices[rule.id];
             const oppData = oppChoices[rule.id];
             
-            // Eğer daha önceden çözüldüyse veya baştan aynıysa doğrudan sözleşmeye at
             if (myData.status === 'resolved' || myData.choice === oppData.choice) {
                 const finalVal = myData.final_choice || myData.choice;
                 addToContract(rule.label, finalVal);
                 return;
             }
 
-            // Kriz durumundaysa Kart Olarak Çiz
             container.innerHTML += `
                 <div class="confront-card" id="card-${rule.id}">
                     <h4 class="text-light">${rule.label}</h4>
@@ -210,7 +215,6 @@
                 </div>
             `;
         });
-        
         checkIfAllResolved();
     }
 
@@ -218,10 +222,8 @@
         btn.innerText = "Hesaplanıyor..."; btn.disabled = true;
         setTimeout(() => {
             const rule = rulesData.find(r => r.id === ruleId);
-            // Sadece görsel amaçlı basit bir "ortadaki seçeneği" seçme mantığı
             const middleChoice = rule.options[1]; 
             
-            // %70 ihtimalle Orta yol kabul edilir
             if (Math.random() > 0.3) {
                 resolveConflict(ruleId, 'orta_yol', middleChoice);
             } else {
@@ -238,13 +240,9 @@
         }).then(res => res.json()).then(data => {
             goodwill = data.goodwill;
             updateGoodwillDisplay();
-            
-            // Kartı Kriz masasından sil, Sözleşmeye animasyonla ekle
             document.getElementById(`card-${ruleId}`).remove();
             addToContract(rulesData.find(r => r.id === ruleId).label, finalValue);
             checkIfAllResolved();
-            
-            // Koz butonlarının disabled durumunu güncelle
             document.querySelectorAll('.btn-koz').forEach(btn => btn.disabled = goodwill <= 0);
         });
     }
@@ -258,13 +256,14 @@
     function checkIfAllResolved() {
         const container = document.getElementById('conflict-container');
         if (container.children.length === 0) {
-            container.innerHTML = 
+            container.innerHTML = `
                 <div class="alert alert-success text-center fw-bold fs-4 mb-3" style="background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71;">
                     Tüm Krizler Çözüldü! 🎉
                 </div>
                 <a href="/matches/" class="btn btn-success w-100 py-3 fs-5 fw-bold" style="border-radius: 15px; box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);">
                     💬 Mesajlaşmaya Başla
                 </a>
+            `;
         }
     }
 
