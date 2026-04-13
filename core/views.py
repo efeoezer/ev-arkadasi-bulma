@@ -168,7 +168,6 @@ def like_user(request, to_user_id):
     reverse_like = Like.objects.filter(from_user=to_user, to_user=request.user).exists()
 
     if reverse_like:
-        # HATA DÜZELTİLDİ: user_1 ve user_2 kullanıldı, match_obj doğru tanımlandı
         match_obj, created = Match.objects.get_or_create(
             user_1=request.user, 
             user_2=to_user, 
@@ -180,24 +179,24 @@ def like_user(request, to_user_id):
 
 @login_required
 def match_success_view(request, match_with_id):
-    """Eski ekranı atlayıp köprü görevi gören fonksiyon"""
+    """Görkemli eşleşme kutlamasını gösteren ana ekran"""
     matched_with = get_object_or_404(User, id=match_with_id)
     
-    # HATA DÜZELTİLDİ: user_1 ve user_2 ile sorgulama yapılıyor
-    match_obj = Match.objects.filter(user_1=request.user, user_2=matched_with).first()
-    if not match_obj:
-        match_obj = Match.objects.filter(user_1=matched_with, user_2=request.user).first()
+    # Eşleşme objesini buluyoruz (ID'sini butona koymak için)
+    match_obj = Match.objects.filter(
+        (Q(user_1=request.user) & Q(user_2=matched_with)) | 
+        (Q(user_1=matched_with) & Q(user_2=request.user))
+    ).first()
 
-    if match_obj:
-        return redirect('negotiation_board', match_id=match_obj.id)
-    
-    return redirect('dashboard')
+    return render(request, 'core/match_success.html', {
+        'matched_with': matched_with,
+        'match': match_obj  # Buton linki için gerekli
+    })
 
 @login_required
 def negotiation_board_view(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     
-    # HATA DÜZELTİLDİ: user_1 ve user_2 çağrıldı
     opponent = match.user_2 if match.user_1 == request.user else match.user_1
     
     return render(request, 'core/negotiation_board.html', {
