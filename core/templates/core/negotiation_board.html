@@ -1,65 +1,39 @@
 {% extends 'core/base.html' %}
-{% block title %}TypeMatch | Kriz Masası{% endblock %}
+{% block title %}TypeMatch | Kriz Masası V3{% endblock %}
 
 {% block content %}
 <style>
     body { background: #0f141e; color: white; overflow-x: hidden; }
-    
     .board-container { max-width: 900px; margin: 40px auto; padding: 20px; }
+    .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin-bottom: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
     
-    .glass-panel {
-        background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
-        padding: 40px; margin-bottom: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-    }
-
-    .header-bar {
-        display: flex; justify-content: space-between; align-items: center;
-        border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 30px;
-    }
-
-    .goodwill-badge {
-        background: linear-gradient(45deg, #f1c40f, #f39c12); color: #000;
-        padding: 10px 25px; border-radius: 30px; font-weight: 900; font-size: 1.2em;
-        box-shadow: 0 0 20px rgba(241, 196, 15, 0.4); transition: transform 0.3s;
-    }
-
-    /* Kural Kartları (Hazırlık) */
-    .rule-row {
-        display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px;
-        align-items: center; background: rgba(0,0,0,0.3);
-        padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid transparent;
-    }
-    .rule-title { font-weight: 800; font-size: 1.2em; color: #bdc3c7; }
+    .goodwill-badge { background: linear-gradient(45deg, #f1c40f, #f39c12); color: #000; padding: 10px 25px; border-radius: 30px; font-weight: 900; font-size: 1.2em; transition: transform 0.3s; }
+    
+    /* Kural Kartları */
+    .rule-row { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px; align-items: center; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin-bottom: 15px; }
     .custom-select { background: #1e2736; color: white; border: 1px solid #34495e; padding: 12px; border-radius: 10px; width: 100%; outline: none; }
     .ultimatum-btn { background: transparent; color: #e74c3c; border: 2px solid #e74c3c; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
     .ultimatum-btn.active { background: #e74c3c; color: white; box-shadow: 0 0 20px rgba(231, 76, 60, 0.5); }
 
-    /* Yüzleşme Kartları */
-    .confront-card {
-        background: rgba(0,0,0,0.4); border-radius: 15px; padding: 25px; margin-bottom: 20px;
-        border-left: 5px solid #555; position: relative; overflow: hidden;
-    }
-    .confront-card.crisis { border-color: #e74c3c; background: linear-gradient(90deg, rgba(231,76,60,0.1) 0%, rgba(0,0,0,0.4) 100%); }
-    .confront-card.agreed { border-color: #2ecc71; background: linear-gradient(90deg, rgba(46,204,113,0.1) 0%, rgba(0,0,0,0.4) 100%); }
-    
-    .hidden-choice { filter: blur(10px); opacity: 0.5; transition: all 1s ease; }
-    .revealed { filter: blur(0); opacity: 1; }
+    /* Kriz Kartları ve Aksiyonlar */
+    .confront-card { background: linear-gradient(90deg, rgba(231,76,60,0.1) 0%, rgba(0,0,0,0.4) 100%); border-left: 5px solid #e74c3c; border-radius: 15px; padding: 20px; margin-bottom: 20px; transition: all 0.5s ease; }
+    .action-row { display: flex; gap: 10px; margin-top: 15px; }
+    .btn-action { flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-taviz { background: #2ecc71; color: #000; } .btn-taviz:hover { background: #27ae60; }
+    .btn-koz { background: #e74c3c; color: #fff; } .btn-koz:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-orta { background: #3498db; color: #fff; } .btn-orta:hover { background: #2980b9; }
 
-    /* Butonlar */
-    .btn-lock { background: linear-gradient(45deg, #3498db, #2980b9); color: white; padding: 15px; width: 100%; font-size: 1.2em; font-weight: 900; border-radius: 15px; border: none; margin-top: 20px; cursor: pointer; box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3); }
-    .btn-reveal { background: #9b59b6; color: white; padding: 15px; width: 100%; font-size: 1.2em; font-weight: 900; border-radius: 15px; border: none; margin-bottom: 30px; cursor: pointer; box-shadow: 0 10px 20px rgba(155, 89, 182, 0.3); }
+    /* Sözleşme Bölgesi */
+    .contract-zone { background: rgba(46, 204, 113, 0.1); border: 2px dashed #2ecc71; border-radius: 15px; padding: 20px; min-height: 150px; }
+    .contract-item { background: #2ecc71; color: #000; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; animation: slideDown 0.5s forwards; }
     
-    .btn-nuke { background: transparent; color: #e74c3c; border: 2px solid #e74c3c; padding: 15px 30px; border-radius: 30px; font-weight: 800; cursor: pointer; text-decoration: none; transition: 0.3s; display: block; text-align: center; margin-top: 40px; }
-    .btn-nuke:hover { background: #e74c3c; color: white; box-shadow: 0 0 30px rgba(231, 76, 60, 0.6); }
-
-    .action-btn { border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    .btn-concede { background: #34495e; color: white; }
-    .btn-concede:hover { background: #2ecc71; color: #000; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .btn-lock { background: linear-gradient(45deg, #3498db, #2980b9); color: white; padding: 15px; width: 100%; font-size: 1.2em; font-weight: 900; border-radius: 15px; border: none; margin-top: 20px; cursor: pointer; }
 </style>
 
 <div class="board-container">
-    <div class="header-bar">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>🤝 Anlaşma Masası</h2>
         <div class="goodwill-badge" id="goodwill-display">⭐ İyi Niyet: 0</div>
     </div>
@@ -71,18 +45,31 @@
 
     <div id="phase-prep" class="glass-panel" style="display: none;">
         <h3 class="mb-2 text-info">Kurallarını Belirle</h3>
-        <p class="text-muted mb-4">Sadece 1 konuda "Kırmızı Çizgi" (Ültimatom) çekebilirsin.</p>
+        <p class="text-muted">Masaya oturmadan önce taleplerini kilitlersin.</p>
         <div id="prep-rules-container"></div>
-        <button class="btn-lock" onclick="lockChoices()">🔒 Seçimleri Kilitle ve Gönder</button>
+        <button class="btn-lock" onclick="lockChoices()">🔒 Seçimleri Kilitle</button>
     </div>
 
-    <div id="phase-confront" class="glass-panel" style="display: none;">
-        <h3 class="mb-4 text-warning">Karşı Tarafın Seçimleri Geldi!</h3>
-        <button class="btn-reveal" id="btn-reveal" onclick="revealCards()">👁️ Kartları Aç</button>
-        <div id="conflict-container"></div>
+    <div id="phase-waiting" class="glass-panel text-center" style="display: none; padding: 50px;">
+        <span style="font-size: 4em;">⏳</span>
+        <h3 class="mt-3 text-warning">Karşı Taraf Bekleniyor</h3>
+        <p class="text-muted">Diğer kullanıcı kurallarını belirlediğinde kriz masası açılacak.</p>
+        <button onclick="window.location.reload()" class="btn btn-outline-light mt-3">Durumu Kontrol Et</button>
     </div>
 
-    <button class="btn-nuke" onclick="walkAway()">☢️ MASADAN KALK (Eşleşmeyi Boz)</button>
+    <div id="phase-confront" style="display: none;">
+        <div class="glass-panel" id="crisis-board">
+            <h3 class="mb-4 text-danger">⚠️ Aktif Krizler</h3>
+            <div id="conflict-container"></div>
+        </div>
+
+        <div class="glass-panel">
+            <h3 class="mb-4 text-success">📝 Taslak Sözleşme</h3>
+            <div class="contract-zone" id="contract-zone">
+                <p class="text-muted text-center mt-4" id="empty-contract-msg">Çözülen kurallar buraya düşecek...</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -98,89 +85,61 @@
 
     let myChoices = {};
     let oppChoices = {};
+    let goodwill = 0;
     let myUltimatum = null;
 
-// Sayfa Yüklendiğinde Durumu Çek
-    fetch(API_URL)
-        .then(async res => {
-            const isJson = res.headers.get("content-type")?.includes("application/json");
-            const data = isJson ? await res.json() : null;
+    fetch(API_URL).then(res => res.json()).then(data => {
+        if (data.status === 'error') throw new Error(data.message);
+        document.getElementById('loading').style.display = 'none';
+        
+        goodwill = data.goodwill;
+        updateGoodwillDisplay();
 
-            if (!res.ok) {
-                // EĞER 500 HATASIYSA (MIGRATE UNUTULDUYSA) BİZİ UYAR!
-                if (res.status === 500) {
-                    throw new Error("Sunucu Çöktü (500). Tablo bulunamadı. Lütfen terminalde 'python manage.py makemigrations' ve 'migrate' yapın.");
-                }
-                throw new Error(data?.message || `HTTP Hatası: ${res.status}`);
-            }
-            return data;
-        })
-        .then(data => {
-            if (data.status === 'error') throw new Error(data.message);
+        if (data.user_ready && data.opponent_ready) {
+            myChoices = data.my_choices;
+            oppChoices = data.opp_choices;
+            renderConfrontation();
+        } else if (data.user_ready && !data.opponent_ready) {
+            document.getElementById('phase-waiting').style.display = 'block';
+        } else {
+            renderPrepPhase();
+        }
+    }).catch(err => console.error(err));
 
-            document.getElementById('loading').style.display = 'none';
-            if (data.user_ready) {
-                oppChoices = data.opp_choices;
-                renderConfrontation();
-            } else {
-                renderPrepPhase();
-            }
-        })
-        .catch(err => {
-            document.getElementById('loading').innerHTML = `
-                <div class="text-center">
-                    <h3 class="text-danger mt-4">⚠️ Bir Sorun Oluştu</h3>
-                    <div class="alert alert-danger d-inline-block mt-3 text-start" style="max-width: 500px;">
-                        <strong>Sistem Mesajı:</strong><br>${err.message}
-                    </div>
-                    <br>
-                    <a href="/dashboard/" class="btn btn-outline-light mt-4">Ana Sayfaya Dön</a>
-                </div>
-            `;
-            console.error("Hata Detayı:", err);
-        });
+    function updateGoodwillDisplay() {
+        document.getElementById('goodwill-display').innerText = `⭐ İyi Niyet: ${goodwill}`;
+    }
 
     function renderPrepPhase() {
         document.getElementById('phase-prep').style.display = 'block';
         const container = document.getElementById('prep-rules-container');
-        
         rulesData.forEach(rule => {
             myChoices[rule.id] = { choice: rule.options[0], is_ultimatum: false };
             let opts = rule.options.map(o => `<option value="${o}">${o}</option>`).join('');
-            
             container.innerHTML += `
-                <div class="rule-row" id="row-${rule.id}">
+                <div class="rule-row">
                     <div class="rule-title">${rule.label}</div>
-                    <select class="custom-select" onchange="updateChoice('${rule.id}', this.value)">${opts}</select>
+                    <select class="custom-select" onchange="myChoices['${rule.id}'].choice = this.value">${opts}</select>
                     <button class="ultimatum-btn" id="btn-ult-${rule.id}" onclick="toggleUltimatum('${rule.id}')">Kırmızı Çizgi</button>
                 </div>
             `;
         });
     }
 
-    function updateChoice(id, val) { myChoices[id].choice = val; }
-
     function toggleUltimatum(id) {
-        if (myUltimatum === id) {
-            myUltimatum = null;
-            document.getElementById(`btn-ult-${id}`).classList.remove('active');
-        } else {
-            if (myUltimatum) document.getElementById(`btn-ult-${myUltimatum}`).classList.remove('active');
+        if (myUltimatum) document.getElementById(`btn-ult-${myUltimatum}`).classList.remove('active');
+        if (myUltimatum !== id) {
             myUltimatum = id;
             document.getElementById(`btn-ult-${id}`).classList.add('active');
-        }
+        } else { myUltimatum = null; }
         rulesData.forEach(r => myChoices[r.id].is_ultimatum = (r.id === myUltimatum));
     }
 
     function lockChoices() {
-        const btn = document.querySelector('.btn-lock');
-        btn.innerText = "Kaydediliyor..."; btn.disabled = true;
-
         fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
             body: JSON.stringify({ action: 'lock_choices', choices: myChoices })
-        }).then(() => window.location.reload()); // Kaydedip sayfayı yeniler
+        }).then(() => window.location.reload());
     }
 
     function renderConfrontation() {
@@ -188,56 +147,81 @@
         const container = document.getElementById('conflict-container');
         
         rulesData.forEach(rule => {
-            const opp = oppChoices[rule.id] || { choice: "Bekleniyor...", is_ultimatum: false };
+            const myData = myChoices[rule.id];
+            const oppData = oppChoices[rule.id];
             
+            // Eğer daha önceden çözüldüyse veya baştan aynıysa doğrudan sözleşmeye at
+            if (myData.status === 'resolved' || myData.choice === oppData.choice) {
+                const finalVal = myData.final_choice || myData.choice;
+                addToContract(rule.label, finalVal);
+                return;
+            }
+
+            // Kriz durumundaysa Kart Olarak Çiz
             container.innerHTML += `
                 <div class="confront-card" id="card-${rule.id}">
-                    <h4 class="mb-3 text-light">${rule.label}</h4>
-                    <div class="d-flex justify-content-between">
-                        <div class="p-3 bg-dark rounded w-50 me-2 border border-secondary">
-                            <span class="text-muted d-block small">Senin Seçimin</span>
-                            <strong class="fs-5">${myChoices[rule.id]?.choice || "Belirsiz"}</strong>
-                        </div>
-                        <div class="p-3 bg-dark rounded w-50 ms-2 border border-secondary hidden-choice opp-box" id="opp-${rule.id}">
-                            <span class="text-muted d-block small">Karşı Taraf</span>
-                            <strong class="fs-5">${opp.choice} ${opp.is_ultimatum ? '🔴' : ''}</strong>
-                        </div>
+                    <h4 class="text-light">${rule.label}</h4>
+                    <div class="d-flex justify-content-between my-2">
+                        <span>Sen: <strong>${myData.choice}</strong></span>
+                        <span>Karşı: <strong>${oppData.choice}</strong></span>
+                    </div>
+                    <div class="action-row">
+                        <button class="btn-action btn-taviz" onclick="resolveConflict('${rule.id}', 'taviz', '${oppData.choice}')">Taviz Ver (+1 ⭐)</button>
+                        <button class="btn-action btn-orta" onclick="proposeMiddle('${rule.id}', this)">🤝 Orta Yol Bul</button>
+                        <button class="btn-action btn-koz" onclick="resolveConflict('${rule.id}', 'koz', '${myData.choice}')" ${goodwill <= 0 ? 'disabled' : ''}>Koz Kullan (-1 ⭐)</button>
                     </div>
                 </div>
             `;
         });
+        
+        checkIfAllResolved();
     }
 
-    // Gerilim dolu kart açılış animasyonu
-    function revealCards() {
-        document.getElementById('btn-reveal').style.display = 'none';
-        const boxes = document.querySelectorAll('.opp-box');
-        
-        boxes.forEach((box, index) => {
-            setTimeout(() => {
-                box.classList.add('revealed');
-                // Açıldıktan sonra kriz var mı kontrol et ve çerçeveyi boya
-                const ruleId = box.id.replace('opp-', '');
-                const card = document.getElementById(`card-${ruleId}`);
-                
-                if (myChoices[ruleId]?.choice === oppChoices[ruleId]?.choice) {
-                    card.classList.add('agreed');
-                    box.innerHTML += '<div class="text-success fw-bold mt-2">✓ UZLAŞILDI</div>';
-                } else {
-                    card.classList.add('crisis');
-                    box.innerHTML += '<div class="text-danger fw-bold mt-2">⚠️ KRİZ</div>';
-                }
-            }, index * 800); // Her kart 0.8 saniye arayla açılır
+    function proposeMiddle(ruleId, btn) {
+        btn.innerText = "Hesaplanıyor..."; btn.disabled = true;
+        setTimeout(() => {
+            const rule = rulesData.find(r => r.id === ruleId);
+            // Sadece görsel amaçlı basit bir "ortadaki seçeneği" seçme mantığı
+            const middleChoice = rule.options[1]; 
+            
+            // %70 ihtimalle Orta yol kabul edilir
+            if (Math.random() > 0.3) {
+                resolveConflict(ruleId, 'orta_yol', middleChoice);
+            } else {
+                btn.innerText = "Reddedildi!";
+                btn.style.background = "#e74c3c";
+            }
+        }, 800);
+    }
+
+    function resolveConflict(ruleId, type, finalValue) {
+        fetch(API_URL, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ action: 'resolve_conflict', rule_id: ruleId, resolution_type: type, final_value: finalValue })
+        }).then(res => res.json()).then(data => {
+            goodwill = data.goodwill;
+            updateGoodwillDisplay();
+            
+            // Kartı Kriz masasından sil, Sözleşmeye animasyonla ekle
+            document.getElementById(`card-${ruleId}`).remove();
+            addToContract(rulesData.find(r => r.id === ruleId).label, finalValue);
+            checkIfAllResolved();
+            
+            // Koz butonlarının disabled durumunu güncelle
+            document.querySelectorAll('.btn-koz').forEach(btn => btn.disabled = goodwill <= 0);
         });
     }
 
-    function walkAway() {
-        if(confirm("Tüm masayı devirip bu eşleşmeyi tamamen silmek istediğine emin misin?")) {
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-                body: JSON.stringify({ action: 'walk_away' })
-            }).then(() => window.location.href = '/dashboard/');
+    function addToContract(label, value) {
+        document.getElementById('empty-contract-msg').style.display = 'none';
+        const contractZone = document.getElementById('contract-zone');
+        contractZone.innerHTML += `<div class="contract-item"><span>${label}</span> <span>${value} ✓</span></div>`;
+    }
+
+    function checkIfAllResolved() {
+        const container = document.getElementById('conflict-container');
+        if (container.children.length === 0) {
+            container.innerHTML = `<div class="alert alert-success text-center fw-bold fs-4">Tüm Krizler Çözüldü! Ev arkadaşlığınız hayırlı olsun. 🎉</div>`;
         }
     }
 </script>
