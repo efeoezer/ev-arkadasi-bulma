@@ -94,4 +94,4 @@ class Negotiation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Müzakere: {self.match.user_1.username} & {self.match.user_2.username}"
+        return f"Müzakere Masası ID: {self.match.id}"
