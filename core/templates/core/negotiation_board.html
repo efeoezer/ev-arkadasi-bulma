@@ -93,12 +93,26 @@
 
     fetch(API_URL)
         .then(async res => {
-            // Sunucudan gelen cevabı kontrol et
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || `Sunucu Hatası: ${res.status}`);
+            // 1. ADIM: Cevabı doğrudan JSON olarak değil, düz metin (HTML) olarak al.
+            const textResponse = await res.text(); 
+            
+            try {
+                // 2. ADIM: Bu metni JSON'a çevirmeyi dene. 
+                // Eğer başarılı olursa, sorun yok demektir, devam et.
+                const data = JSON.parse(textResponse);
+                
+                // Eğer backend'den özel bir hata mesajı geldiyse fırlat
+                if (!res.ok || data.status === 'error') {
+                    throw new Error(data.message || `HTTP Hatası: ${res.status}`);
+                }
+                
+                return data;
+            } catch (err) {
+                // 3. ADIM: JSON'A ÇEVİRİRKEN ÇÖKERSE (Yani HTML geldiyse)
+                // O zaman Django'nun gönderdiği o gizli HTML sayfasını zorla ekrana bas!
+                document.body.innerHTML = textResponse; 
+                throw new Error("Sunucu JSON yerine HTML sayfası döndürdü. Detaylar ekranda.");
             }
-            return res.json();
         })
         .then(data => {
             document.getElementById('loading').style.display = 'none';
@@ -116,14 +130,17 @@
             }
         })
         .catch(err => {
-            // Takılma olduğunda ekrana kırmızı hata basar
-            document.getElementById('loading').innerHTML = `
-                <div class="alert alert-danger mt-5">
-                    <h4>⚠️ Bağlantı Hatası</h4>
-                    <p>${err.message}</p>
-                    <button onclick="location.reload()" class="btn btn-outline-danger btn-sm">Tekrar Dene</button>
-                </div>
-            `;
+            // Normal takılmalar için kırmızı hata mesajı
+            if (document.getElementById('loading')) {
+                document.getElementById('loading').innerHTML = `
+                    <div class="alert alert-danger mt-5 text-center">
+                        <h4>⚠️ Bağlantı Hatası</h4>
+                        <p>${err.message}</p>
+                        <button onclick="location.reload()" class="btn btn-outline-danger btn-sm">Tekrar Dene</button>
+                    </div>
+                `;
+            }
+            console.error("Masa Hatası:", err);
         });
     
     function updateGoodwillDisplay() {
