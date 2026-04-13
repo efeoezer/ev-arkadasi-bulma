@@ -298,3 +298,12 @@
     <p>Henüz uygun bir eşleşme bulunamadı.</p>
     {% endfor %}
 </div>
+<span class="diet-icon">
+    {% if candidate.diet_preference == 'vegan' %}
+        🌱 (Vegan)
+    {% elif candidate.diet_preference == 'vegetarian' %}
+        🥦 (Vejetaryen)
+    {% else %}
+        🥩 (Hepçil)
+    {% endif %}
+</span>
