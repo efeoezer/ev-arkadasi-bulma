@@ -77,7 +77,7 @@ class Review(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Negotiation(models.Model):
-    match = models.OneToOneField(Match, on_delete=models.CASCADE, related_name='negotiation_board')
+    match = models.OneToOneField('Match', on_delete=models.CASCADE, related_name='negotiation_board')
     
     # Kullanıcıların seçimleri JSON olarak tutulacak
     user1_choices = JSONField(default=dict, blank=True)
