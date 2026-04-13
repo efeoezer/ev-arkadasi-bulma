@@ -50,12 +50,17 @@ def generate_match_score(profile1, profile2):
     if total_score == 0:
         total_score = 10
       
+    # Mutfak uyumu (Bonus 10 Puan)
+    if profile1.diet_preference == profile2.diet_preference:
+      total_score += 10
+       
+      
     # LOKASYON BONUSU
     location_bonus = 0
     if profile1.city and profile2.city:
         if profile1.city.lower() == profile2.city.lower():
             location_bonus = 20 # Aynı şehirdeyse ciddi bir avantaj
-            
+       
     # Toplam skoru hesapla ve 100 ile sınırla
     final_score = total_score + location_bonus
     return min(final_score, 100)
