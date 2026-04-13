@@ -206,3 +206,12 @@ def negotiation_board_view(request, match_id):
         'match': match,
         'opponent': opponent
     })
+
+@login_required
+def delete_match(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    
+    if request.user == match.user_1 or request.user == match.user_2:
+        match.delete()
+    
+    return redirect('matches')
