@@ -70,6 +70,9 @@
             </div>
         </div>
     </div>
+    <button onclick="walkAway()" class="btn btn-outline-danger w-100 mt-4 py-3 fw-bold" style="border-radius: 30px; transition: 0.3s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white';">
+            ☢️ ANLAŞAMIYORUZ (Masadan Kalk ve Eşleşmeyi Boz)
+        </button>
 </div>
 
 <script>
@@ -221,13 +224,25 @@
     function checkIfAllResolved() {
         const container = document.getElementById('conflict-container');
         if (container.children.length === 0) {
-            container.innerHTML = `
+            container.innerHTML = 
                 <div class="alert alert-success text-center fw-bold fs-4 mb-3" style="background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71;">
                     Tüm Krizler Çözüldü! 🎉
                 </div>
                 <a href="/matches/" class="btn btn-success w-100 py-3 fs-5 fw-bold" style="border-radius: 15px; box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);">
                     💬 Mesajlaşmaya Başla
                 </a>
+        }
+    }
+
+    function walkAway() {
+        if(confirm("Tüm masayı devirip bu eşleşmeyi kalıcı olarak silmek istediğine emin misin?")) {
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ action: 'walk_away' })
+            }).then(() => {
+                window.location.href = '/dashboard/';
+            });
         }
     }
 </script>
