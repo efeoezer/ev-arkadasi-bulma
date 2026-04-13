@@ -201,3 +201,23 @@ def save_mbti_api(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Geçersiz istek'}, status=400)
+
+@login_required
+def update_negotiation(request, match_id):
+    negotiation = get_object_or_404(NegotiationBoard, match_id=match_id)
+    data = json.loads(request.body)
+    
+    # Hangi kullanıcı işlem yapıyor?
+    if request.user == negotiation.match.user1:
+        negotiation.user1_choices.update(data)
+    else:
+        negotiation.user2_choices.update(data)
+        
+    consensus = negotiation.check_consensus()
+    
+    # Eğer tüm kritik kurallarda (örn. 5 temel kural) anlaşıldıysa bitir
+    if len(consensus) >= 5:
+        negotiation.is_completed = True
+        
+    negotiation.save()
+    return JsonResponse({'status': 'success', 'consensus': consensus, 'is_completed': negotiation.is_completed})
