@@ -24,7 +24,10 @@ def dashboard(request):
         return redirect('onboarding')
 
     # 2. MESAJLARI ÇEK
-    unread_messages = Message.objects.filter(receiver=request.user, is_read=False).order_by('-sent_at')
+    unread_messages = Message.objects.filter(
+        conversation__participants=request.user, 
+        is_read=False
+    ).exclude(sender=request.user).order_by('-created_at')
     unread_count = unread_messages.count()
 
     # 3. SENİ BEĞENENLER
@@ -129,8 +132,8 @@ def matches_view(request):
         
         # Okunmamış mesajları say
         unread = Message.objects.filter(
+            conversation__participants=request.user,
             sender=other_user, 
-            receiver=request.user, 
             is_read=False
         ).count()
         
