@@ -28,6 +28,8 @@ class Profile(models.Model):
     mbti_type = models.CharField(max_length=4, blank=True, null=True, verbose_name="MBTI Tipi")
     budget_limit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Bütçe Limiti")
     diet_preference = models.CharField(max_length=20, choices=DIET_CHOICES, default='omnivore', verbose_name="Diyet Tercihi")
+    has_pet = models.BooleanField(default=False, verbose_name="Evcil Hayvanı Var")
+    has_allergy = models.BooleanField(default=False, verbose_name="Alerjisi Var")
     
     # Sistem Takibi
     last_seen = models.DateTimeField(null=True, blank=True, verbose_name="Son Görülme")
