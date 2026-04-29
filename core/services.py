@@ -118,7 +118,7 @@ def generate_bot_users(count=10):
                 zodiac = random.choice(ZODIAC_SIGNS)
                 smoking = random.choice(SMOKING_HABITS)
                 # Diyet: %60 Hepçil, %25 Vejetaryen, %15 Vegan
-                diet = random.choice(DIET_CHOICES)
+                diet = random.choice([choice[0] for choice in DIET_CHOICES])
                 # Rozetler: Hayvan ve Alerji durumları
                 pet = random.choice([True, False, False]) # %33 ihtimalle kedi/köpeği var
                 allergy = random.choice([True, False, False, False]) # %25 ihtimalle alerjisi var
