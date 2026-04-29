@@ -307,3 +307,17 @@
         🥩 (Hepçil)
     {% endif %}
 </span>
+
+<div class="profile-card">
+    <div class="badge-container">
+        {% if candidate.has_pet %}
+            <span class="badge badge-pet" title="Evcil Hayvanı Var">🐾 Patili Dostu</span>
+        {% endif %}
+        
+        {% if candidate.has_allergy %}
+            <span class="badge badge-allergy" title="Alerjisi Var">⚠️ Alerjisi Var</span>
+        {% endif %}
+    </div>
+
+    <img src="{{ candidate.userphoto_set.first.image.url }}" class="profile-img">
+    </div>
