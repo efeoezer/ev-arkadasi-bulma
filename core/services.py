@@ -11,9 +11,16 @@ from accounts.models import Profile, Verification, UserPhoto
 # Terminaldeki SSL uyarılarını gizleme
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# MBTI Havuzumuz
+# Veri havuzu
 MBTI_TYPES = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 
               'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP']
+
+ZODIAC_SIGNS = ['Koç', 'Boğa', 'İkizler', 'Yengeç', 'Aslan', 'Başak', 
+                'Terazi', 'Akrep', 'Yay', 'Oğlak', 'Kova', 'Balık']
+
+SMOKING_HABITS = ['Asla', 'Sosyal İçici', 'Düzenli İçici']
+
+
 
 def calculate_cosine_similarity(vec1, vec2):
     """İleriki aşamalar için İki vektör (liste) arasındaki kosinüs benzerliğini hesaplar."""
