@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -123,6 +123,13 @@ STATIC_URL = 'static/'
 # --- MEDYA DOSYALARI AYARLARI (Kullanıcı Yüklemeleri) ---
 # Yüklenen dosyaların diskte tutulacağı klasör
 MEDIA_ROOT = BASE_DIR / 'media'
+
+STATIC_URL = 'static/'
+
+# Django'nun statik dosyaları arayacağı ek klasörler
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 # Bu dosyalara tarayıcıdan erişmek için kullanılacak URL öneki
 MEDIA_URL = '/media/'
