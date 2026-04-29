@@ -20,7 +20,13 @@ ZODIAC_SIGNS = ['Koç', 'Boğa', 'İkizler', 'Yengeç', 'Aslan', 'Başak',
 
 SMOKING_HABITS = ['Asla', 'Sosyal İçici', 'Düzenli İçici']
 
-diets = ['omnivore', 'omnivore', 'omnivore', 'vegetarian', 'vegan']
+DIET_CHOICES = [
+        ('none', 'Belirtilmemiş'),
+        ('omnivore', 'Hepçil (Her şeyi yer)'),
+        ('vegetarian', 'Vejetaryen'),
+        ('vegan', 'Vegan'),
+        ('pescatarian', 'Pesketaryen')
+    ]
 
 
 
