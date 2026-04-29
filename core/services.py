@@ -20,6 +20,8 @@ ZODIAC_SIGNS = ['Koç', 'Boğa', 'İkizler', 'Yengeç', 'Aslan', 'Başak',
 
 SMOKING_HABITS = ['Asla', 'Sosyal İçici', 'Düzenli İçici']
 
+diets = ['omnivore', 'omnivore', 'omnivore', 'vegetarian', 'vegan']
+
 
 
 def calculate_cosine_similarity(vec1, vec2):
