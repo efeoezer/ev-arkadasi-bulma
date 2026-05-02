@@ -46,4 +46,18 @@
         {% endblock %}
     </div>
 </body>
+<script>
+    // Eğer kullanıcı zaten müzakere sayfasında değilse, her 2 saniyede bir radar çalışır.
+    if (!window.location.href.includes('/negotiation/')) {
+        setInterval(() => {
+            fetch('/api/active-match-ping/')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.active) {
+                        window.location.href = data.url; // Kullanıcıyı anında masaya fırlat
+                    }
+                });
+        }, 2000);
+    }
+</script>
 </html>

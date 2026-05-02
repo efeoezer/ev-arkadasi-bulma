@@ -2,6 +2,7 @@ import json, random
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -9,6 +10,16 @@ from accounts.models import Profile
 from .models import Like, Match, Negotiation
 from .services import generate_match_score, generate_bot_users
 from chat.models import Message 
+
+TR_MAP = {
+    'DAILY': 'Her Gün', 'WEEKLY': 'Haftada Bir', 'BIWEEKLY': 'İki Haftada Bir', 'RELAXED': 'Kirlendikçe',
+    'NO_GUESTS': 'Kesinlikle Yasak', 'WEEKENDS': 'Sadece Hafta Sonu', 'ANYTIME': 'Haberli Her Zaman',
+    'EARLY_BIRD': 'Erkenci (12 Öncesi)', 'NIGHT_OWL': 'Gece Kuşu', 'FLEXIBLE': 'Esnek',
+    'True': 'Kabul', 'False': 'İstenmiyor', True: 'Kabul', False: 'İstenmiyor'
+}
+
+def get_tr(val):
+    return TR_MAP.get(str(val), str(val))
 
 def index_view(request):
     return render(request, 'core/index.html')
@@ -22,6 +33,9 @@ def dashboard(request):
     # Kontrol
     if not profile.is_onboarded:
         return redirect('onboarding')
+    
+    if not profile.budget_limit:
+        return redirect('edit_lifestyle')
 
     # 2. MESAJLARI ÇEK
     unread_messages = Message.objects.filter(
@@ -198,17 +212,6 @@ def match_success_view(request, match_with_id):
     })
 
 @login_required
-def negotiation_board_view(request, match_id):
-    match = get_object_or_404(Match, id=match_id)
-    
-    opponent = match.user_2 if match.user_1 == request.user else match.user_1
-    
-    return render(request, 'core/negotiation_board.html', {
-        'match': match,
-        'opponent': opponent
-    })
-
-@login_required
 def delete_match(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     
@@ -217,93 +220,151 @@ def delete_match(request, match_id):
     
     return redirect('matches')
 
-@csrf_exempt
-@login_required
-def api_negotiation(request, match_id):
-    match = get_object_or_404(Match, id=match_id)
-    
-    if request.user.id != match.user_1.id and request.user.id != match.user_2.id:
-        return JsonResponse({'status': 'error', 'message': 'Bu masaya erişim yetkiniz yok.'}, status=403)
+def get_middle(key, v1, v2):
+    if key == 'rent': return f"{(int(v1) + int(v2)) // 2} TL"
+    if key == 'cleaning': return "Nöbetleşe Ortak Temizlik"
+    if key == 'guest': return "Sadece Hafta Sonu (Haberli)"
+    if key == 'sleep': return "Gece 01:00 Sonrası Sessizlik"
+    if key == 'smoking': return "Sadece Açık Alan / Balkon"
+    if key == 'pets': return "Sadece Kendi Odasında"
+    return "Orta Yol"
 
-    nego, created = Negotiation.objects.get_or_create(match=match)
-    is_user1 = (request.user.id == match.user_1.id)
+def resolve_matrix(key, c1, c2, v1, v2):
+    if c1 == 'force' and c2 == 'force': return 'BOOM', 'deadlock'
+    if c1 == 'force': return v1, 'user1_won'
+    if c2 == 'force': return v2, 'user2_won'
+    if c1 == 'yield' and c2 == 'yield': return get_middle(key, v1, v2), 'mutual_middle'
+    if c1 == 'middle' and c2 == 'yield': return v1, 'user1_won_soft'
+    if c2 == 'middle' and c1 == 'yield': return v2, 'user2_won_soft'
+    return get_middle(key, v1, v2), 'mutual_middle'
+
+def generate_veto_conflicts(p1, p2):
+    rules = {
+        'rent': ('Kira Bütçesi', p1.budget_limit or 10000, p2.budget_limit or 10000),
+        'cleaning': ('Temizlik Sıklığı', p1.cleaning_frequency, p2.cleaning_frequency),
+        'guest': ('Misafir Kuralı', p1.guest_policy, p2.guest_policy),
+        'sleep': ('Uyku Düzeni', p1.sleep_schedule, p2.sleep_schedule),
+        'smoking': ('Sigara', p1.smoking_allowed, p2.smoking_allowed),
+        'pets': ('Evcil Hayvan', p1.pets_allowed, p2.pets_allowed),
+    }
     
-    # Karşı taraf BOT ise (veya test için otomatik doldurulması gerekiyorsa)
-    opponent_user = match.user_2 if is_user1 else match.user_1
-    opponent_ready = nego.user2_ready if is_user1 else nego.user1_ready
-    
-    # EĞER KARŞI TARAF BİR BOTSA (is_superuser falan üretimi ise) OTOMATİK SEÇİM YAPAR
-    # Gerçek kullanıcıysa bu bloğu atlar ve bekler!
-    if not opponent_ready and getattr(opponent_user, 'is_bot', True): # is_bot yoksa True sayıp bot simülasyonu yapar (Test için)
-        bot_choices = {}
-        options = {
-            'cleaning': ['Her Gün', 'Haftalık', 'Gevşek'],
-            'guests': ['Yasak', 'Haberli İzin', 'Serbest'],
-            'noise': ['Sıfır Tolerans', 'Normal', 'Farketmez'],
-            'pets': ['Yasak', 'Kafes', 'Serbest']
-        }
-        for k, v in options.items():
-            bot_choices[k] = {'choice': random.choice(v), 'is_ultimatum': random.random() < 0.2, 'status': 'pending'}
-        
-        if is_user1:
-            nego.user2_choices = bot_choices
-            nego.user2_ready = True
+    conflicts = {}
+    has_pending = False
+    for key, (name, val1, val2) in rules.items():
+        tr_v1 = f"{val1} TL" if key == 'rent' else get_tr(val1)
+        tr_v2 = f"{val2} TL" if key == 'rent' else get_tr(val2)
+
+        if val1 == val2:
+            conflicts[key] = {'name': name, 'p1': tr_v1, 'p2': tr_v2, 'middle': tr_v1, 'status': 'resolved', 'final': tr_v1, 'winner': 'mutual'}
         else:
-            nego.user1_choices = bot_choices
-            nego.user1_ready = True
-        nego.save()
+            conflicts[key] = {'name': name, 'p1': tr_v1, 'p2': tr_v2, 'middle': get_middle(key, val1, val2), 'status': 'pending'}
+            has_pending = True
+            
+    return conflicts, has_pending
 
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        action = data.get('action')
+@login_required
+def negotiation_board(request, match_id):
+    match = Match.objects.filter(id=match_id).first()
+    if not match:
+        return redirect('dashboard')
+
+    is_user1 = (request.user == match.user_1)
+    other_user = match.user_2 if is_user1 else match.user_1
+    negotiation, created = Negotiation.objects.get_or_create(match=match)
+
+    if created:
+        conflicts, _ = generate_veto_conflicts(match.user_1.profile, match.user_2.profile)
+        negotiation.current_offer = conflicts
+        negotiation.status = 'ONGOING'
+        # Her iki tarafa 2 başlangıç kozu veriyoruz
+        negotiation.user1_koz = 2 
+        negotiation.user2_koz = 2
+        negotiation.current_turn = random.choice([match.user_1, match.user_2])
+        negotiation.save()
+
+    if request.method == "POST":
+        action = request.POST.get('action')
         
-        if action == 'lock_choices':
-            choices = data.get('choices')
-            # Başlangıçta tüm kuralların statüsü 'pending' (beklemede) olur
-            for k in choices: choices[k]['status'] = 'pending'
+        # 1. Masayı Devirme (Her zaman aktif)
+        if action == 'walk_away':
+            negotiation.status = 'FAILED'
+            negotiation.save()
+            return redirect('negotiation_board', match_id=match_id)
+
+        # 2. Hamle Yapma (Sadece sıra sendeyse)
+        if negotiation.status == 'ONGOING' and negotiation.current_turn == request.user:
+            conflicts = negotiation.current_offer
             
-            if is_user1:
-                nego.user1_choices = choices
-                nego.user1_ready = True
-            else:
-                nego.user2_choices = choices
-                nego.user2_ready = True
-            nego.save()
-            return JsonResponse({'status': 'locked'})
-            
-        elif action == 'resolve_conflict':
-            # Kriz çözüldüğünde (Taviz, Koz, Orta Yol) sözleşmeye yazılır
-            rule_id = data.get('rule_id')
-            res_type = data.get('resolution_type')
-            final_val = data.get('final_value')
-            
-            my_choices = nego.user1_choices if is_user1 else nego.user2_choices
-            
-            if res_type == 'koz':
-                if is_user1: nego.user1_goodwill -= 1
-                else: nego.user2_goodwill -= 1
-            elif res_type == 'taviz':
-                if is_user1: nego.user1_goodwill += 1
-                else: nego.user2_goodwill += 1
+            if action == 'submit_move':
+                for key, data in conflicts.items():
+                    if data['status'] == 'pending':
+                        decision = request.POST.get(f'decision_{key}')
+                        if decision == 'force': # Koz Kullan
+                            if is_user1 and negotiation.user1_koz > 0:
+                                data['final'] = data['p1']; data['status'] = 'resolved'; data['winner'] = 'u1'; negotiation.user1_koz -= 1
+                            elif not is_user1 and negotiation.user2_koz > 0:
+                                data['final'] = data['p2']; data['status'] = 'resolved'; data['winner'] = 'u2'; negotiation.user2_koz -= 1
+                        elif decision == 'yield': # Taviz Ver
+                            if is_user1:
+                                data['final'] = data['p2']; data['status'] = 'resolved'; data['winner'] = 'u2'; negotiation.user1_koz += 1
+                            else:
+                                data['final'] = data['p1']; data['status'] = 'resolved'; data['winner'] = 'u1'; negotiation.user2_koz += 1
                 
-            my_choices[rule_id]['status'] = 'resolved'
-            my_choices[rule_id]['final_choice'] = final_val
-            
-            if is_user1: nego.user1_choices = my_choices
-            else: nego.user2_choices = my_choices
-            nego.save()
-            
-            return JsonResponse({'status': 'resolved', 'goodwill': nego.user1_goodwill if is_user1 else nego.user2_goodwill})
+                # Tüm maddeler çözüldüyse ACCEPTED, değilse turu devret
+                if not any(v['status'] == 'pending' for v in conflicts.values()):
+                    negotiation.status = 'ACCEPTED'
+                else:
+                    negotiation.current_turn = other_user
+                
+                negotiation.save()
+                return redirect('negotiation_board', match_id=match_id)
 
-        elif action == 'walk_away':
-            match.delete()
-            return JsonResponse({'status': 'destroyed'})
+    is_my_turn = (negotiation.current_turn == request.user)
+    my_koz = negotiation.user1_koz if is_user1 else negotiation.user2_koz
 
-    # GET İsteği
+    return render(request, 'core/negotiation_board.html', {
+        'negotiation': negotiation, 'other_user': other_user,
+        'conflicts': negotiation.current_offer, 'is_my_turn': is_my_turn,
+        'my_koz': my_koz, 'is_user1': is_user1
+    })
+
+@login_required
+def check_new_matches(request):
+    # Kullanıcının aktif ve devam eden bir müzakeresi var mı kontrol et
+    active_negotiation = Negotiation.objects.filter(
+        match__user_1=request.user, status='ONGOING'
+    ).first() or Negotiation.objects.filter(
+        match__user_2=request.user, status='ONGOING'
+    ).first()
+
+    if active_negotiation:
+        return JsonResponse({'has_new': True, 'match_id': active_negotiation.match.id})
+    return JsonResponse({'has_new': False})
+
+def active_match_ping(request):
+    """Kullanıcının aktif bir masası varsa onu anında o URL'ye çeker."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'active': False})
+    
+    active_neg = Negotiation.objects.filter(
+        Q(match__user_1=request.user) | Q(match__user_2=request.user),
+        status='ONGOING'
+    ).first()
+    
+    if active_neg:
+        return JsonResponse({'active': True, 'url': f'/negotiation/{active_neg.match.id}/'})
+    return JsonResponse({'active': False})
+
+@login_required
+def negotiation_status_api(request, match_id):
+    neg = Negotiation.objects.filter(match_id=match_id).first()
+    if not neg:
+        return JsonResponse({'status': 'DELETED'})
+    
+    is_user1 = (request.user == neg.match.user_1)
+    # Sıra kimde, kim mühürledi, kriz çıktı mı? Hepsini gönderiyoruz.
     return JsonResponse({
-        'user_ready': nego.user1_ready if is_user1 else nego.user2_ready,
-        'opponent_ready': nego.user2_ready if is_user1 else nego.user1_ready,
-        'my_choices': nego.user1_choices if is_user1 else nego.user2_choices,
-        'opp_choices': nego.user2_choices if is_user1 else nego.user1_choices,
-        'goodwill': nego.user1_goodwill if is_user1 else nego.user2_goodwill
+        'status': neg.status,
+        'current_turn_id': neg.current_turn.id if neg.current_turn else None,
+        'opp_ready': neg.user2_ready if is_user1 else neg.user1_ready,
     })

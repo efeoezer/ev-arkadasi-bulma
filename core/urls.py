@@ -24,9 +24,14 @@ urlpatterns = [
 
     path('match-success/<int:match_with_id>/', views.match_success_view, name='match_success_view'),
 
-    path('negotiation/<int:match_id>/', views.negotiation_board_view, name='negotiation_board'),
+    path('negotiation/<int:match_id>/', views.negotiation_board, name='negotiation_board'),
 
     path('delete-match/<int:match_id>/', views.delete_match, name='delete_match'),
 
-    path('api/negotiation/<int:match_id>/', views.api_negotiation, name='api_negotiation'),
+    path('api/check-new-matches/', views.check_new_matches, name='check_new_matches'),
+
+    path('api/active-match-ping/', views.active_match_ping, name='active_match_ping'),
+
+    path('api/negotiation-status/<int:match_id>/', views.negotiation_status_api, name='negotiation_status_api')
+
 ]

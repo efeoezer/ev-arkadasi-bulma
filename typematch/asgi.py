@@ -1,16 +1,28 @@
 """
 ASGI config for typematch project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
 """
 
 import os
-
 from django.core.asgi import get_asgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'typematch.settings')
 
-application = get_asgi_application()
+# HTTP isteklerini karşılaması için Django'nun standart ASGI uygulamasını başlatıyoruz
+django_asgi_app = get_asgi_application()
+
+# Kanalları (Channels) ve yönlendirmeleri dahil ediyoruz
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+import chat.routing
+
+application = ProtocolTypeRouter({
+    # Normal web sayfaları için standart HTTP yönlendirmesi
+    "http": django_asgi_app,
+    
+    # Anlık mesajlaşma için WebSocket yönlendirmesi
+    "websocket": AuthMiddlewareStack(
+        URLRouter(
+            chat.routing.websocket_urlpatterns
+        )
+    ),
+})

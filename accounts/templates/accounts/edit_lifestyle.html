@@ -1,0 +1,75 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<style>
+    :root { --accent: #3b82f6; --bg: #0b0f19; --card: #151c28; }
+    body { background: var(--bg); color: #fff; }
+    .settings-card { max-width: 650px; margin: 4rem auto; background: var(--card); border-radius: 24px; padding: 3rem; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+    .section-header { margin-bottom: 2.5rem; text-align: center; }
+    .section-header h2 { font-weight: 800; letter-spacing: -0.025em; margin-bottom: 0.5rem; }
+    .input-box { margin-bottom: 2rem; }
+    .input-box label { display: block; margin-bottom: 0.75rem; color: #94a3b8; font-weight: 600; font-size: 0.95rem; }
+    .custom-input { width: 100%; background: #1f2937; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem; color: #fff; font-size: 1rem; transition: all 0.2s; }
+    .custom-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(59,130,246,0.15); }
+    .toggle-group { background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 16px; margin-bottom: 2.5rem; border: 1px solid rgba(255,255,255,0.03); }
+    .btn-submit { width: 100%; background: var(--accent); color: #fff; border: none; padding: 1.2rem; border-radius: 14px; font-weight: 700; font-size: 1.1rem; transition: all 0.3s; }
+    .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4); }
+</style>
+
+<div class="settings-card">
+    <div class="section-header">
+        <h2>Yaşam Standartların</h2>
+        <p class="text-muted">Bu tercihler, her eşleşmede pazarlık masasına senin <strong>resmi teklifin</strong> olarak gelecektir.</p>
+    </div>
+    
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div class="input-box">
+            <label>Aylık Maksimum Kira Bütçen (TL)</label>
+            <input type="number" name="budget_limit" class="custom-input" value="{{ profile.budget_limit|default:10000 }}" placeholder="Örn: 15000">
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 input-box">
+                <label>Temizlik Beklentisi</label>
+                <select name="cleaning_frequency" class="custom-input">
+                    <option value="DAILY" {% if profile.cleaning_frequency == 'DAILY' %}selected{% endif %}>Her Gün</option>
+                    <option value="WEEKLY" {% if profile.cleaning_frequency == 'WEEKLY' %}selected{% endif %}>Haftada Bir</option>
+                    <option value="BIWEEKLY" {% if profile.cleaning_frequency == 'BIWEEKLY' %}selected{% endif %}>İki Haftada Bir</option>
+                    <option value="RELAXED" {% if profile.cleaning_frequency == 'RELAXED' %}selected{% endif %}>Kirlendikçe</option>
+                </select>
+            </div>
+            <div class="col-md-6 input-box">
+                <label>Misafir Politikası</label>
+                <select name="guest_policy" class="custom-input">
+                    <option value="NO_GUESTS" {% if profile.guest_policy == 'NO_GUESTS' %}selected{% endif %}>Ziyaretçi İstemiyorum</option>
+                    <option value="WEEKENDS" {% if profile.guest_policy == 'WEEKENDS' %}selected{% endif %}>Sadece Hafta Sonları</option>
+                    <option value="ANYTIME" {% if profile.guest_policy == 'ANYTIME' %}selected{% endif %}>Haberli Olursa Her Zaman</option>
+                </select>
+            </div>
+        </div>
+                <div class="input-box">
+            <label>Uyku ve Sessizlik Beklentisi</label>
+            <select name="sleep_schedule" class="custom-input">
+                <option value="EARLY_BIRD" {% if profile.sleep_schedule == 'EARLY_BIRD' %}selected{% endif %}>Gece 12 Öncesi Sessizlik (Erkenci)</option>
+                <option value="NIGHT_OWL" {% if profile.sleep_schedule == 'NIGHT_OWL' %}selected{% endif %}>Gece Kuşu (Ses Sorun Olmaz)</option>
+                <option value="FLEXIBLE" {% if profile.sleep_schedule == 'FLEXIBLE' %}selected{% endif %}>Esnek Uyku Saatleri</option>
+            </select>
+        </div>
+        <div class="toggle-group">
+
+        <div class="toggle-group">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-bold">Evde Sigara Kullanımı</span>
+                <div class="form-switch"><input class="form-check-input" type="checkbox" name="smoking_allowed" {% if profile.smoking_allowed %}checked{% endif %}></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Evcil Hayvan Kabulü</span>
+                <div class="form-switch"><input class="form-check-input" type="checkbox" name="pets_allowed" {% if profile.pets_allowed %}checked{% endif %}></div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit">Standartlarımı Kaydet ve Devam Et</button>
+    </form>
+</div>
+{% endblock %}

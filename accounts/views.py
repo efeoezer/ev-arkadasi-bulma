@@ -6,7 +6,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
 from .models import Profile, UserPhoto
 from core.models import RoommatePreference
 from .forms import UserUpdateForm, ProfileUpdateForm, PhotoUpdateForm
@@ -221,3 +220,21 @@ def update_negotiation(request, match_id):
         
     negotiation.save()
     return JsonResponse({'status': 'success', 'consensus': consensus, 'is_completed': negotiation.is_completed})
+
+@login_required
+def edit_lifestyle(request):
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    
+    if request.method == "POST":
+        profile.budget_limit = request.POST.get('budget_limit')
+        profile.cleaning_frequency = request.POST.get('cleaning_frequency')
+        profile.guest_policy = request.POST.get('guest_policy')
+        profile.sleep_schedule = request.POST.get('sleep_schedule')
+        profile.smoking_allowed = request.POST.get('smoking_allowed') == 'on'
+        profile.pets_allowed = request.POST.get('pets_allowed') == 'on'
+        
+        profile.save()
+        
+        return redirect('dashboard')
+
+    return render(request, 'accounts/edit_lifestyle.html', {'profile': profile})

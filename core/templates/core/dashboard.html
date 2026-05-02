@@ -202,6 +202,17 @@
 </div>
 
 <script>
+    // Her 3 saniyede bir yeni eşleşme var mı diye radarı çalıştır
+    setInterval(() => {
+        fetch('{% url "check_new_matches" %}')
+            .then(res => res.json())
+            .then(data => {
+                if(data.has_new) {
+                    window.location.href = `/negotiation/${data.match_id}/`;
+                }
+            });
+    }, 3000);
+    
     document.addEventListener('DOMContentLoaded', function() {
         const stack = document.getElementById('card-stack');
         let cards = Array.from(stack.querySelectorAll('.swipe-card')).reverse();

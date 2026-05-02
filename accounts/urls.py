@@ -12,4 +12,5 @@ urlpatterns = [
     path('onboarding/', views.onboarding_wizard, name='onboarding'),
     path('mbti-test/', views.mbti_test_view, name='mbti_test'),
     path('api/save_mbti/', views.save_mbti_api, name='save_mbti_api'),
+    path('edit-lifestyle/', views.edit_lifestyle, name='edit_lifestyle'),
 ]

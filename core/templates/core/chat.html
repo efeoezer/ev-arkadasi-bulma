@@ -1,98 +1,151 @@
 {% extends 'core/base.html' %}
-
-{% block title %}TypeMatch | {{ receiver.username }} ile Sohbet{% endblock %}
+{% block title %}TypeMatch | {{ other_user.username }} ile Sohbet{% endblock %}
 
 {% block content %}
-
 <div style="margin-bottom: 20px;">
-        <a href="{% url 'matches' %}" style="display: inline-flex; align-items: center; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.9em; transition: all 0.3s;" onmouseover="this.style.background='#3498db'; this.style.color='white';" onmouseout="this.style.background='rgba(52, 152, 219, 0.1)'; this.style.color='#3498db';">
-            <span style="margin-right: 8px; font-size: 1.2em;">🔙</span> Eşleşmelere Dön
-        </a>
-    </div>
+    <a href="{% url 'matches' %}" style="display: inline-flex; align-items: center; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.9em; transition: all 0.3s;" onmouseover="this.style.background='#3498db'; this.style.color='white';" onmouseout="this.style.background='rgba(52, 152, 219, 0.1)'; this.style.color='#3498db';">
+        <span style="margin-right: 8px; font-size: 1.2em;">🔙</span> Eşleşmelere Dön
+    </a>
+</div>
 
 <div style="max-width: 800px; margin: 20px auto; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; height: 80vh;">
     
     <div style="background: #2c3e50; color: white; padding: 15px 25px; display: flex; align-items: center; gap: 15px;">
         <div style="width: 45px; height: 45px; border-radius: 50%; background: #ecf0f1; overflow: hidden; border: 2px solid #3498db;">
-            {% if receiver.profile.userphoto_set.first %}
-                <img src="{{ receiver.profile.userphoto_set.first.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% if other_user.profile.userphoto_set.first %}
+                <img src="{{ other_user.profile.userphoto_set.first.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
             {% else %}
                 <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #7f8c8d; font-weight: bold;">?</div>
             {% endif %}
         </div>
         <div>
-            <h4 style="margin: 0; font-size: 1.1em;">{{ receiver.first_name|default:receiver.username }}</h4>
-            <small style="color: #bdc3c7;">{{ receiver.profile.mbti_type }} • Çevrimiçi</small>
+            <h4 style="margin: 0; font-size: 1.1em;">{{ other_user.first_name|default:other_user.username }}</h4>
+            <small id="connection-status" style="color: #bdc3c7;">Bağlanıyor...</small>
         </div>
     </div>
 
     <div id="chat-window" style="flex: 1; padding: 20px; overflow-y: auto; background: #f7f9fb; display: flex; flex-direction: column; gap: 10px;">
         {% for msg in messages %}
             {% if msg.sender == request.user %}
-                <div style="align-self: flex-end; max-width: 70%;">
+                <div class="msg-container msg-me" style="align-self: flex-end; max-width: 70%;">
                     <div style="background: #3498db; color: white; padding: 10px 15px; border-radius: 18px 18px 0 18px; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);">
                         {{ msg.content }}
                     </div>
-                    <small style="display: block; text-align: right; color: #95a5a6; font-size: 0.7em; margin-top: 4px;">{{ msg.sent_at|date:"H:i" }}</small>
                 </div>
             {% else %}
-                <div style="align-self: flex-start; max-width: 70%;">
+                <div class="msg-container msg-opp" style="align-self: flex-start; max-width: 70%;">
                     <div style="background: white; color: #2c3e50; padding: 10px 15px; border-radius: 18px 18px 18px 0; border: 1px solid #ecf0f1; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                         {{ msg.content }}
                     </div>
-                    <small style="display: block; color: #95a5a6; font-size: 0.7em; margin-top: 4px;">{{ msg.sent_at|date:"H:i" }}</small>
                 </div>
             {% endif %}
-        {% empty %}
-            <div style="text-align: center; margin-top: 50px; color: #bdc3c7;">
-                <p>Henüz mesaj yok. İlk adımı sen at!</p>
-            </div>
         {% endfor %}
     </div>
+
     <div class="icebreaker-container" style="display: flex; gap: 10px; padding: 10px; overflow-x: auto; white-space: nowrap; border-top: 1px solid #f1f2f6; background: #fafbfc;">
-    <span style="font-size: 0.8em; color: #95a5a6; align-self: center;">💡 Buzkıranlar:</span>
-    {% for prompt in icebreakers %}
-        <button type="button" 
-                onclick="document.getElementsByName('message_text')[0].value = '{{ prompt }}'"
-                style="background: white; border: 1px solid #3498db; color: #3498db; padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; cursor: pointer; transition: 0.2s;"
-                onmouseover="this.style.background='#3498db'; this.style.color='white';"
-                onmouseout="this.style.background='white'; this.style.color='#3498db';">
-            {{ prompt }}
-        </button>
-    {% endfor %}
-</div>
-    <form method="POST" style="padding: 20px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px;">
-        {% csrf_token %}
-        <input type="text" name="message_text" placeholder="Mesajınızı buraya yazın..." required 
+        <span style="font-size: 0.8em; color: #95a5a6; align-self: center;">💡 Buzkıranlar:</span>
+        {% for prompt in icebreakers %}
+            <button type="button" 
+                    onclick="document.getElementById('chat-message-input').value = '{{ prompt }}'"
+                    style="background: white; border: 1px solid #3498db; color: #3498db; padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; cursor: pointer; transition: 0.2s;"
+                    onmouseover="this.style.background='#3498db'; this.style.color='white';"
+                    onmouseout="this.style.background='white'; this.style.color='#3498db';">
+                {{ prompt }}
+            </button>
+        {% endfor %}
+    </div>
+
+    <div style="padding: 20px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px;">
+        <input id="chat-message-input" type="text" placeholder="Mesajınızı buraya yazın..." required 
                style="flex: 1; border: 2px solid #f1f2f6; padding: 12px 20px; border-radius: 25px; outline: none; transition: border-color 0.3s; font-size: 0.95em;">
-        <button type="submit" 
+        <button id="chat-message-submit" type="button" 
                 style="background: #3498db; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
         </button>
-    </form>
+    </div>
 </div>
-
-<script>
-    const chatWindow = document.getElementById('chat-window');
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-    
-    // Sayfa yüklendiğinde input'a odaklan
-    document.querySelector('input[name="message_text"]').focus();
-    
-    // --- CANLI SOHBET HİLESİ (AUTO-REFRESH) ---
-setInterval(function() {
-    let inputField = document.querySelector('input[name="message_text"]');
-    
-    // Eğer mesaj kutusu boşsa (yani kullanıcı bir şey yazmıyorsa) sayfayı yenile
-    // Böylece karşıdan yeni mesaj geldiyse ekrana düşer!
-    if (inputField && inputField.value.trim() === "") {
-        window.location.reload();
-    }
-}, 10000); // 10000 milisaniye = 10 saniyede bir kontrol eder
-</script>
 
 <style>
     input:focus { border-color: #3498db !important; }
     button:hover { transform: scale(1.1); background: #2980b9 !important; }
 </style>
+
+<script>
+    // Gerekli ID'leri Django'dan alıyoruz
+    const roomId = "{{ conversation.id }}";
+    const currentUserId = {{ request.user.id }};
+    const chatWindow = document.getElementById('chat-window');
+    
+    // Açılışta sayfayı en alta kaydır
+    function scrollToBottom() {
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+    scrollToBottom();
+    document.getElementById('chat-message-input').focus();
+
+    // 1. WEBSOCKET BAĞLANTISINI KUR
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const chatSocket = new WebSocket(protocol + window.location.host + '/ws/chat/room/' + roomId + '/');
+
+    // Bağlantı başarılı olduğunda (Online durumu)
+    chatSocket.onopen = function(e) {
+        document.getElementById('connection-status').innerHTML = "🟢 Çevrimiçi (Canlı)";
+        document.getElementById('connection-status').style.color = "#2ecc71";
+    };
+
+    // 2. YENİ MESAJ GELDİĞİNDE TETİKLENİR
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        
+        // Yeni bir mesaj kutusu oluştur (Senin tasarımına birebir uygun)
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.style.maxWidth = '70%';
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.innerText = data.message;
+        
+        // Gelen mesaj benden mi ondan mı?
+        if (data.sender_id === currentUserId) {
+            wrapperDiv.style.alignSelf = 'flex-end';
+            bubbleDiv.style.cssText = "background: #3498db; color: white; padding: 10px 15px; border-radius: 18px 18px 0 18px; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);";
+        } else {
+            wrapperDiv.style.alignSelf = 'flex-start';
+            bubbleDiv.style.cssText = "background: white; color: #2c3e50; padding: 10px 15px; border-radius: 18px 18px 18px 0; border: 1px solid #ecf0f1; box-shadow: 0 2px 5px rgba(0,0,0,0.02);";
+        }
+        
+        wrapperDiv.appendChild(bubbleDiv);
+        
+        // Henüz hiç mesaj yoksa "İlk adımı sen at" yazısını sil
+        const emptyMsg = chatWindow.querySelector('p');
+        if (emptyMsg && emptyMsg.innerText.includes('İlk adımı sen at')) {
+            emptyMsg.parentElement.remove();
+        }
+
+        chatWindow.appendChild(wrapperDiv);
+        scrollToBottom(); // Mesaj gelince en alta kaydır
+    };
+
+    // Bağlantı koptuğunda
+    chatSocket.onclose = function(e) {
+        document.getElementById('connection-status').innerHTML = "🔴 Bağlantı Koptu";
+        document.getElementById('connection-status').style.color = "#e74c3c";
+        console.error('WebSocket bağlantısı beklenmedik şekilde kapandı.');
+    };
+
+    // 3. ENTER TUŞU İLE MESAJ GÖNDER
+    document.querySelector('#chat-message-input').onkeyup = function(e) {
+        if (e.keyCode === 13) { document.querySelector('#chat-message-submit').click(); }
+    };
+
+    // 4. BUTONA TIKLAYINCA SOKETE FIRLAT (Sayfa Yenilenmez)
+    document.querySelector('#chat-message-submit').onclick = function(e) {
+        const messageInputDom = document.querySelector('#chat-message-input');
+        const message = messageInputDom.value;
+        if(message.trim() !== "") {
+            chatSocket.send(JSON.stringify({ 'message': message }));
+            messageInputDom.value = ''; // Kutuyu temizle
+            messageInputDom.focus(); // Tekrar yazmaya hazır hale getir
+        }
+    };
+</script>
 {% endblock %}

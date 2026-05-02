@@ -1,283 +1,186 @@
 {% extends 'core/base.html' %}
-{% block title %}TypeMatch | Kriz Masası V3{% endblock %}
+{% block title %}TypeMatch | Müzakere Masası{% endblock %}
 
 {% block content %}
 <style>
-    body { background: #0f141e; color: white; overflow-x: hidden; }
-    .board-container { max-width: 900px; margin: 40px auto; padding: 20px; }
-    .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin-bottom: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+    :root { 
+        --bg-color: #050505; 
+        --surface-color: #111111; 
+        --border-color: #262626; 
+        --text-main: #ededed; 
+        --text-muted: #a3a3a3;
+        --accent-blue: #2563eb; 
+        --accent-green: #059669; 
+        --accent-red: #dc2626; 
+        --accent-orange: #d97706;
+    }
     
-    .goodwill-badge { background: linear-gradient(45deg, #f1c40f, #f39c12); color: #000; padding: 10px 25px; border-radius: 30px; font-weight: 900; font-size: 1.2em; transition: transform 0.3s; }
+    body { background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .negotiation-container { max-width: 850px; margin: 3rem auto; padding: 0 1rem; }
     
-    .rule-row { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px; align-items: center; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin-bottom: 15px; }
-    .custom-select { background: #1e2736; color: white; border: 1px solid #34495e; padding: 12px; border-radius: 10px; width: 100%; outline: none; }
-    .ultimatum-btn { background: transparent; color: #e74c3c; border: 2px solid #e74c3c; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-    .ultimatum-btn.active { background: #e74c3c; color: white; box-shadow: 0 0 20px rgba(231, 76, 60, 0.5); }
+    /* Üst Bilgi Paneli */
+    .header-panel { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+    .header-title { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.025em; margin: 0; color: #fff; }
+    .power-metric { background: #1a1a1a; border: 1px solid #333; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; color: #d4d4d4; display: flex; align-items: center; gap: 8px; }
+    .power-metric span { display: inline-block; width: 8px; height: 8px; background: var(--accent-orange); border-radius: 50%; }
 
-    .confront-card { background: linear-gradient(90deg, rgba(231,76,60,0.1) 0%, rgba(0,0,0,0.4) 100%); border-left: 5px solid #e74c3c; border-radius: 15px; padding: 20px; margin-bottom: 20px; transition: all 0.5s ease; }
-    .action-row { display: flex; gap: 10px; margin-top: 15px; }
-    .btn-action { flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .btn-taviz { background: #2ecc71; color: #000; } .btn-taviz:hover { background: #27ae60; }
-    .btn-koz { background: #e74c3c; color: #fff; } .btn-koz:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-orta { background: #3498db; color: #fff; } .btn-orta:hover { background: #2980b9; }
+    /* Durum Bildirimleri */
+    .status-banner { padding: 1rem 1.5rem; border-radius: 8px; font-size: 0.9rem; font-weight: 500; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .banner-active { background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.2); color: #60a5fa; }
+    .banner-waiting { background: rgba(217, 119, 6, 0.1); border: 1px solid rgba(217, 119, 6, 0.2); color: #fbbf24; }
 
-    .contract-zone { background: rgba(46, 204, 113, 0.1); border: 2px dashed #2ecc71; border-radius: 15px; padding: 20px; min-height: 150px; }
-    .contract-item { background: #2ecc71; color: #000; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; animation: slideDown 0.5s forwards; }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    /* Kriz Kartları */
+    .conflict-card { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; transition: border-color 0.2s; }
+    .conflict-card:hover { border-color: #404040; }
+    .card-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .conflict-title { font-size: 1.1rem; font-weight: 600; color: #fff; margin: 0; }
     
-    .btn-lock { background: linear-gradient(45deg, #3498db, #2980b9); color: white; padding: 15px; width: 100%; font-size: 1.2em; font-weight: 900; border-radius: 15px; border: none; margin-top: 20px; cursor: pointer; }
+    /* Karşılaştırma Tablosu */
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+    .compare-side { display: flex; flex-direction: column; gap: 0.25rem; }
+    .compare-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
+    .compare-value { font-size: 1.1rem; font-weight: 500; color: #e5e5e5; }
+    .my-value { color: #60a5fa; }
+    
+    /* Profesyonel Buton Grubu */
+    .action-group { display: flex; gap: 1rem; }
+    .btn-action { flex: 1; background: #0a0a0a; border: 1px solid var(--border-color); color: var(--text-muted); padding: 0.875rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-align: center; }
+    .btn-action:hover:not(:disabled) { background: #1a1a1a; color: #fff; border-color: #525252; }
+    
+    /* Seçili Buton Durumları */
+    .btn-taviz:hover { border-color: var(--accent-green); color: var(--accent-green); }
+    .btn-koz:hover:not(:disabled) { border-color: var(--accent-red); color: var(--accent-red); }
+    .btn-koz:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Masayı Devir & Onay Butonları */
+    .btn-danger-outline { display: block; width: 100%; padding: 1rem; margin-top: 2rem; background: transparent; border: 1px solid rgba(220, 38, 38, 0.3); color: #f87171; border-radius: 8px; text-align: center; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: 0.2s; }
+    .btn-danger-outline:hover { background: rgba(220, 38, 38, 0.1); border-color: var(--accent-red); }
+    .btn-primary-solid { display: block; width: 100%; padding: 1rem; margin-top: 2rem; background: var(--text-main); color: #000; border: none; border-radius: 8px; font-weight: 600; font-size: 0.95rem; transition: 0.2s; }
+    .btn-primary-solid:hover { background: #fff; transform: translateY(-1px); }
+
+    /* Sonuç Ekranları */
+    .result-container { text-align: center; padding: 4rem 0 2rem 0; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem; }
+    .result-title { font-size: 2rem; font-weight: 600; letter-spacing: -0.025em; margin-bottom: 1rem; }
+    .result-desc { color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto; }
+    
+    .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 0; border-bottom: 1px solid var(--border-color); }
+    .ledger-item:last-child { border-bottom: none; }
+    .ledger-badge { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 </style>
 
-<div class="board-container" id="main-board">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>🤝 Anlaşma Masası</h2>
-        <div class="goodwill-badge" id="goodwill-display">⭐ İyi Niyet: 0</div>
-    </div>
+<div class="negotiation-container">
 
-    <div id="loading" class="text-center py-5">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
-        <h4 class="mt-3 text-muted">Masa Hazırlanıyor...</h4>
-    </div>
-
-    <div id="phase-prep" class="glass-panel" style="display: none;">
-        <h3 class="mb-2 text-info">Kurallarını Belirle</h3>
-        <p class="text-muted">Masaya oturmadan önce taleplerini kilitlersin.</p>
-        <div id="prep-rules-container"></div>
-        <button class="btn-lock" onclick="lockChoices()">🔒 Seçimleri Kilitle</button>
-    </div>
-
-    <div id="phase-waiting" class="glass-panel text-center" style="display: none; padding: 50px;">
-        <span style="font-size: 4em;">⏳</span>
-        <h3 class="mt-3 text-warning">Karşı Taraf Bekleniyor</h3>
-        <p class="text-muted">Diğer kullanıcı kurallarını belirlediğinde kriz masası açılacak.</p>
-        <button onclick="window.location.reload()" class="btn btn-outline-light mt-3">Durumu Kontrol Et</button>
-    </div>
-
-    <div id="phase-confront" style="display: none;">
-        <div class="glass-panel" id="crisis-board">
-            <h3 class="mb-4 text-danger">⚠️ Aktif Krizler</h3>
-            <div id="conflict-container"></div>
+    {% if negotiation.status == 'FAILED' %}
+        <div class="result-container">
+            <h1 class="result-title" style="color: #f87171;">Müzakere Sonlandırıldı</h1>
+            <p class="result-desc">Taraflar asgari müşterekte buluşamadı. Sözleşme taslağı iptal edildi ve eşleşme sistemden kaldırıldı.</p>
         </div>
+        <a href="{% url 'dashboard' %}" class="btn-primary-solid text-center text-decoration-none">Sisteme Geri Dön</a>
 
-        <div class="glass-panel">
-            <h3 class="mb-4 text-success">📝 Taslak Sözleşme</h3>
-            <div class="contract-zone" id="contract-zone">
-                <p class="text-muted text-center mt-4" id="empty-contract-msg">Çözülen kurallar buraya düşecek...</p>
-            </div>
+    {% elif negotiation.status == 'ACCEPTED' %}
+        <div class="result-container">
+            <h1 class="result-title" style="color: #34d399;">Sözleşme Onaylandı</h1>
+            <p class="result-desc">{{ other_user.display_name }} ile aranızdaki nihai yaşam koşulları mühürlenmiştir.</p>
         </div>
         
-        <button onclick="walkAway()" style="display: block; width: 100%; margin-top: 40px; background: rgba(231, 76, 60, 0.05); border: 2px solid #e74c3c; color: #e74c3c; padding: 18px 0; border-radius: 30px; font-size: 1.1em; font-weight: 800; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'; this.style.boxShadow='0 10px 30px rgba(231, 76, 60, 0.5)';" onmouseout="this.style.background='rgba(231, 76, 60, 0.05)'; this.style.color='#e74c3c'; this.style.boxShadow='none';">
-            ☢️ ANLAŞAMIYORUZ (Masayı Devir)
-        </button>
-    </div>
+        <div class="conflict-card" style="padding: 1rem 2rem;">
+            <div class="card-header-flex" style="margin-bottom: 0;">
+                <h4 class="conflict-title text-muted">Nihai Şartlar</h4>
+            </div>
+            {% for key, data in conflicts.items %}
+                <div class="ledger-item">
+                    <div>
+                        <span class="compare-label d-block">{{ data.name }}</span>
+                        <strong class="compare-value">{{ data.final }}</strong>
+                    </div>
+                    <div>
+                        {% if data.winner == 'u1' and is_user1 or data.winner == 'u2' and not is_user1 %}
+                            <span class="ledger-badge" style="background: rgba(220, 38, 38, 0.1); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.2);">Şartınız Uygulandı</span>
+                        {% else %}
+                            <span class="ledger-badge" style="background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2);">Karşı Tarafın Şartı</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <a href="{% url 'chat' other_user.id %}" class="btn-primary-solid text-center text-decoration-none mt-4">İletişim Kanalını Aç</a>
+
+    {% else %}
+        <div class="header-panel">
+            <h2 class="header-title">Müzakere Paneli</h2>
+            <div class="power-metric">
+                <span></span> {{ my_koz }} Kullanılabilir Koz
+            </div>
+        </div>
+
+        {% if is_my_turn %}
+            <div class="status-banner banner-active">
+                <div><strong>Aksiyon Bekleniyor:</strong> Maddeleri inceleyin ve kararınızı iletin.</div>
+            </div>
+        {% else %}
+            <div class="status-banner banner-waiting">
+                <div><strong>Bekleniyor:</strong> {{ other_user.display_name }} taslağı inceliyor...</div>
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            {% for key, data in conflicts.items %}
+                <div class="conflict-card {% if data.status == 'resolved' %}opacity-50{% endif %}">
+                    <div class="card-header-flex">
+                        <h5 class="conflict-title">{{ data.name }}</h5>
+                        {% if data.status == 'resolved' %}
+                            <span class="ledger-badge" style="background: #262626; color: #a3a3a3;">Mühürlendi</span>
+                        {% else %}
+                            <span class="ledger-badge" style="background: rgba(37, 99, 235, 0.1); color: #60a5fa;">Açık Madde</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="compare-grid">
+                        <div class="compare-side">
+                            <span class="compare-label">Sizin Talebiniz</span>
+                            <span class="compare-value my-value">{{ data.p1 }}</span>
+                        </div>
+                        <div class="compare-side text-end">
+                            <span class="compare-label">Karşı Tarafın Talebi</span>
+                            <span class="compare-value">{{ data.p2 }}</span>
+                        </div>
+                    </div>
+
+                    {% if is_my_turn and data.status == 'pending' %}
+                        <div class="action-group mt-4">
+                            <button type="submit" name="action" value="submit_move" onclick="this.form.elements['decision_{{ key }}'].value='yield'" class="btn-action btn-taviz">
+                                Taviz Ver (+1 Koz)
+                            </button>
+                            <button type="submit" name="action" value="submit_move" onclick="this.form.elements['decision_{{ key }}'].value='force'" class="btn-action btn-koz" {% if my_koz < 1 %}disabled{% endif %}>
+                                Şartı Dayat (-1 Koz)
+                            </button>
+                            <input type="hidden" name="decision_{{ key }}" value="">
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" name="action" value="walk_away" class="btn-danger-outline" onclick="return confirm('Müzakereyi sonlandırmak istediğinize emin misiniz? Bu işlem eşleşmeyi kalıcı olarak iptal eder.');">
+                Müzakereyi Sonlandır (Masadan Kalk)
+            </button>
+        </form>
+    {% endif %}
+
 </div>
 
 <script>
-    // 1. Tırnak işaretleri hatayı önler
-    const MATCH_ID = "{{ match.id }}";
-    
-    // Eğer Match ID gelmezse Javascript'i baştan durdur
-    if (!MATCH_ID) {
-        document.getElementById('loading').innerHTML = `<h3 class="text-danger mt-4">⚠️ Sistem Hatası</h3><p>Eşleşme ID'si bulunamadı (views.py kontrol edilmeli).</p>`;
-        throw new Error("Match ID yok.");
-    }
-
-    const API_URL = `/api/negotiation/${MATCH_ID}/`;
-
-    const OPPONENT_ID = "{% if request.user == match.user_1 %}{{ match.user_2.id }}{% else %}{{ match.user_1.id }}{% endif %}";
-    const CHAT_URL = "{% url 'chat' 0 %}".replace('0', OPPONENT_ID);
-    
-    const rulesData = [
-        { id: 'cleaning', label: 'Temizlik', options: ['Her Gün', 'Haftalık', 'Gevşek'] },
-        { id: 'guests', label: 'Misafir', options: ['Yasak', 'Haberli İzin', 'Serbest'] },
-        { id: 'noise', label: 'Gürültü', options: ['Sıfır Tolerans', 'Normal', 'Farketmez'] },
-        { id: 'pets', label: 'Evcil Hayvan', options: ['Yasak', 'Kafes', 'Serbest'] }
-    ];
-
-    let myChoices = {};
-    let oppChoices = {};
-    let goodwill = 0;
-    let myUltimatum = null;
-
-    // FETCH İŞLEMİ
-    fetch(API_URL)
-        .then(async res => {
-            const textResponse = await res.text();
-            try {
-                const data = JSON.parse(textResponse);
-                if (!res.ok || data.status === 'error') {
-                    throw new Error(data.message || `HTTP Hatası: ${res.status}`);
-                }
-                return data;
-            } catch (err) {
-                document.getElementById('main-board').innerHTML = `
-                    <div class="glass-panel text-danger">
-                        <h3>⚠️ Sunucu HTML Döndürdü (500 veya Login Hatası)</h3>
-                        <p>Django çöktü veya oturumun kapandı. Gelen yanıt aşağıdadır:</p>
-                        <div style="background: white; color: black; padding: 15px; border-radius: 10px; max-height: 400px; overflow-y: auto;">
-                            ${textResponse}
-                        </div>
-                    </div>
-                `;
-                throw new Error("JSON beklenirken HTML geldi.");
-            }
-        })
+    {% if not is_my_turn or negotiation.status == 'ONGOING' %}
+    setInterval(() => {
+        fetch('/api/negotiation-status/{{ negotiation.match.id }}/')
+        .then(res => res.json())
         .then(data => {
-            document.getElementById('loading').style.display = 'none';
-            goodwill = data.goodwill;
-            updateGoodwillDisplay();
-
-            if (data.user_ready && data.opponent_ready) {
-                myChoices = data.my_choices;
-                oppChoices = data.opp_choices;
-                renderConfrontation();
-            } else if (data.user_ready && !data.opponent_ready) {
-                document.getElementById('phase-waiting').style.display = 'block';
-            } else {
-                renderPrepPhase();
-            }
-        })
-        .catch(err => {
-            console.error("Masa Yükleme Hatası:", err);
-            if(document.getElementById('loading')) {
-                document.getElementById('loading').innerHTML = `
-                    <div class="alert alert-danger mt-5">
-                        <h4>⚠️ Bir Şeyler Ters Gitti</h4>
-                        <p>${err.message}</p>
-                    </div>
-                `;
+            if (data.status !== '{{ negotiation.status }}' || data.current_turn_id == {{ request.user.id }}) {
+                window.location.reload();
             }
         });
-
-    // --- FONKSİYONLAR ---
-
-    function updateGoodwillDisplay() {
-        document.getElementById('goodwill-display').innerText = `⭐ İyi Niyet: ${goodwill}`;
-    }
-
-    function renderPrepPhase() {
-        document.getElementById('phase-prep').style.display = 'block';
-        const container = document.getElementById('prep-rules-container');
-        rulesData.forEach(rule => {
-            myChoices[rule.id] = { choice: rule.options[0], is_ultimatum: false };
-            let opts = rule.options.map(o => `<option value="${o}">${o}</option>`).join('');
-            container.innerHTML += `
-                <div class="rule-row">
-                    <div class="rule-title">${rule.label}</div>
-                    <select class="custom-select" onchange="myChoices['${rule.id}'].choice = this.value">${opts}</select>
-                    <button class="ultimatum-btn" id="btn-ult-${rule.id}" onclick="toggleUltimatum('${rule.id}')">Kırmızı Çizgi</button>
-                </div>
-            `;
-        });
-    }
-
-    function toggleUltimatum(id) {
-        if (myUltimatum) document.getElementById(`btn-ult-${myUltimatum}`).classList.remove('active');
-        if (myUltimatum !== id) {
-            myUltimatum = id;
-            document.getElementById(`btn-ult-${id}`).classList.add('active');
-        } else { myUltimatum = null; }
-        rulesData.forEach(r => myChoices[r.id].is_ultimatum = (r.id === myUltimatum));
-    }
-
-    function lockChoices() {
-        fetch(API_URL, {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-            body: JSON.stringify({ action: 'lock_choices', choices: myChoices })
-        }).then(() => window.location.reload());
-    }
-
-    function renderConfrontation() {
-        document.getElementById('phase-confront').style.display = 'block';
-        const container = document.getElementById('conflict-container');
-        
-        rulesData.forEach(rule => {
-            const myData = myChoices[rule.id];
-            const oppData = oppChoices[rule.id];
-            
-            if (myData.status === 'resolved' || myData.choice === oppData.choice) {
-                const finalVal = myData.final_choice || myData.choice;
-                addToContract(rule.label, finalVal);
-                return;
-            }
-
-            container.innerHTML += `
-                <div class="confront-card" id="card-${rule.id}">
-                    <h4 class="text-light">${rule.label}</h4>
-                    <div class="d-flex justify-content-between my-2">
-                        <span>Sen: <strong>${myData.choice}</strong></span>
-                        <span>Karşı: <strong>${oppData.choice}</strong></span>
-                    </div>
-                    <div class="action-row">
-                        <button class="btn-action btn-taviz" onclick="resolveConflict('${rule.id}', 'taviz', '${oppData.choice}')">Taviz Ver (+1 ⭐)</button>
-                        <button class="btn-action btn-orta" onclick="proposeMiddle('${rule.id}', this)">🤝 Orta Yol Bul</button>
-                        <button class="btn-action btn-koz" onclick="resolveConflict('${rule.id}', 'koz', '${myData.choice}')" ${goodwill <= 0 ? 'disabled' : ''}>Koz Kullan (-1 ⭐)</button>
-                    </div>
-                </div>
-            `;
-        });
-        checkIfAllResolved();
-    }
-
-    function proposeMiddle(ruleId, btn) {
-        btn.innerText = "Hesaplanıyor..."; btn.disabled = true;
-        setTimeout(() => {
-            const rule = rulesData.find(r => r.id === ruleId);
-            const middleChoice = rule.options[1]; 
-            
-            if (Math.random() > 0.3) {
-                resolveConflict(ruleId, 'orta_yol', middleChoice);
-            } else {
-                btn.innerText = "Reddedildi!";
-                btn.style.background = "#e74c3c";
-            }
-        }, 800);
-    }
-
-    function resolveConflict(ruleId, type, finalValue) {
-        fetch(API_URL, {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-            body: JSON.stringify({ action: 'resolve_conflict', rule_id: ruleId, resolution_type: type, final_value: finalValue })
-        }).then(res => res.json()).then(data => {
-            goodwill = data.goodwill;
-            updateGoodwillDisplay();
-            document.getElementById(`card-${ruleId}`).remove();
-            addToContract(rulesData.find(r => r.id === ruleId).label, finalValue);
-            checkIfAllResolved();
-            document.querySelectorAll('.btn-koz').forEach(btn => btn.disabled = goodwill <= 0);
-        });
-    }
-
-    function addToContract(label, value) {
-        document.getElementById('empty-contract-msg').style.display = 'none';
-        const contractZone = document.getElementById('contract-zone');
-        contractZone.innerHTML += `<div class="contract-item"><span>${label}</span> <span>${value} ✓</span></div>`;
-    }
-
-    function checkIfAllResolved() {
-        const container = document.getElementById('conflict-container');
-        if (container.children.length === 0) {
-            container.innerHTML = `
-                <div style="background: rgba(46, 204, 113, 0.15); border: 2px solid #2ecc71; color: #2ecc71; padding: 25px; border-radius: 15px; text-align: center; font-weight: 900; font-size: 1.5em; margin-bottom: 25px;">
-                    🎉 Tüm Krizler Çözüldü!
-                </div>
-                <a href="${CHAT_URL}" style="display: block; width: 100%; text-align: center; background: linear-gradient(45deg, #2ecc71, #27ae60); color: white; padding: 20px 0; border-radius: 15px; text-decoration: none; font-size: 1.4em; font-weight: 900; box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-                   💬 MESAJLAŞMAYA BAŞLA
-                </a>
-            `;
-        }
-    }
-
-    function walkAway() {
-        if(confirm("Tüm masayı devirip bu eşleşmeyi kalıcı olarak silmek istediğine emin misin?")) {
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-                body: JSON.stringify({ action: 'walk_away' })
-            }).then(() => {
-                window.location.href = '/dashboard/';
-            });
-        }
-    }
+    }, 3000);
+    {% endif %}
 </script>
 {% endblock %}

@@ -77,21 +77,46 @@ class Review(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Negotiation(models.Model):
+    STATUS_CHOICES = [
+        ('ONGOING', 'Pazarlık Devam Ediyor'),
+        ('ACCEPTED', 'Sözleşme İmzalandı'),
+        ('REJECTED', 'Masa Devrildi'),
+    ]
+
+    # İlişkiyi 'Match' string'i yerine doğrudan Match modelini import ederek de verebilirsin
     match = models.OneToOneField('Match', on_delete=models.CASCADE, related_name='negotiation_board')
     
-    # Kullanıcıların seçimleri JSON olarak tutulacak
-    user1_choices = JSONField(default=dict, blank=True)
-    user2_choices = JSONField(default=dict, blank=True)
+    # --- SATRANÇ MOTORU (State Machine) ---
+    # Hamle sırasının kimde olduğunu takip eder. (P1 hamle yapınca buraya P2'nin ID'si yazılır)
+    current_turn = models.ForeignKey(User, related_name='active_turns', on_delete=models.SET_NULL, null=True, blank=True)
     
-    # Seçimler kilitlendi mi?
-    user1_ready = models.BooleanField(default=False)
-    user2_ready = models.BooleanField(default=False)
+    # Müzakere sonsuza uzamasın diye tur sayacı
+    round_number = models.IntegerField(default=1)
     
-    # İyi niyet (Taviz) puanları
+    # Masanın genel durumu
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='ONGOING')
+    
+    # --- MASADAKİ SÖZLEŞME (Orta Yol) ---
+    # İki ayrı user choice yerine, ortada DÖNEN TEK BİR TEKLİF var.
+    # JSON içinde {'rent': 12000, 'cleaning': 'WEEKLY', ...} şeklinde güncel taslak tutulacak.
+    current_offer = models.JSONField(default=dict, blank=True, verbose_name="Masadaki Güncel Teklif")
+    
+    # İyi niyet (Taviz) puanları - Sevdiğimiz bir mekanik olduğu için koruduk!
+    # Sistem, profilinden en çok taviz verene bu puanı ekleyecek.
     user1_goodwill = models.IntegerField(default=0)
     user2_goodwill = models.IntegerField(default=0)
     
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    user1_ready = models.BooleanField(default=False)
+    user2_ready = models.BooleanField(default=False)
+
+    user1_choices = models.JSONField(default=dict, blank=True)
+    user2_choices = models.JSONField(default=dict, blank=True)
+
+    user1_koz = models.IntegerField(default=2)
+    user2_koz = models.IntegerField(default=2)
 
     def __str__(self):
-        return f"Müzakere Masası ID: {self.match.id}"
+        return f"Müzakere Masası ID: {self.match.id} - Durum: {self.get_status_display()}"
