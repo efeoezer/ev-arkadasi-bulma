@@ -56,6 +56,8 @@ class Profile(models.Model):
     sleep_schedule = models.CharField(max_length=20, choices=SLEEP_SCHEDULE_CHOICES, default='FLEXIBLE', verbose_name="Uyku Düzeni")
     smoking_allowed = models.BooleanField(default=False, verbose_name="Evde Sigara İçilebilir")
     pets_allowed = models.BooleanField(default=False, verbose_name="Evcil Hayvan Kabul Ediyor") # has_pet'ten farklıdır!
+    # Güvenilir Kullanıcı Rozeti Alanı
+    is_verified = models.BooleanField(default=False, help_text="Kullanıcının hesabı doğrulanmış mı?")
     
     # Sistem Takibi
     last_seen = models.DateTimeField(null=True, blank=True, verbose_name="Son Görülme")

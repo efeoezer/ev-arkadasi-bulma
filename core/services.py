@@ -11,9 +11,24 @@ from accounts.models import Profile, Verification, UserPhoto
 # Terminaldeki SSL uyarılarını gizleme
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# MBTI Havuzumuz
+# Veri havuzu
 MBTI_TYPES = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 
               'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP']
+
+ZODIAC_SIGNS = ['Koç', 'Boğa', 'İkizler', 'Yengeç', 'Aslan', 'Başak', 
+                'Terazi', 'Akrep', 'Yay', 'Oğlak', 'Kova', 'Balık']
+
+SMOKING_HABITS = ['Asla', 'Sosyal İçici', 'Düzenli İçici']
+
+DIET_CHOICES = [
+        ('none', 'Belirtilmemiş'),
+        ('omnivore', 'Hepçil (Her şeyi yer)'),
+        ('vegetarian', 'Vejetaryen'),
+        ('vegan', 'Vegan'),
+        ('pescatarian', 'Pesketaryen')
+    ]
+
+
 
 def calculate_cosine_similarity(vec1, vec2):
     """İleriki aşamalar için İki vektör (liste) arasındaki kosinüs benzerliğini hesaplar."""
@@ -100,6 +115,15 @@ def generate_bot_users(count=10):
                 # 2. Profil Oluşturma (Lokasyon Bilgileriyle)
                 mbti = random.choice(MBTI_TYPES)
                 bio = f"Selam! Ben {first_name}. {city}, {country} lokasyonunda yaşıyorum. MBTI tipim {mbti}."
+                zodiac = random.choice(ZODIAC_SIGNS)
+                smoking = random.choice(SMOKING_HABITS)
+                # Diyet: %60 Hepçil, %25 Vejetaryen, %15 Vegan
+                diet = random.choice([choice[0] for choice in DIET_CHOICES])
+                # Rozetler: Hayvan ve Alerji durumları
+                pet = random.choice([True, False, False]) # %33 ihtimalle kedi/köpeği var
+                allergy = random.choice([True, False, False, False]) # %25 ihtimalle alerjisi var
+                clean = random.randint(1, 3)
+              
                 
                 # Global Lokasyon API'si ile uyumlu hale getirdik
                 profile = Profile.objects.create(
@@ -107,6 +131,12 @@ def generate_bot_users(count=10):
                     city=city,
                     country=country, # YENİ: Ülke alanı artık boş kalmıyor
                     mbti_type=mbti
+                    zodiac_sign=zodiac,
+                    smoking_habit=smoking,
+                    diet_preference=diet,
+                    has_pet=pet,
+                    has_allergy=allergy,
+                    cleanliness_score=clean,
                 )
                 profile.bio = bio # Eğer modelinde bio varsa ekle
                 profile.save()
