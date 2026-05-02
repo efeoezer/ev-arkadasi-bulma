@@ -30,6 +30,9 @@ class Profile(models.Model):
     diet_preference = models.CharField(max_length=20, choices=DIET_CHOICES, default='omnivore', verbose_name="Diyet Tercihi")
     has_pet = models.BooleanField(default=False, verbose_name="Evcil Hayvanı Var")
     has_allergy = models.BooleanField(default=False, verbose_name="Alerjisi Var")
+
+    # Güvenilir Kullanıcı Rozeti Alanı
+    is_verified = models.BooleanField(default=False, help_text="Kullanıcının hesabı doğrulanmış mı?")
     
     # Sistem Takibi
     last_seen = models.DateTimeField(null=True, blank=True, verbose_name="Son Görülme")
