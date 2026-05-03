@@ -1,0 +1,17 @@
+.verification-badge {
+    background-color: #e6f4ea;
+    color: #137333;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 6px;
+    border: 1px solid #ceead6;
+}
+
+.verification-badge i {
+    font-size: 0.9rem;
+}
