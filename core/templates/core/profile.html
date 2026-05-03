@@ -289,3 +289,15 @@ countrySelect.addEventListener('change', function() {
 });
 </script>
 {% endblock %}
+
+<div class="user-info">
+    <h3>
+        {{ profile.user.username }}
+        
+        {% if profile.is_verified %}
+            <span class="verification-badge" title="Güvenilir Profil">
+                <i class="fas fa-check-circle"></i> Doğrulanmış
+            </span>
+        {% endif %}
+    </h3>
+</div>
