@@ -34,7 +34,7 @@ def calculate_cosine_similarity(vec1, vec2):
     """İleriki aşamalar için İki vektör (liste) arasındaki kosinüs benzerliğini hesaplar."""
     dot_product = sum(a * b for a, b in zip(vec1, vec2))
     norm_a = math.sqrt(sum(a * a for a in vec1))
-    norm_b = math.sqrt(sum(b * b for b in vec2))
+    norm_b = math.sqrt(sum(a * a for a in vec2))
     
     if norm_a == 0 or norm_b == 0:
         return 0.0
@@ -69,7 +69,6 @@ def generate_match_score(profile1, profile2):
     if profile1.diet_preference == profile2.diet_preference:
       total_score += 10
     # Zıt kutuplar için küçük bir tolerans (Opsiyonel)
-    # Örneğin biri Vegan biri Vejetaryen ise 5 puan verilebilir.
     elif (profile1.diet_preference == 'vegan' and profile2.diet_preference == 'vegetarian'):
         total_score += 5
        
@@ -112,33 +111,33 @@ def generate_bot_users(count=10):
                     last_name=last_name
                 )
                 
-                # 2. Profil Oluşturma (Lokasyon Bilgileriyle)
+                # 2. Profil Oluşturma (Güncellenmiş Profile model alanlarıyla)
                 mbti = random.choice(MBTI_TYPES)
                 bio = f"Selam! Ben {first_name}. {city}, {country} lokasyonunda yaşıyorum. MBTI tipim {mbti}."
-                zodiac = random.choice(ZODIAC_SIGNS)
-                smoking = random.choice(SMOKING_HABITS)
-                # Diyet: %60 Hepçil, %25 Vejetaryen, %15 Vegan
-                diet = random.choice([choice[0] for choice in DIET_CHOICES])
-                # Rozetler: Hayvan ve Alerji durumları
+                
                 pet = random.choice([True, False, False]) # %33 ihtimalle kedi/köpeği var
                 allergy = random.choice([True, False, False, False]) # %25 ihtimalle alerjisi var
-                clean = random.randint(1, 3)
-              
+                diet = random.choice([choice[0] for choice in DIET_CHOICES])
+                smoking = random.choice([True, False])
+                cleaning = random.choice(['DAILY', 'WEEKLY', 'BIWEEKLY', 'RELAXED'])
+                guest = random.choice(['NO_GUESTS', 'WEEKENDS', 'ANYTIME'])
+                sleep = random.choice(['EARLY_BIRD', 'NIGHT_OWL', 'FLEXIBLE'])
                 
-                # Global Lokasyon API'si ile uyumlu hale getirdik
                 profile = Profile.objects.create(
                     user=user,
                     city=city,
-                    country=country, # YENİ: Ülke alanı artık boş kalmıyor
-                    mbti_type=mbti
-                    zodiac_sign=zodiac,
-                    smoking_habit=smoking,
+                    country=country,
+                    mbti_type=mbti,
                     diet_preference=diet,
                     has_pet=pet,
                     has_allergy=allergy,
-                    cleanliness_score=clean,
+                    smoking_allowed=smoking,
+                    cleaning_frequency=cleaning,
+                    guest_policy=guest,
+                    sleep_schedule=sleep,
+                    budget_limit=random.randint(5000, 25000),
                 )
-                profile.bio = bio # Eğer modelinde bio varsa ekle
+                profile.bio = bio
                 profile.save()
                 
                 # 3. Alt Tablolar (Oto-yaratım)

@@ -1,237 +1,331 @@
 {% extends 'core/base.html' %}
-
 {% block title %}TypeMatch | Keşfet{% endblock %}
 
 {% block content %}
-
-{% load static %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 
 <style>
-    /* --- Temel Izgara ve Arkaplan --- */
-    .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-    .dashboard-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 30px; align-items: start; }
-    
-    .swipe-section { 
-        background: #fdfdfd; 
-        border-radius: 20px; 
-        padding: 30px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.03); 
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
-        border: 1px solid #f1f2f6;
-        min-height: 700px;
+    :root {
+        --bg-body: #f4f7f6;
+        --surface: #ffffff;
+        --border-soft: #e2e8f0;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --primary-color: #2563eb;
+        --danger-color: #ef4444;
+        --success-color: #10b981;
+        --radius-lg: 24px;
+        --radius-md: 12px;
     }
 
-    .card-stack-wrapper { position: relative; width: 320px; height: 450px; margin-top: 20px; }
+    body { background-color: var(--bg-body); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
-    /* --- PERFORMANS ODAKLI KART CSS --- */
-    .swipe-card { 
+    .dashboard-layout { max-width: 1350px; margin: 30px auto; padding: 0 15px; display: grid; grid-template-columns: 280px minmax(360px, 1fr) 300px; gap: 30px; align-items: start; }
+
+    /* YAN PANELLER (Küçük rötüşler) */
+    .sidebar { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 30px; z-index: 10; }
+    .panel-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    .panel-title { font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin: 0 0 15px 0; border-bottom: 2px solid var(--bg-body); padding-bottom: 8px; }
+
+    .filter-form { display: flex; flex-direction: column; gap: 12px; }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-group label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+    .filter-group select, .filter-group input { background: #f8fafc; border: 1px solid var(--border-soft); border-radius: 8px; padding: 10px; font-weight: 600; color: var(--text-main); outline: none; transition: 0.2s; width: 100%; }
+    .filter-group select:focus, .filter-group input:focus { border-color: var(--primary-color); background: #fff; }
+    .btn-apply { background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 4px; transition: 0.2s; }
+    .btn-apply:hover { background: #1d4ed8; }
+    .btn-clear { background: #fee2e2; color: #ef4444; border: none; padding: 10px; border-radius: 8px; font-weight: 700; text-decoration: none; text-align: center; }
+
+    /* ========================================= */
+    /* YENİ NESİL PREMIUM KART TASARIMI (AVATAR) */
+    /* ========================================= */
+    .swipe-arena { display: flex; flex-direction: column; align-items: center; z-index: 50; }
+    .card-stack-wrapper { position: relative; width: 100%; max-width: 380px; height: 58vh; min-height: 460px; max-height: 580px; perspective: 1000px; margin-bottom: 25px; }
+    
+    .empty-state { display: none; position: absolute; inset: 0; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--surface); border-radius: var(--radius-lg); border: 2px dashed #cbd5e1; z-index: 1; padding: 30px; }
+    
+    .swipe-card { position: absolute; width: 100%; height: 100%; background: var(--surface); border-radius: var(--radius-lg); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border: 1px solid #f1f5f9; display: flex; flex-direction: column; overflow: hidden; will-change: transform, opacity; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: grab; }
+    .swipe-card.dragging { transition: none !important; box-shadow: 0 25px 50px rgba(0,0,0,0.15); cursor: grabbing; z-index: 1000; }
+    
+    /* 1. Şık Kapak Fotoğrafı (Gradient) */
+    .card-cover { position: relative; height: 120px; width: 100%; background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); }
+    .match-score-float { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.95); color: #059669; padding: 6px 12px; border-radius: 20px; font-weight: 900; font-size: 0.85rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    
+    /* 2. Dairesel Avatar (Düşük çözünürlüğü gizler, kaliteyi patlatır) */
+    .card-avatar-container { margin-top: -65px; text-align: center; position: relative; z-index: 2; }
+    .card-avatar { width: 130px; height: 130px; border-radius: 50%; border: 6px solid var(--surface); object-fit: cover; background: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+    .card-avatar-fallback { width: 130px; height: 130px; border-radius: 50%; border: 6px solid var(--surface); background: linear-gradient(135deg, #e2e8f0, #cbd5e1); display: inline-flex; align-items: center; justify-content: center; font-size: 3rem; color: #64748b; font-weight: 800; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+
+    /* 3. Kart İçeriği ve Tipografi */
+    .card-body { padding: 15px 25px 25px 25px; flex-grow: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; overflow-y: auto; }
+    .card-header-text h2 { font-size: 1.6rem; font-weight: 900; margin: 0 0 5px 0; color: var(--text-main); letter-spacing: -0.5px; }
+    .card-header-text p { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin: 0; }
+    
+    .candidate-bio { font-size: 0.95rem; color: #334155; line-height: 1.5; font-style: italic; margin: 0; padding: 10px 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; width: 100%; }
+
+    /* Rozetler */
+    .badge-container { 
         position: absolute; 
-        width: 100%; 
-        height: 100%; 
-        background-color: #ffffff; 
-        border-radius: 25px; 
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+        top: 15px; 
+        left: 15px; 
         display: flex; 
-        flex-direction: column; 
-        overflow: hidden;
-        user-select: none; 
-        will-change: transform, opacity;
-        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        border: 1px solid #ecf0f1; 
+        flex-direction: column; /* Yukarıdan aşağıya dizer */
+        align-items: flex-start; /* Sola yaslar */
+        gap: 8px; 
+        z-index: 10; /* Kartın en üstünde kalmasını sağlar */
     }
     
-    .swipe-card.dragging { 
-        transition: none !important; 
-        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
-        z-index: 1000;
+    .info-badge { 
+        background: rgba(255, 255, 255, 0.95); /* Arka planın üzerine oturacağı için hafif saydam beyaz */
+        border: 1px solid rgba(255, 255, 255, 0.5); 
+        color: #334155; 
+        padding: 5px 12px; 
+        border-radius: 12px; 
+        font-size: 0.75rem; 
+        font-weight: 800; 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center; 
+        gap: 5px; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Hafif gölge ile derinlik katıldı */
+        white-space: nowrap; 
+        width: fit-content !important; 
+        flex: 0 0 auto !important; 
     }
     
-    .card-header-bg { height: 140px; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); width: 100%; position: relative; }
-    .profile-img-container { width: 110px; height: 110px; border-radius: 50%; border: 5px solid white; overflow: hidden; position: absolute; bottom: -55px; left: 50%; transform: translateX(-50%); background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .card-content { padding: 65px 20px 20px 20px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-    .card-content h2 { color: #2c3e50; margin: 0; font-size: 1.5em; }
-    .match-score-badge { font-size: 2.5em; font-weight: 900; color: #2ecc71; margin-top: 10px; }
+    /* Renkleri koruyarak şeffaflıkla uyumlu hale getirdik */
+    .info-badge.highlight { color: #1d4ed8; }
+    .badge-diet { color: #15803d; }
+    .badge-alert { color: #b91c1c; }
 
-    .side-panel { display: flex; flex-direction: column; gap: 20px; }
-    .info-card { background: white; border-radius: 15px; padding: 25px; border: 1px solid #f1f2f6; }
-    .admin-panel { background: #fff3e0; padding: 15px; border-radius: 12px; border: 1px dashed #e67e22; width: 100%; margin-bottom: 20px; }
+    /* Butonlar */
+    .action-controls { display: flex; gap: 20px; justify-content: center; width: 100%; max-width: 380px; }
+    .btn-swipe { width: 65px; height: 65px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; font-weight: bold; background: #fff; }
+    .btn-pass { color: var(--danger-color); box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2); }
+    .btn-pass:hover { transform: scale(1.08); box-shadow: 0 12px 30px rgba(239, 68, 68, 0.3); }
+    .btn-pass:active { transform: scale(0.95); }
+    .btn-like { color: var(--success-color); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2); }
+    .btn-like:hover { transform: scale(1.08); box-shadow: 0 12px 30px rgba(16, 185, 129, 0.3); }
+    .btn-like:active { transform: scale(0.95); }
 
-    @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+    /* Sağ Panel Listeleri */
+    .data-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;}
+    .data-item { padding: 8px; border: 1px solid var(--border-soft); border-radius: 8px; display: flex; align-items: center; gap: 10px; background: #fff; }
+    .data-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 </style>
 
-<div id="match-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center;">
-    <h1 style="font-family: 'Pacifico', cursive; font-size: 5em; color: #e74c3c; margin-bottom: 0;">It's a Match!</h1>
-    <p style="font-size: 1.4em; margin-bottom: 30px;">Tebrikler! <strong id="match-name" style="color: #f1c40f;"></strong> ile eşleştin.</p>
+<div id="match-popup" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center;">
+    <div style="font-size: 5rem; margin-bottom: 15px;">🤝</div>
+    <h1 style="font-size: 3.2rem; font-weight: 900; margin-bottom: 10px;">Eşleşme Başarılı!</h1>
+    <p style="font-size: 1.1rem; color: #cbd5e1; margin-bottom: 30px;"><strong id="match-name"></strong> ile sözleşme masasına oturabilirsiniz.</p>
     <div style="display: flex; gap: 15px;">
-        <button onclick="document.getElementById('match-popup').style.display='none'" style="background: transparent; border: 2px solid white; color: white; padding: 12px 30px; border-radius: 30px; font-weight: bold; cursor: pointer;">Kapat</button>
-        <a href="{% url 'matches' %}" style="background: #e74c3c; color: white; padding: 12px 30px; border-radius: 30px; text-decoration: none; font-weight: bold;">Mesaj At</a>
+        <button onclick="document.getElementById('match-popup').style.display='none'" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">Kapat</button>
+        <a id="btn-go-to-table" href="#" style="background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700;">Masaya Git</a>
     </div>
 </div>
 
-<div class="dashboard-container">
-    <div class="dashboard-grid">
-        <div class="swipe-section">
-            {% if request.user.is_superuser %}
-            <div class="admin-panel">
-                <h4 style="color: #d35400; margin: 0 0 10px 0;">🛠️ Yönetici Paneli</h4>
-                <a href="{% url 'generate_bots' %}" style="text-decoration: none; background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">🤖 Bot Üret</a>
-                <a href="{% url 'make_bots_like_me' %}" style="text-decoration: none; background: #e74c3c; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">💖 Like Al</a>
-            </div>
-            {% endif %}
-
-            <div style="width: 100%; max-width: 800px; margin: 0 auto 30px auto; z-index: 100;">
-                <form method="GET" action="{% url 'dashboard' %}" id="premium-filter-form" style="background: white; border-radius: 50px; padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 25px rgba(0,0,0,0.06); border: 1px solid #f1f2f6; flex-wrap: wrap; gap: 10px;">
-                    
-                    <div style="display: flex; align-items: center; padding: 5px 15px; background: #f8f9fa; border-radius: 30px; border: 1px solid #ecf0f1;">
-                        <span style="font-size: 1.2em; margin-right: 8px;">📍</span>
-                        <select name="city" onchange="document.getElementById('premium-filter-form').submit();" style="border: none; background: transparent; font-weight: 700; color: #2c3e50; outline: none; cursor: pointer; font-size: 0.9em;">
-                            <option value="">Tüm Lokasyonlar</option>
-                            {% for city in all_cities %}
-                                <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div style="display: flex; align-items: center; padding: 5px 15px; background: #f8f9fa; border-radius: 30px; border: 1px solid #ecf0f1;">
-                        <span style="font-size: 1.2em; margin-right: 8px;">🛏️</span>
-                        <select name="room_style" onchange="document.getElementById('premium-filter-form').submit();" style="border: none; background: transparent; font-weight: 700; color: #2c3e50; outline: none; cursor: pointer; font-size: 0.9em;">
-                            <option value="">Ev & Oda Tipi</option>
-                            <option value="private" {% if request.GET.room_style == 'private' %}selected{% endif %}>Kendime Ait Oda</option>
-                            <option value="shared" {% if request.GET.room_style == 'shared' %}selected{% endif %}>Oda Paylaşımlı</option>
-                            <option value="entire" {% if request.GET.room_style == 'entire' %}selected{% endif %}>Boş Evime Arkadaş</option>
-                        </select>
-                    </div>
-
-                    <div style="display: flex; align-items: center; padding: 5px 15px; background: #f8f9fa; border-radius: 30px; border: 1px solid #ecf0f1; flex-grow: 1; max-width: 250px;">
-                        <span style="font-size: 1.2em; margin-right: 8px;">💰</span>
-                        <input type="number" name="max_rent" placeholder="Max Kira (TL)" value="{{ request.GET.max_rent }}" style="border: none; background: transparent; font-weight: 700; color: #2c3e50; outline: none; width: 100%; font-size: 0.9em;" onchange="document.getElementById('premium-filter-form').submit();">
-                    </div>
-
-                    {% if selected_city or request.GET.room_style or request.GET.max_rent %}
-                    <a href="{% url 'dashboard' %}?city=" style="background: #ff7675; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3);" title="Filtreleri Temizle">
-                        ✕
-                    </a>
-                    {% endif %}
-                </form>
-            </div>
-            <div class="card-stack-wrapper">
+<div class="dashboard-layout">
+    
+    <aside class="sidebar">
+        <div class="panel-card">
+            <h3 class="panel-title">Arama Kriterleri</h3>
+            <form method="GET" action="{% url 'dashboard' %}" class="filter-form">
                 
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 1;">
-                    <span style="font-size: 4.5em; text-shadow: 0 10px 20px rgba(0,0,0,0.1);">🌍</span>
-                    <h3 style="color: #2c3e50; font-weight: 900; margin-top: 15px;">Herkesi Gördün!</h3>
-                    <p style="color: #7f8c8d; font-size: 0.95em; padding: 0 20px; line-height: 1.5;">Sola kaydırdığın kişilere tekrar bir şans vermek ister misin?</p>
-                    <button onclick="window.location.reload()" style="margin-top: 20px; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 12px 30px; border-radius: 30px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        🔄 Desteyi Başa Sar
-                    </button>
+                <div class="filter-group">
+                    <label>📍 Şehir</label>
+                    <select name="city">
+                        <option value="">Tümü</option>
+                        {% for city in all_cities %}
+                            <option value="{{ city }}" {% if city == request.GET.city %}selected{% endif %}>{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>💰 Max Kira (TL)</label>
+                    <input type="number" name="max_rent" placeholder="Örn: 15000" value="{{ request.GET.max_rent }}">
                 </div>
 
-                <div class="card-stack" id="card-stack" style="position: relative; z-index: 10; width: 100%; height: 100%;">
-                    {% for candidate in candidates %}
-                    <div class="swipe-card" data-id="{{ candidate.user.id }}">
-                        <div class="card-header-bg">
-                            <div class="profile-img-container">
-                                {% if candidate.userphoto_set.first %}
-                                    <img src="{{ candidate.userphoto_set.first.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
-                                {% else %}
-                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f8f9fa; color: #bdc3c7;">?</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div>
-                                <h2 style="font-weight: 800; letter-spacing: -0.5px;">{{ candidate.display_name }}</h2>
-                                
-                                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px;">
-                                    {% if candidate.city == profile.city and profile.city %}
-                                        <span style="background: #e8f8f5; color: #1abc9c; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; border: 1px solid #a3e4d7;">📍 Seninle Aynı Şehir</span>
-                                    {% else %}
-                                        <span style="background: #f4f6f6; color: #7f8c8d; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">📍 {{ candidate.city|default:"Konum Yok" }}</span>
-                                    {% endif %}
-                                    <span style="background: #ebf5fb; color: #2980b9; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">🧠 {{ candidate.mbti_type|default:"MBTI Yok" }}</span>
-                                    <span style="background: #fdf2e9; color: #d35400; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold;">🚭 {% if candidate.preferences.smoking_allowed %}Sigara İçiyor{% else %}Sigara İçmez{% endif %}</span>
-                                </div>
+                <div class="filter-group">
+                    <label>🧠 MBTI Tipi</label>
+                    <select name="mbti">
+                        <option value="">Tümü</option>
+                        <option value="INTJ" {% if request.GET.mbti == 'INTJ' %}selected{% endif %}>INTJ</option>
+                        <option value="ENTP" {% if request.GET.mbti == 'ENTP' %}selected{% endif %}>ENTP</option>
+                        <option value="INFJ" {% if request.GET.mbti == 'INFJ' %}selected{% endif %}>INFJ</option>
+                        <option value="ENFP" {% if request.GET.mbti == 'ENFP' %}selected{% endif %}>ENFP</option>
+                        <option value="ISTJ" {% if request.GET.mbti == 'ISTJ' %}selected{% endif %}>ISTJ</option>
+                        <option value="ESTP" {% if request.GET.mbti == 'ESTP' %}selected{% endif %}>ESTP</option>
+                    </select>
+                </div>
 
-                            </div>
-                            <div class="match-score-badge">%{{ candidate.match_score }}</div>
+                <div class="filter-group">
+                    <label>🚬 Sigara</label>
+                    <select name="smoking">
+                        <option value="">Farketmez</option>
+                        <option value="False" {% if request.GET.smoking == 'False' %}selected{% endif %}>İçmeyenler</option>
+                        <option value="True" {% if request.GET.smoking == 'True' %}selected{% endif %}>İçenler</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>🥗 Beslenme</label>
+                    <select name="diet">
+                        <option value="">Farketmez</option>
+                        <option value="omnivore" {% if request.GET.diet == 'omnivore' %}selected{% endif %}>Hepçil</option>
+                        <option value="vegetarian" {% if request.GET.diet == 'vegetarian' %}selected{% endif %}>Vejetaryen</option>
+                        <option value="vegan" {% if request.GET.diet == 'vegan' %}selected{% endif %}>Vegan</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn-apply">Filtrele</button>
+                
+                {% if request.GET %}
+                    <a href="{% url 'dashboard' %}" class="btn-clear">Sıfırla</a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if request.user.is_superuser %}
+        <div class="panel-card" style="background: #fffbeb; border-color: #fde68a;">
+            <h3 class="panel-title" style="color: #b45309; border-bottom-color: #fcd34d;">Bot Araçları</h3>
+            <div style="display: flex; gap: 10px;">
+                <a href="{% url 'generate_bots' %}" style="flex:1; background: #f59e0b; color: white; padding: 8px; border-radius: 8px; font-weight: 800; text-decoration: none; text-align: center; font-size: 0.8rem;">🤖 Üret</a>
+                <a href="{% url 'make_bots_like_me' %}" style="flex:1; background: #e11d48; color: white; padding: 8px; border-radius: 8px; font-weight: 800; text-decoration: none; text-align: center; font-size: 0.8rem;">💖 Like Al</a>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+
+    <main class="swipe-arena">
+        <div class="card-stack-wrapper">
+            
+            <div class="empty-state">
+                <div style="font-size: 3rem; margin-bottom: 12px;">📡</div>
+                <h3 style="margin: 0 0 8px 0; color: #333;">Aday Kalmadı</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; padding: 0 15px; margin-bottom: 20px;">Filtreleri esnetmeyi deneyin veya havuzu tükettiniz.</p>
+                <button onclick="window.location.reload()" style="background: var(--primary-color); color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 700; cursor: pointer;">Sistemi Yenile</button>
+            </div>
+
+            <div class="card-stack" id="card-stack" style="position: relative; z-index: 10; width: 100%; height: 100%;">
+                {% for candidate in candidates %}
+                <div class="swipe-card" data-id="{{ candidate.user.id }}">
+                    
+                    <div class="card-cover">
+                        <div class="match-score-float">%{{ candidate.match_score }} Uyum</div>
+                    </div>
+                    
+                    <div class="card-avatar-container">
+                        {% if candidate.userphoto_set.first %}
+                            <img src="{{ candidate.userphoto_set.first.image.url }}" class="card-avatar" alt="Profile">
+                        {% else %}
+                            <div class="card-avatar-fallback">{{ candidate.display_name|slice:":1"|upper }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="card-header-text">
+                            <h2>{{ candidate.display_name }}</h2>
+                            <p>📍 {{ candidate.city|default:"Konum Yok" }}</p>
+                        </div>
+
+                        <p class="candidate-bio">"{{ candidate.bio|default:'Merhaba, yeni insanlarla tanışmak için buradayım.' }}"</p>
+                        
+                        <div class="badge-container">
+                            <span class="info-badge highlight">🧠 {{ candidate.mbti_type|default:"Bilinmiyor" }}</span>
+                            <span class="info-badge">{% if candidate.smoking_allowed %}🚬 İçer{% else %}🚭 İçmez{% endif %}</span>
+                            
+                            <span class="info-badge badge-diet">
+                                {% if candidate.diet_preference == 'vegan' %}🌱 Vegan
+                                {% elif candidate.diet_preference == 'vegetarian' %}🥦 Vejetaryen
+                                {% else %}🥩 Hepçil{% endif %}
+                            </span>
+                            
+                            {% if candidate.has_pet %}
+                                <span class="info-badge">🐾 Evcil Hayvan</span>
+                            {% endif %}
+                            {% if candidate.has_allergy %}
+                                <span class="info-badge badge-alert">⚠️ Alerjik</span>
+                            {% endif %}
                         </div>
                     </div>
-                    {% empty %}
-                        {% endfor %}
+
                 </div>
+                {% empty %}
+                {% endfor %}
             </div>
         </div>
 
-        <div class="side-panel">
-            <div class="info-card">
-                <h3>Profil Tamamlama</h3>
-                <div style="background: #ecf0f1; border-radius: 10px; height: 12px; overflow: hidden; margin-bottom: 10px;">
-                    <div style="background: #2ecc71; width: {{ completion_percentage }}%; height: 100%;"></div>
-                </div>
-                <p style="text-align: right; font-weight: bold; color: #2ecc71; margin: 0;">%{{ completion_percentage }}</p>
-            </div>
-            <div class="info-card">
-                <h3>Son Aktiviteler</h3>
-                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9em; color: #7f8c8d;">
-                    {% for activity in recent_activities %}
-                        <li style="padding: 10px 0; border-bottom: 1px solid #f4f7f6;">{{ activity }}</li>
-                    {% empty %}
-                        <li style="padding: 10px 0; text-align: center;">Henüz hareket yok.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="info-card" style="background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%); border: none;">
-    <h3 style="color: #634a3a;">✨ Seni Beğenenler</h3>
-    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-        {% for like in who_liked_me %}
-            <div style="position: relative; width: 60px; height: 60px;">
-                <img src="{{ like.from_user.profile.userphoto_set.first.image.url }}" 
-                     style="width: 100%; height: 100%; border-radius: 50%; filter: blur(6px); border: 2px solid white;">
-                <span style="position: absolute; bottom: 0; right: 0; background: #2ecc71; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></span>
-            </div>
-        {% empty %}
-            <p style="font-size: 0.8em; color: #8d7d77; text-align: center;">Yeni birilerini keşfetmeye devam et!</p>
-        {% endfor %}
-    </div>
-    <p style="font-size: 0.8em; text-align: center; margin-top: 10px; color: #634a3a; font-weight: bold;">
-        {{ who_liked_me.count }} kişi seni bekliyor!
-    </p>
-</div>
+        {% if candidates %}
+        <div class="action-controls" id="action-controls">
+            <button id="btn-swipe-left" class="btn-swipe btn-pass">✕</button>
+            <button id="btn-swipe-right" class="btn-swipe btn-like">♥</button>
         </div>
-    </div>
+        {% endif %}
+    </main>
+
+    <aside class="sidebar">
+        
+        <div class="panel-card" style="background: #eff6ff; border-color: #bfdbfe;">
+            <h3 class="panel-title" style="color: #1d4ed8; border-bottom-color: #93c5fd; margin-bottom: 10px;">📩 Bildirim Merkezi</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                Şu an <strong style="color: #1d4ed8; font-size: 1rem;">{{ unread_count|default:"0" }}</strong> okunmamış mesajınız var.
+            </p>
+            <a href="{% url 'matches' %}" style="display: block; background: var(--primary-color); color: white; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 800; text-decoration: none; transition: 0.2s;">
+                Mesajlara Git
+            </a>
+        </div>
+
+        <div class="panel-card">
+            <h3 class="panel-title">🤝 Aktif Sözleşmeler</h3>
+            <div class="data-list">
+                {% for match in matches|slice:":4" %}
+                    <div class="data-item">
+                        <img src="{{ match.profile.userphoto_set.first.image.url }}" class="data-avatar" onerror="this.src='https://via.placeholder.prompt/45'">
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin: 0; font-size: 0.85rem;">{{ match.profile.user.first_name|default:match.profile.user.username }}</h4>
+                            <p style="margin: 0; font-size: 0.75rem; color: var(--success-color); font-weight: 600;">%{{ match.score }} Uyum</p>
+                        </div>
+                        <a href="{% url 'negotiation_board' match.id %}" style="background: var(--text-main); color: white; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: bold;">Masaya Git</a>
+                    </div>
+                {% empty %}
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; text-align: center;">Sözleşme bekleyen eşleşmeniz yok.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="panel-card" style="border: 2px solid #fef08a; background: #fefce8;">
+            <h3 class="panel-title" style="color: #b45309; border-bottom-color: #fde68a;">✨ Bekleyen Beğeniler <span style="background: #fde047; color: #854d0e; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; float: right;">{{ who_liked_me.count }}</span></h3>
+            <div style="display: flex; gap: 6px; margin-top: 10px;">
+                {% for like in who_liked_me|slice:":5" %}
+                    <img src="{{ like.from_user.profile.userphoto_set.first.image.url }}" style="width: 42px; height: 42px; border-radius: 50%; filter: blur(4px); border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                {% empty %}
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">Henüz bekleyen etkileşim yok.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+    </aside>
 </div>
 
 <script>
-    // Her 3 saniyede bir yeni eşleşme var mı diye radarı çalıştır
-    setInterval(() => {
-        fetch('{% url "check_new_matches" %}')
-            .then(res => res.json())
-            .then(data => {
-                if(data.has_new) {
-                    window.location.href = `/negotiation/${data.match_id}/`;
-                }
-            });
-    }, 3000);
-    
     document.addEventListener('DOMContentLoaded', function() {
         const stack = document.getElementById('card-stack');
+        const controls = document.getElementById('action-controls');
         let cards = Array.from(stack.querySelectorAll('.swipe-card')).reverse();
 
         function sendSwipeData(targetId, swipeDirection) {
             fetch('/api/swipe/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
                 body: JSON.stringify({ 'target_user_id': targetId, 'action': swipeDirection })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'match') {
-                    window.location.href = `/match-success/${data.target_user_id}/`;
+                    document.getElementById('match-name').innerText = data.matched_name;
+                    document.getElementById('btn-go-to-table').href = `/negotiation/${data.match_id}/`;
+                    document.getElementById('match-popup').style.display = 'flex';
                 }
             });
         }
@@ -239,20 +333,45 @@
         function initCards() {
             cards.forEach((card, index) => {
                 card.style.zIndex = cards.length - index;
-                card.style.transform = `translate3d(0, -${20 * index}px, 0) scale(${(25 - index) / 25})`;
+                card.style.transform = `translateY(${index * -12}px) scale(${1 - (index * 0.05)})`;
                 card.style.opacity = index > 2 ? 0 : 1;
             });
-            if (cards.length === 0) {
-                stack.style.pointerEvents = 'none'; 
-            }
 
-            cards.forEach((card, index) => {
-                card.style.zIndex = cards.length - index;
-                card.style.transform = `translate3d(0, -${20 * index}px, 0) scale(${(25 - index) / 25})`;
-                card.style.opacity = index > 2 ? 0 : 1;
-            });
+            if (cards.length === 0) {
+                stack.style.pointerEvents = 'none';
+                if (controls) controls.style.display = 'none';
+                document.querySelector('.empty-state').style.display = 'flex';
+            } else {
+                document.querySelector('.empty-state').style.display = 'none';
+                if (controls) controls.style.display = 'flex';
+            }
             if (cards.length > 0) initHammer(cards[0]);
         }
+
+        function triggerSwipe(direction) {
+            if (cards.length === 0) return;
+            const card = cards[0];
+            const xMovement = direction === 'right' ? window.innerWidth : -window.innerWidth;
+            const rotation = direction === 'right' ? 30 : -30;
+            
+            card.style.transition = 'transform 0.4s ease-out, opacity 0.3s';
+            card.style.transform = `translate(${xMovement}px, -50px) rotate(${rotation}deg)`;
+            card.style.opacity = '0';
+
+            const targetId = card.getAttribute('data-id');
+            
+            setTimeout(() => {
+                card.remove();
+                cards.shift();
+                initCards();
+                sendSwipeData(targetId, direction);
+            }, 300);
+        }
+
+        const btnLeft = document.getElementById('btn-swipe-left');
+        const btnRight = document.getElementById('btn-swipe-right');
+        if (btnLeft) btnLeft.addEventListener('click', () => triggerSwipe('left'));
+        if (btnRight) btnRight.addEventListener('click', () => triggerSwipe('right'));
 
         function initHammer(card) {
             const hammer = new Hammer(card);
@@ -260,31 +379,31 @@
 
             hammer.on('pan', (e) => {
                 card.classList.add('dragging');
-                card.style.transform = `translate3d(${e.deltaX}px, ${e.deltaY}px, 0) rotate(${e.deltaX * 0.05}deg)`;
+                card.style.transform = `translate(${e.deltaX}px, ${e.deltaY}px) rotate(${e.deltaX * 0.03}deg)`;
             });
 
             hammer.on('panend', (e) => {
                 card.classList.remove('dragging');
-                const threshold = window.innerWidth * 0.2;
+                const threshold = window.innerWidth * 0.15;
                 
                 if (Math.abs(e.deltaX) > threshold) {
                     const direction = e.deltaX > 0 ? 1 : -1;
-                    card.style.transition = 'transform 0.3s ease-in, opacity 0.3s';
-                    card.style.transform = `translate3d(${direction * window.innerWidth * 1.2}px, ${e.deltaY}px, 0) rotate(${direction * 40}deg)`;
+                    const actionName = e.deltaX > 0 ? 'right' : 'left';
+                    card.style.transition = 'transform 0.4s ease-out, opacity 0.3s';
+                    card.style.transform = `translate(${direction * window.innerWidth}px, ${e.deltaY}px) rotate(${direction * 30}deg)`;
                     card.style.opacity = '0';
 
                     const targetId = card.getAttribute('data-id');
-                    const action = e.deltaX > 0 ? 'right' : 'left';
                     
                     setTimeout(() => {
                         card.remove();
                         cards.shift();
                         initCards();
-                        sendSwipeData(targetId, action);
-                    }, 200);
+                        sendSwipeData(targetId, actionName);
+                    }, 300);
                 } else {
-                    card.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                    card.style.transform = `translate3d(0, 0, 0) rotate(0deg)`;
+                    card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    card.style.transform = `translate(0px, 0px) rotate(0deg)`;
                     initCards();
                 }
             });
@@ -293,44 +412,3 @@
     });
 </script>
 {% endblock %}
-
-<div class="match-container">
-    {% for match in matches %}
-    <div class="match-card">
-        <img src="{{ match.profile.userphoto_set.first.image.url }}" alt="{{ match.profile.user.first_name }}">
-        
-        <div class="match-info">
-            <h3>{{ match.profile.user.first_name }} {{ match.profile.user.last_name }}</h3>
-            <p><strong>Uyum Skoru: %{{ match.score }}</strong></p>
-            <p>{{ match.profile.city }} | {{ match.profile.mbti_type }}</p>
-            <p>{{ match.profile.bio|truncatechars:100 }}</p>
-            <button class="btn-chat">Mesaj At</button>
-        </div>
-    </div>
-    {% empty %}
-    <p>Henüz uygun bir eşleşme bulunamadı.</p>
-    {% endfor %}
-</div>
-<span class="diet-icon">
-    {% if candidate.diet_preference == 'vegan' %}
-        🌱 (Vegan)
-    {% elif candidate.diet_preference == 'vegetarian' %}
-        🥦 (Vejetaryen)
-    {% else %}
-        🥩 (Hepçil)
-    {% endif %}
-</span>
-
-<div class="profile-card">
-    <div class="badge-container">
-        {% if candidate.has_pet %}
-            <span class="badge badge-pet" title="Evcil Hayvanı Var">🐾 Patili Dostu</span>
-        {% endif %}
-        
-        {% if candidate.has_allergy %}
-            <span class="badge badge-allergy" title="Alerjisi Var">⚠️ Alerjisi Var</span>
-        {% endif %}
-    </div>
-
-    <img src="{{ candidate.userphoto_set.first.image.url }}" class="profile-img">
-    </div>

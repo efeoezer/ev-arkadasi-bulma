@@ -45,7 +45,6 @@ def dashboard(request):
     unread_count = unread_messages.count()
 
     # 3. SENİ BEĞENENLER
-    # Senin henüz etkileşime girmediğin (swipe yapmadığın) ama seni beğenenler.
     people_who_liked_me_query = Like.objects.filter(to_user=request.user).exclude(
         from_user__id__in=swiped_user_ids
     ).select_related('from_user__profile')
@@ -54,7 +53,6 @@ def dashboard(request):
     recent_activities = []
     likes_count = people_who_liked_me_query.count()
 
-    # --- Mesaj Bildirimleri ---
     if unread_count > 0:
         recent_activities.append(f"📩 {unread_count} yeni mesajın var! Cevaplamak için sabırsızlanıyorlar.")
     
@@ -71,20 +69,52 @@ def dashboard(request):
     if profile.mbti_type: score += 25
     if profile.userphoto_set.exists(): score += 25
 
-    # 6. ADAY LİSTESİ VE FİLTRELEME
-    room_style = request.GET.get('room_style')
-    max_rent = request.GET.get('max_rent')
-
-    selected_city = request.GET.get('city', '')
-    
+    # 6. ADAY LİSTESİ VE ZENGİN FİLTRELEME MOTORU
     candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
     
+    # Şehir Filtresi
+    selected_city = request.GET.get('city', '')
     if selected_city:
         candidates_query = candidates_query.filter(city=selected_city)
+        
+    # Oda/Ev Tipi Filtresi
+    room_style = request.GET.get('room_style')
     if room_style:
-        candidates_query = candidates_query.filter(preferences__room_type=room_style)
+        try:
+            candidates_query = candidates_query.filter(room_type=room_style)
+        except Exception:
+            pass
+
+    # Bütçe Filtresi (Çökme hatası düzeltildi: Modeldeki alan budget_limit olarak geçiyor)
+    max_rent = request.GET.get('max_rent')
     if max_rent and max_rent.isdigit():
-        candidates_query = candidates_query.filter(preferences__max_budget__lte=int(max_rent))
+        try:
+            candidates_query = candidates_query.filter(budget_limit__lte=int(max_rent))
+        except Exception:
+            pass
+
+    # MBTI Filtresi
+    mbti = request.GET.get('mbti')
+    if mbti:
+        candidates_query = candidates_query.filter(mbti_type=mbti)
+
+    # Beslenme (Diyet) Filtresi
+    diet = request.GET.get('diet')
+    if diet:
+        candidates_query = candidates_query.filter(diet_preference=diet)
+
+    # Sigara Filtresi
+    smoking = request.GET.get('smoking')
+    if smoking == 'True':
+        try:
+            candidates_query = candidates_query.filter(smoking_allowed=True)
+        except Exception:
+            pass
+    elif smoking == 'False':
+        try:
+            candidates_query = candidates_query.filter(smoking_allowed=False)
+        except Exception:
+            pass
 
     # Adayları çek ve skorla
     candidates = candidates_query.order_by('-id')[:6]
@@ -102,7 +132,7 @@ def dashboard(request):
         'candidates': candidates,
         'all_cities': all_cities,
         'selected_city': selected_city,
-        'who_liked_me': people_who_liked_me_query[:3], # Sadece ilk 3 kişiyi blurlu göster
+        'who_liked_me': people_who_liked_me_query[:5], 
     })
 
 @csrf_exempt
@@ -119,10 +149,11 @@ def swipe_api(request):
                 is_mutual = Like.objects.filter(from_user=target_user, to_user=request.user).exists()
 
                 if is_mutual:
-                    Match.objects.get_or_create(user_1=request.user, user_2=target_user, defaults={'algorithm_score': 0})
+                    match_obj, created = Match.objects.get_or_create(user_1=request.user, user_2=target_user, defaults={'algorithm_score': 0})
                     return JsonResponse({'status': 'match',
                                          'matched_name': target_user.first_name or target_user.username,
-                                         'target_user_id': target_user.id
+                                         'target_user_id': target_user.id,
+                                         'match_id': match_obj.id
                                         })
                 
                 return JsonResponse({'status': 'success', 'message': 'Beğenildi'})
@@ -281,6 +312,48 @@ def negotiation_board(request, match_id):
         negotiation.user2_koz = 2
         negotiation.current_turn = random.choice([match.user_1, match.user_2])
         negotiation.save()
+
+    # ==========================================
+    # BOT YAPAY ZEKASI (Mini Karar Motoru)
+    # ==========================================
+    if negotiation.status == 'ONGOING' and 'bot' in negotiation.current_turn.username.lower():
+        conflicts = negotiation.current_offer
+        pending_keys = [k for k, v in conflicts.items() if v['status'] == 'pending']
+        
+        if pending_keys:
+            # Bot rastgele bir kriz maddesi seçer
+            key = random.choice(pending_keys)
+            data = conflicts[key]
+            is_bot_user1 = (negotiation.current_turn == match.user_1)
+            bot_koz = negotiation.user1_koz if is_bot_user1 else negotiation.user2_koz
+            
+            # Botun kozu varsa %50 ihtimalle sana ŞART DAYATIR
+            if bot_koz > 0 and random.choice([True, False]):
+                if is_bot_user1:
+                    data['final'] = data['p1']; data['winner'] = 'u1'; negotiation.user1_koz -= 1
+                else:
+                    data['final'] = data['p2']; data['winner'] = 'u2'; negotiation.user2_koz -= 1
+            else: 
+                # Kozu yoksa veya kullanmak istemezse TAVİZ VERİR
+                if is_bot_user1:
+                    data['final'] = data['p2']; data['winner'] = 'u2'; negotiation.user1_koz += 1
+                else:
+                    data['final'] = data['p1']; data['winner'] = 'u1'; negotiation.user2_koz += 1
+            
+            data['status'] = 'resolved'
+            
+            # Tüm pürüzler çözüldü mü?
+            if not any(v['status'] == 'pending' for v in conflicts.values()):
+                negotiation.status = 'ACCEPTED'
+            else:
+                # Oynamasını bitirdi, sırayı sana salıyor
+                negotiation.current_turn = request.user
+            
+            negotiation.save()
+
+    # ==========================================
+    # KULLANICI HAMLESİ (Normal POST işlemleri)
+    # ==========================================
 
     if request.method == "POST":
         action = request.POST.get('action')
