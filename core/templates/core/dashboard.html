@@ -412,3 +412,25 @@
     });
 </script>
 {% endblock %}
+
+<div class="energy-bars-container mt-3">
+    <div class="energy-bar-wrapper mb-2">
+        <div class="d-flex justify-content-between mb-1">
+            <span class="bar-label"><i class="fas fa-users"></i> Misafir Toleransı</span>
+            <span class="bar-value">{{ candidate.preferences.guest_frequency }}/5</span>
+        </div>
+        <div class="energy-bar-bg">
+            <div class="energy-bar-fill guest-fill" style="width: {{ candidate.preferences.guest_frequency_percent }}%;"></div>
+        </div>
+    </div>
+
+    <div class="energy-bar-wrapper">
+        <div class="d-flex justify-content-between mb-1">
+            <span class="bar-label"><i class="fas fa-volume-up"></i> Gürültü Toleransı</span>
+            <span class="bar-value">{{ candidate.preferences.noise_tolerance }}/5</span>
+        </div>
+        <div class="energy-bar-bg">
+            <div class="energy-bar-fill noise-fill" style="width: {{ candidate.preferences.noise_tolerance_percent }}%;"></div>
+        </div>
+    </div>
+</div>
