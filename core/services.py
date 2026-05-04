@@ -84,7 +84,7 @@ def generate_match_score(profile1, profile2):
     return min(final_score, 100)
 
 
-    def generate_match_score(user1, user2):
+    #def generate_match_score(user1, user2):
     # 1. Kullanıcıların tercih bilgilerini çekiyoruz
     pref1 = getattr(user1, 'preferences', None)
     pref2 = getattr(user2, 'preferences', None)
@@ -209,15 +209,12 @@ def get_icebreaker_prompts(user1_profile, user2_profile):
     if user1_profile.mbti_type == user2_profile.mbti_type:
         prompts.append(f"İkiniz de {user1_profile.mbti_type} tipisiniz! Evin kuralları konusunda ne kadar titizsiniz?")
     
-    # 2. Ortak Yaşam Tarzı (RoommatePreference üzerinden)
-    pref1 = getattr(user1_profile, 'preferences', None)
-    pref2 = getattr(user2_profile, 'preferences', None)
-    
-    if pref1 and pref2:
-        if pref1.has_pet and pref2.has_pet:
-            prompts.append("İkinizin de evcil hayvanı var! Onları tanıştırmaya ne dersiniz?")
-        if pref1.dietary_preference == pref2.dietary_preference and pref1.dietary_preference != 'none':
-            prompts.append(f"İkiniz de {pref1.get_dietary_preference_display()} besleniyorsunuz. Ortak yemek yapmak harika olabilir!")
+    # 2. Ortak Yaşam Tarzı (Artık doğrudan Profile üzerinden çekiliyor)
+    if user1_profile.has_pet and user2_profile.has_pet:
+        prompts.append("İkinizin de evcil hayvanı var! Onları tanıştırmaya ne dersiniz?")
+        
+    if user1_profile.diet_preference == user2_profile.diet_preference and user1_profile.diet_preference != 'none':
+        prompts.append("İkiniz de aynı şekilde besleniyorsunuz. Ortak yemek yapmak harika olabilir!")
 
     # Eğer hiçbir ortak nokta yoksa genel bir soru
     if not prompts:
