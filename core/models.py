@@ -50,6 +50,19 @@ class RoommatePreference(models.Model):
     def __str__(self):
         return f"{self.profile.user.username} Tercihleri"
 
+    # Misafir sıklığını % cinsine çevirir (Örn: 3 -> %60)
+    @property
+    def guest_frequency_percent(self):
+        # 1-5 skalasını yüzdeye vurmak için: (değer / 5) * 100
+        return min(max(int((self.guest_frequency / 5) * 100), 0), 100)
+
+    # Gürültü toleransını % cinsine çevirir (Örn: 4 -> %80)
+    @property
+    def noise_tolerance_percent(self):
+        return min(max(int((self.noise_tolerance / 5) * 100), 0), 100)
+        
+        
+
 # EŞLEŞME MOTORU TABLOSU
 class Match(models.Model):
     user_1 = models.ForeignKey(User, related_name='matches_as_user1', on_delete=models.CASCADE)
