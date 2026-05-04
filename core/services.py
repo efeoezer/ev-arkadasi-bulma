@@ -83,6 +83,50 @@ def generate_match_score(profile1, profile2):
     final_score = total_score + location_bonus
     return min(final_score, 100)
 
+
+    def generate_match_score(user1, user2):
+    # 1. Kullanıcıların tercih bilgilerini çekiyoruz
+    pref1 = getattr(user1, 'preferences', None)
+    pref2 = getattr(user2, 'preferences', None)
+    
+    # Tercihler tanımlanmamışsa varsayılan bir başlangıç puanı verelim
+    if not pref1 or not pref2:
+        return 0.0
+
+    # ---------------------------------------------------------
+    # KRİTİK ALAN KONTROLÜ: Temizlik Seviyesi (1 - 5 Skalası)
+    # ---------------------------------------------------------
+    cleanliness_diff = abs(pref1.cleanliness_level - pref2.cleanliness_level)
+    
+    # Senaryo A: Katı Filtreleme (Hard Filter)
+    # Temizlik takıntısı 5 olan biri ile 1 veya 2 olan birini kesinlikle eşleştirme!
+    if cleanliness_diff >= 3:
+        return 0.0  # Puanı sıfıra çekerek eşleşme listesinden eliyoruz.
+
+    # ---------------------------------------------------------
+    # NORMAL ALGORİTMA HESAPLAMASI (Kosinüs Benzerliği veya MBTI)
+    # ---------------------------------------------------------
+    # Örnek başlangıç puanı hesaplama (MBTI ve diğer testler üzerinden)
+    base_score = calculate_mbti_and_lifestyle_score(user1, user2)
+
+    # ---------------------------------------------------------
+    # Senaryo B: Ceza Puanı (Penalty)
+    # Fark tam olarak 2 ise (Örn: 3 ve 5), uyum fena değildir ama yine de sorun çıkabilir.
+    # Genel skordan %15 veya sabit 15 puan ceza kırıyoruz.
+    if cleanliness_diff == 2:
+        base_score = base_score * 0.85  # %15 ceza uygula
+        # Alternatif olarak: base_score -= 15
+
+    # ---------------------------------------------------------
+    # Ekstra Kontrol: Temizlik Sıklığı (Haftalık Temizlik)
+    # ---------------------------------------------------------
+    freq_diff = abs(pref1.cleaning_frequency - pref2.cleaning_frequency)
+    if freq_diff >= 4:  # Biri haftada 5 kere temizliyor, diğeri hiç (1)
+        base_score = base_score * 0.90  # %10 ek ceza
+
+    # Skorun 0 ile 100 arasında kalmasını garanti altına alıyoruz
+    return max(0.0, min(float(base_score), 100.0))
+
 def generate_bot_users(count=10):
     url = f"https://randomuser.me/api/?results={count}&nat=tr,gb,de" # gb = İngiltere (en yerine gb daha iyi sonuç verir)
     response = requests.get(url, verify=False)
