@@ -397,7 +397,12 @@ document.querySelector('form').addEventListener('submit', function(e) {
                 }
             }).then(response => {
                 if (response.ok) window.location.reload(); // Başarılıysa sayfayı yenile
-            });
+            } else {
+                   alert("Bir hata oluştu!");
+                   document.querySelector('button[type="submit"]').innerText = originalButtonText;
+                   document.querySelector('button[type="submit"]').disabled = false;
+            }
+    });
         });
     }
 });
