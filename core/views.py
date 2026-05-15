@@ -30,6 +30,50 @@ def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
     swiped_user_ids = Like.objects.filter(from_user=request.user).values_list('to_user_id', flat=True)
 
+    # Oturumdaki (Session) filtreleri kontrol et 
+    filters = request.session.get('user_filters', {})
+
+    # Eğer yeni bir GET isteği geldiyse filtreleri güncelle 
+    filter_keys = ['city', 'room_style', 'max_rent', 'mbti', 'diet', 'smoking']
+    if any(key in request.GET for key in filter_keys):
+        filters = {key: request.GET.get(key, '') for key in filter_keys}
+        request.session['user_filters'] = filters # Yeni değerleri oturuma kaydet 
+
+    # ... (Onboarding ve mesaj kontrolleri kısımları aynı kalacak) ...
+
+    # 6. ADAY LİSTESİ VE ZENGİN FİLTRELEME MOTORU (Filtreleri oturumdan oku)
+    candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
+    
+    # Şehir Filtresi [cite: 1996]
+    selected_city = filters.get('city', '')
+    if selected_city:
+        candidates_query = candidates_query.filter(city=selected_city)
+        
+    # Oda/Ev Tipi Filtresi [cite: 1339]
+    room_style = filters.get('room_style', '')
+    if room_style:
+        candidates_query = candidates_query.filter(room_type=room_style)
+
+    # Bütçe Filtresi [cite: 1339]
+    max_rent = filters.get('max_rent', '')
+    if max_rent and max_rent.isdigit():
+        candidates_query = candidates_query.filter(budget_limit__lte=int(max_rent))
+
+    # MBTI Filtresi [cite: 2562]
+    mbti = filters.get('mbti', '')
+    if mbti:
+        candidates_query = candidates_query.filter(mbti_type=mbti)
+
+    # Beslenme (Diyet) Filtresi [cite: 751]
+    diet = filters.get('diet', '')
+    if diet:
+        candidates_query = candidates_query.filter(diet_preference=diet)
+
+    # Sigara Filtresi [cite: 2562]
+    smoking = filters.get('smoking', '')
+    if smoking:
+        candidates_query = candidates_query.filter(smoking_allowed=(smoking == 'True'))
+    
     # Kontrol
     if not profile.is_onboarded:
         return redirect('onboarding')
@@ -133,8 +177,13 @@ def dashboard(request):
         'all_cities': all_cities,
         'selected_city': selected_city,
         'who_liked_me': people_who_liked_me_query[:5], 
+        'active_filters': filters, # Formda değerleri geri göstermek için
     })
 
+def reset_filters(request):
+    if 'user_filters' in request.session:
+        del request.session['user_filters']
+    return redirect('dashboard')
 @csrf_exempt
 @login_required
 def swipe_api(request):
