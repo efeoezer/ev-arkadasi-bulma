@@ -434,3 +434,16 @@
         </div>
     </div>
 </div>
+
+<select name="city">
+    <option value="">Tüm Şehirler</option>
+    {% for city in all_cities %}
+        <option value="{{ city }}" {% if active_filters.city == city %}selected{% endif %}>
+            {{ city }}
+        </option>
+    {% endfor %}
+</select>
+
+<input type="number" name="max_rent" value="{{ active_filters.max_rent }}" placeholder="Maks. Bütçe">
+
+<a href="{% url 'reset_filters' %}" class="btn btn-outline-danger">Filtreleri Sıfırla</a>
