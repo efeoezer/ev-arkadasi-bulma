@@ -9,7 +9,7 @@ from django.db.models import Q
 from accounts.models import Profile
 from .models import Like, Match, Negotiation
 from .services import generate_match_score, generate_bot_users
-from chat.models import Message 
+from chat.models import Message
 
 TR_MAP = {
     'DAILY': 'Her Gün', 'WEEKLY': 'Haftada Bir', 'BIWEEKLY': 'İki Haftada Bir', 'RELAXED': 'Kirlendikçe',
@@ -39,37 +39,35 @@ def dashboard(request):
         filters = {key: request.GET.get(key, '') for key in filter_keys}
         request.session['user_filters'] = filters # Yeni değerleri oturuma kaydet 
 
-    # ... (Onboarding ve mesaj kontrolleri kısımları aynı kalacak) ...
-
     # 6. ADAY LİSTESİ VE ZENGİN FİLTRELEME MOTORU (Filtreleri oturumdan oku)
     candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
     
-    # Şehir Filtresi [cite: 1996]
+    # Şehir Filtresi
     selected_city = filters.get('city', '')
     if selected_city:
         candidates_query = candidates_query.filter(city=selected_city)
         
-    # Oda/Ev Tipi Filtresi [cite: 1339]
+    # Oda/Ev Tipi Filtresi
     room_style = filters.get('room_style', '')
     if room_style:
         candidates_query = candidates_query.filter(room_type=room_style)
 
-    # Bütçe Filtresi [cite: 1339]
+    # Bütçe Filtresi
     max_rent = filters.get('max_rent', '')
     if max_rent and max_rent.isdigit():
         candidates_query = candidates_query.filter(budget_limit__lte=int(max_rent))
 
-    # MBTI Filtresi [cite: 2562]
+    # MBTI Filtresi
     mbti = filters.get('mbti', '')
     if mbti:
         candidates_query = candidates_query.filter(mbti_type=mbti)
 
-    # Beslenme (Diyet) Filtresi [cite: 751]
+    # Beslenme (Diyet) Filtresi
     diet = filters.get('diet', '')
     if diet:
         candidates_query = candidates_query.filter(diet_preference=diet)
 
-    # Sigara Filtresi [cite: 2562]
+    # Sigara Filtresi
     smoking = filters.get('smoking', '')
     if smoking:
         candidates_query = candidates_query.filter(smoking_allowed=(smoking == 'True'))
@@ -113,53 +111,6 @@ def dashboard(request):
     if profile.mbti_type: score += 25
     if profile.userphoto_set.exists(): score += 25
 
-    # 6. ADAY LİSTESİ VE ZENGİN FİLTRELEME MOTORU
-    candidates_query = Profile.objects.exclude(user=request.user).exclude(user__id__in=swiped_user_ids)
-    
-    # Şehir Filtresi
-    selected_city = request.GET.get('city', '')
-    if selected_city:
-        candidates_query = candidates_query.filter(city=selected_city)
-        
-    # Oda/Ev Tipi Filtresi
-    room_style = request.GET.get('room_style')
-    if room_style:
-        try:
-            candidates_query = candidates_query.filter(room_type=room_style)
-        except Exception:
-            pass
-
-    # Bütçe Filtresi (Çökme hatası düzeltildi: Modeldeki alan budget_limit olarak geçiyor)
-    max_rent = request.GET.get('max_rent')
-    if max_rent and max_rent.isdigit():
-        try:
-            candidates_query = candidates_query.filter(budget_limit__lte=int(max_rent))
-        except Exception:
-            pass
-
-    # MBTI Filtresi
-    mbti = request.GET.get('mbti')
-    if mbti:
-        candidates_query = candidates_query.filter(mbti_type=mbti)
-
-    # Beslenme (Diyet) Filtresi
-    diet = request.GET.get('diet')
-    if diet:
-        candidates_query = candidates_query.filter(diet_preference=diet)
-
-    # Sigara Filtresi
-    smoking = request.GET.get('smoking')
-    if smoking == 'True':
-        try:
-            candidates_query = candidates_query.filter(smoking_allowed=True)
-        except Exception:
-            pass
-    elif smoking == 'False':
-        try:
-            candidates_query = candidates_query.filter(smoking_allowed=False)
-        except Exception:
-            pass
-
     # Adayları çek ve skorla
     candidates = candidates_query.order_by('-id')[:6]
     for candidate in candidates:
@@ -180,10 +131,12 @@ def dashboard(request):
         'active_filters': filters, # Formda değerleri geri göstermek için
     })
 
+@login_required
 def reset_filters(request):
     if 'user_filters' in request.session:
         del request.session['user_filters']
     return redirect('dashboard')
+
 @csrf_exempt
 @login_required
 def swipe_api(request):
@@ -247,6 +200,7 @@ def make_bots_like_me(request):
             Like.objects.get_or_create(from_user=bot, to_user=request.user)
     return redirect('dashboard')
 
+@login_required
 def generate_bots_view(request):
     if request.user.is_superuser:
         generate_bot_users(5)

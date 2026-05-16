@@ -63,20 +63,30 @@
     
     .candidate-bio { font-size: 0.95rem; color: #334155; line-height: 1.5; font-style: italic; margin: 0; padding: 10px 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; width: 100%; }
 
+    /* Tolerans Barları (Yeni Eklenen Alan) */
+    .energy-bars-container { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+    .energy-bar-wrapper { width: 100%; text-align: left; }
+    .bar-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+    .bar-value { font-size: 0.8rem; font-weight: 800; color: var(--text-main); float: right; }
+    .energy-bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+    .energy-bar-fill { height: 100%; border-radius: 4px; }
+    .guest-fill { background: #f59e0b; } /* Turuncu */
+    .noise-fill { background: #8b5cf6; } /* Mor */
+
     /* Rozetler */
     .badge-container { 
         position: absolute; 
         top: 15px; 
         left: 15px; 
         display: flex; 
-        flex-direction: column; /* Yukarıdan aşağıya dizer */
-        align-items: flex-start; /* Sola yaslar */
+        flex-direction: column; 
+        align-items: flex-start; 
         gap: 8px; 
-        z-index: 10; /* Kartın en üstünde kalmasını sağlar */
+        z-index: 10; 
     }
     
     .info-badge { 
-        background: rgba(255, 255, 255, 0.95); /* Arka planın üzerine oturacağı için hafif saydam beyaz */
+        background: rgba(255, 255, 255, 0.95); 
         border: 1px solid rgba(255, 255, 255, 0.5); 
         color: #334155; 
         padding: 5px 12px; 
@@ -87,13 +97,12 @@
         align-items: center; 
         justify-content: center; 
         gap: 5px; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Hafif gölge ile derinlik katıldı */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
         white-space: nowrap; 
         width: fit-content !important; 
         flex: 0 0 auto !important; 
     }
     
-    /* Renkleri koruyarak şeffaflıkla uyumlu hale getirdik */
     .info-badge.highlight { color: #1d4ed8; }
     .badge-diet { color: #15803d; }
     .badge-alert { color: #b91c1c; }
@@ -230,6 +239,28 @@
                         </div>
 
                         <p class="candidate-bio">"{{ candidate.bio|default:'Merhaba, yeni insanlarla tanışmak için buradayım.' }}"</p>
+                        
+                        <!-- YENİ EKLENEN ENERJİ BARLARI BURAYA ALINDI -->
+                        <div class="energy-bars-container">
+                            <div class="energy-bar-wrapper">
+                                <div>
+                                    <span class="bar-label">🏠 Misafir Toleransı</span>
+                                    <span class="bar-value">{{ candidate.preferences.guest_frequency|default:"0" }}/5</span>
+                                </div>
+                                <div class="energy-bar-bg">
+                                    <div class="energy-bar-fill guest-fill" style="width: {{ candidate.preferences.guest_frequency_percent|default:"0" }}%;"></div>
+                                </div>
+                            </div>
+                            <div class="energy-bar-wrapper">
+                                <div>
+                                    <span class="bar-label">🔊 Gürültü Toleransı</span>
+                                    <span class="bar-value">{{ candidate.preferences.noise_tolerance|default:"0" }}/5</span>
+                                </div>
+                                <div class="energy-bar-bg">
+                                    <div class="energy-bar-fill noise-fill" style="width: {{ candidate.preferences.noise_tolerance_percent|default:"0" }}%;"></div>
+                                </div>
+                            </div>
+                        </div>
                         
                         <div class="badge-container">
                             <span class="info-badge highlight">🧠 {{ candidate.mbti_type|default:"Bilinmiyor" }}</span>
@@ -412,38 +443,3 @@
     });
 </script>
 {% endblock %}
-
-<div class="energy-bars-container mt-3">
-    <div class="energy-bar-wrapper mb-2">
-        <div class="d-flex justify-content-between mb-1">
-            <span class="bar-label"><i class="fas fa-users"></i> Misafir Toleransı</span>
-            <span class="bar-value">{{ candidate.preferences.guest_frequency }}/5</span>
-        </div>
-        <div class="energy-bar-bg">
-            <div class="energy-bar-fill guest-fill" style="width: {{ candidate.preferences.guest_frequency_percent }}%;"></div>
-        </div>
-    </div>
-
-    <div class="energy-bar-wrapper">
-        <div class="d-flex justify-content-between mb-1">
-            <span class="bar-label"><i class="fas fa-volume-up"></i> Gürültü Toleransı</span>
-            <span class="bar-value">{{ candidate.preferences.noise_tolerance }}/5</span>
-        </div>
-        <div class="energy-bar-bg">
-            <div class="energy-bar-fill noise-fill" style="width: {{ candidate.preferences.noise_tolerance_percent }}%;"></div>
-        </div>
-    </div>
-</div>
-
-<select name="city">
-    <option value="">Tüm Şehirler</option>
-    {% for city in all_cities %}
-        <option value="{{ city }}" {% if active_filters.city == city %}selected{% endif %}>
-            {{ city }}
-        </option>
-    {% endfor %}
-</select>
-
-<input type="number" name="max_rent" value="{{ active_filters.max_rent }}" placeholder="Maks. Bütçe">
-
-<a href="{% url 'reset_filters' %}" class="btn btn-outline-danger">Filtreleri Sıfırla</a>
