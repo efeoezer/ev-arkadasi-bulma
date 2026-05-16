@@ -245,19 +245,19 @@
                             <div class="energy-bar-wrapper">
                                 <div>
                                     <span class="bar-label">🏠 Misafir Toleransı</span>
-                                    <span class="bar-value">{{ candidate.preferences.guest_frequency|default:"0" }}/5</span>
+                                    <span class="bar-value">{{ candidate.guest_level }}/5</span>
                                 </div>
                                 <div class="energy-bar-bg">
-                                    <div class="energy-bar-fill guest-fill" style="width: {{ candidate.preferences.guest_frequency_percent|default:"0" }}%;"></div>
+                                    <div class="energy-bar-fill guest-fill" style="width: {{ candidate.guest_percent }}%;"></div>
                                 </div>
-                            </div>
+                            </div> 
                             <div class="energy-bar-wrapper">
                                 <div>
-                                    <span class="bar-label">🔊 Gürültü Toleransı</span>
-                                    <span class="bar-value">{{ candidate.preferences.noise_tolerance|default:"0" }}/5</span>
+                                    <span class="bar-label">🧹 Temizlik Takıntısı</span>
+                                    <span class="bar-value">{{ candidate.cleaning_level }}/5</span>
                                 </div>
                                 <div class="energy-bar-bg">
-                                    <div class="energy-bar-fill noise-fill" style="width: {{ candidate.preferences.noise_tolerance_percent|default:"0" }}%;"></div>
+                                    <div class="energy-bar-fill noise-fill" style="width: {{ candidate.cleaning_percent }}%;"></div>
                                 </div>
                             </div>
                         </div>
