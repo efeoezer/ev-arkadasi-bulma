@@ -1,11 +1,18 @@
+# Gizli Çevre Değişkenleri (Şifreler)
+.env
+
+# Sanal Ortam
 venv/
-db.sqlite3
+
+# Python Ön Bellek Dosyaları
 __pycache__/
 *.pyc
-.DS_Store
-venv/
+
+# Veritabanı (Geri dönmek istersen diye)
 db.sqlite3
-__pycache__/
-*.pyc
-.DS_Store
+
+# Kullanıcı Yüklemeleri (Profil Fotoğrafları vs.)
 media/
+
+# Mac İşletim Sistemi Dosyaları
+.DS_Store

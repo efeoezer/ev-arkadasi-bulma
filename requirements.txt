@@ -18,11 +18,13 @@ Incremental==24.11.0
 msgpack==1.1.2
 packaging==26.2
 pillow==12.1.1
+psycopg2-binary==2.9.12
 py-ubjson==0.16.1
 pyasn1==0.6.3
 pyasn1_modules==0.4.2
 pycparser==3.0
 pyOpenSSL==26.1.0
+python-dotenv==1.2.2
 redis==7.4.0
 requests==2.33.0
 service-identity==24.2.0
